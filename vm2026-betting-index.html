@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VM 2026 Tippeligaen</title>
+  <style>
+    :root{
+      --bg:#070b13;
+      --panel:#0f1724;
+      --panel2:#141f31;
+      --gold:#e8c46a;
+      --gold2:#f7dc91;
+      --text:#f7f0df;
+      --muted:#aab3c4;
+      --green:#5ee0a0;
+      --red:#ff7575;
+      --blue:#7bb9ff;
+      --border:rgba(232,196,106,.22);
+      --shadow:0 22px 80px rgba(0,0,0,.45);
+      --radius:22px;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family:Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(232,196,106,.20), transparent 34%),
+        radial-gradient(circle at 85% 12%, rgba(67,113,178,.28), transparent 28%),
+        linear-gradient(145deg,#05070d,#0a101a 52%,#140d08);
+      padding:18px;
+    }
+
+    .app{
+      width:min(1180px,100%);
+      margin:0 auto;
+    }
+
+    .hero{
+      position:relative;
+      overflow:hidden;
+      border:1px solid var(--border);
+      border-radius:30px;
+      padding:24px;
+      background:
+        linear-gradient(135deg, rgba(15,23,36,.96), rgba(18,28,46,.88)),
+        repeating-linear-gradient(90deg, rgba(232,196,106,.05) 0 1px, transparent 1px 28px);
+      box-shadow:var(--shadow);
+    }
+
+    .hero::after{
+      content:"⚽";
+      position:absolute;
+      right:28px;
+      top:18px;
+      font-size:115px;
+      opacity:.10;
+      transform:rotate(-12deg);
+    }
+
+    .topline{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:14px;
+      flex-wrap:wrap;
+      position:relative;
+      z-index:1;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:14px;
+    }
+
+    .logo{
+      width:54px;
+      height:54px;
+      border-radius:17px;
+      display:grid;
+      place-items:center;
+      background:linear-gradient(135deg,var(--gold),#996f25);
+      color:#1b1005;
+      font-size:28px;
+      box-shadow:0 12px 28px rgba(232,196,106,.25);
+    }
+
+    h1{
+      margin:0;
+      font-size:clamp(1.75rem,4vw,3.25rem);
+      letter-spacing:-.04em;
+    }
+
+    .subtitle{
+      margin:6px 0 0;
+      color:var(--muted);
+      max-width:720px;
+      line-height:1.5;
+    }
+
+    .pill{
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.04);
+      color:var(--gold2);
+      padding:10px 14px;
+      border-radius:999px;
+      font-weight:800;
+      white-space:nowrap;
+    }
+
+    .login-card{
+      margin-top:20px;
+      display:grid;
+      grid-template-columns:1fr auto auto;
+      gap:10px;
+      align-items:center;
+      position:relative;
+      z-index:1;
+    }
+
+    input, select, button, textarea{
+      font:inherit;
+    }
+
+    input, select, textarea{
+      width:100%;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(5,8,13,.68);
+      color:var(--text);
+      border-radius:14px;
+      padding:12px 13px;
+      outline:none;
+    }
+
+    input:focus, select:focus, textarea:focus{
+      border-color:rgba(232,196,106,.70);
+      box-shadow:0 0 0 4px rgba(232,196,106,.11);
+    }
+
+    button{
+      border:0;
+      border-radius:14px;
+      padding:12px 15px;
+      color:#171006;
+      background:linear-gradient(135deg,var(--gold2),var(--gold));
+      font-weight:900;
+      cursor:pointer;
+      box-shadow:0 10px 25px rgba(232,196,106,.18);
+    }
+
+    button.secondary{
+      color:var(--text);
+      background:rgba(255,255,255,.07);
+      border:1px solid rgba(255,255,255,.12);
+      box-shadow:none;
+    }
+
+    button.danger{
+      color:white;
+      background:rgba(255,117,117,.18);
+      border:1px solid rgba(255,117,117,.32);
+      box-shadow:none;
+    }
+
+    button.small{
+      padding:9px 11px;
+      border-radius:12px;
+      font-size:.88rem;
+    }
+
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:12px;
+      margin:16px 0;
+    }
+
+    .stat{
+      padding:16px;
+      border-radius:var(--radius);
+      background:rgba(15,23,36,.84);
+      border:1px solid rgba(255,255,255,.09);
+      box-shadow:0 14px 35px rgba(0,0,0,.18);
+    }
+
+    .stat span{
+      display:block;
+      color:var(--muted);
+      font-size:.83rem;
+      margin-bottom:6px;
+    }
+
+    .stat strong{
+      font-size:1.45rem;
+    }
+
+    .tabs{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin:16px 0;
+    }
+
+    .tab{
+      color:var(--text);
+      background:rgba(255,255,255,.055);
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow:none;
+    }
+
+    .tab.active{
+      color:#171006;
+      background:linear-gradient(135deg,var(--gold2),var(--gold));
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1.25fr .75fr;
+      gap:16px;
+      align-items:start;
+    }
+
+    .panel{
+      background:rgba(15,23,36,.88);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:16px;
+    }
+
+    .section-title{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-bottom:12px;
+    }
+
+    .section-title h2{
+      margin:0;
+      font-size:1.2rem;
+    }
+
+    .notice{
+      border:1px solid rgba(94,224,160,.25);
+      background:rgba(94,224,160,.08);
+      color:#d8ffee;
+      padding:12px 14px;
+      border-radius:16px;
+      line-height:1.45;
+      margin-bottom:14px;
+    }
+
+    .match-list{
+      display:grid;
+      gap:12px;
+    }
+
+    .match{
+      border:1px solid rgba(255,255,255,.10);
+      background:linear-gradient(135deg, rgba(255,255,255,.055), rgba(255,255,255,.025));
+      border-radius:20px;
+      padding:14px;
+    }
+
+    .match-head{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      color:var(--muted);
+      font-size:.86rem;
+      margin-bottom:10px;
+      flex-wrap:wrap;
+    }
+
+    .teams{
+      display:grid;
+      grid-template-columns:1fr auto 1fr;
+      align-items:center;
+      gap:10px;
+      margin-bottom:12px;
+    }
+
+    .team{
+      padding:12px;
+      border-radius:16px;
+      background:rgba(0,0,0,.20);
+      border:1px solid rgba(255,255,255,.06);
+      font-weight:900;
+      min-height:48px;
+      display:flex;
+      align-items:center;
+    }
+
+    .team:last-child{justify-content:flex-end;text-align:right}
+
+    .versus{
+      color:var(--gold2);
+      font-weight:900;
+    }
+
+    .bet-form{
+      display:grid;
+      grid-template-columns:70px 70px 1fr auto;
+      gap:8px;
+      align-items:center;
+    }
+
+    .bet-form input{
+      padding:10px;
+      text-align:center;
+    }
+
+    .muted{color:var(--muted)}
+    .gold{color:var(--gold2)}
+    .green{color:var(--green)}
+    .red{color:var(--red)}
+    .blue{color:var(--blue)}
+
+    .leaderboard{
+      display:grid;
+      gap:10px;
+    }
+
+    .rank{
+      display:grid;
+      grid-template-columns:auto 1fr auto;
+      gap:10px;
+      align-items:center;
+      padding:12px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:16px;
+    }
+
+    .medal{
+      width:34px;
+      height:34px;
+      border-radius:12px;
+      display:grid;
+      place-items:center;
+      background:rgba(232,196,106,.14);
+      color:var(--gold2);
+      font-weight:900;
+    }
+
+    .admin-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:10px;
+    }
+
+    .admin-grid .wide{grid-column:1/-1}
+
+    .hidden{display:none!important}
+
+    .history{
+      display:grid;
+      gap:10px;
+    }
+
+    .history-item{
+      padding:12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.09);
+      background:rgba(0,0,0,.15);
+      line-height:1.45;
+    }
+
+    .tools{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:12px;
+    }
+
+    textarea{min-height:115px;resize:vertical}
+
+    .footer{
+      margin:18px 0 4px;
+      color:var(--muted);
+      text-align:center;
+      font-size:.9rem;
+    }
+
+    @media(max-width:860px){
+      body{padding:10px}
+      .hero{padding:18px;border-radius:24px}
+      .login-card{grid-template-columns:1fr}
+      .stats{grid-template-columns:repeat(2,1fr)}
+      .grid{grid-template-columns:1fr}
+      .bet-form{grid-template-columns:1fr 1fr;}
+      .bet-form input:nth-child(3){grid-column:1/-1}
+      .bet-form button{grid-column:1/-1}
+      .admin-grid{grid-template-columns:1fr}
+      .teams{grid-template-columns:1fr;}
+      .team:last-child{justify-content:flex-start;text-align:left}
+      .versus{text-align:center}
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="hero">
+      <div class="topline">
+        <div class="brand">
+          <div class="logo">🏆</div>
+          <div>
+            <h1>VM 2026 Tippeligaen</h1>
+            <p class="subtitle">Privat konkurranse med venner. Tipp resultater, sats falske VM Coins og se hvem som topper tabellen gjennom hele mesterskapet.</p>
+          </div>
+        </div>
+        <div class="pill">Kun lekepoeng · ingen ekte penger</div>
+      </div>
+
+      <div class="login-card">
+        <input id="usernameInput" placeholder="Skriv brukernavn, f.eks. Thomas" maxlength="22" />
+        <button id="loginBtn">Logg inn</button>
+        <button id="logoutBtn" class="secondary hidden">Bytt bruker</button>
+      </div>
+    </section>
+
+    <section class="stats">
+      <div class="stat"><span>Innlogget som</span><strong id="statUser">Gjest</strong></div>
+      <div class="stat"><span>Min saldo</span><strong id="statCoins">0</strong></div>
+      <div class="stat"><span>Kamper</span><strong id="statMatches">0</strong></div>
+      <div class="stat"><span>Mine tips</span><strong id="statBets">0</strong></div>
+    </section>
+
+    <nav class="tabs">
+      <button class="tab active" data-tab="matches">Kamper</button>
+      <button class="tab" data-tab="mybets">Mine tips</button>
+      <button class="tab" data-tab="leaderboard">Leaderboard</button>
+      <button class="tab" data-tab="admin">Admin</button>
+    </nav>
+
+    <section class="grid">
+      <div class="panel" id="matchesPanel">
+        <div class="section-title">
+          <h2>⚽ Kamper å tippe på</h2>
+          <span class="muted" id="openMatchesLabel"></span>
+        </div>
+        <div class="notice">Start med 1000 VM Coins. Eksakt resultat gir størst gevinst, riktig vinner/uavgjort gir mindre gevinst. Alt er bare for moro med venner.</div>
+        <div class="match-list" id="matchList"></div>
+      </div>
+
+      <aside class="panel">
+        <div class="section-title">
+          <h2>🏅 Topp 5</h2>
+          <button class="secondary small" onclick="switchTab('leaderboard')">Se alle</button>
+        </div>
+        <div class="leaderboard" id="sideLeaderboard"></div>
+      </aside>
+    </section>
+
+    <section class="panel hidden" id="mybetsPanel">
+      <div class="section-title"><h2>🎯 Mine tips</h2></div>
+      <div class="history" id="myBetsList"></div>
+    </section>
+
+    <section class="panel hidden" id="leaderboardPanel">
+      <div class="section-title"><h2>🏆 Leaderboard</h2></div>
+      <div class="leaderboard" id="leaderboardList"></div>
+    </section>
+
+    <section class="panel hidden" id="adminPanel">
+      <div class="section-title"><h2>🔧 Admin: legg inn kamper og resultater</h2></div>
+      <div class="notice">Tips: Bruk denne siden som kontrollrom. Legg inn VM-kamper, la venner tippe, og skriv inn resultat etter kampen. Da regnes gevinst automatisk.</div>
+
+      <div class="admin-grid">
+        <input id="matchDate" type="datetime-local" />
+        <input id="matchGroup" placeholder="Gruppe / runde, f.eks. Gruppe A" />
+        <input id="homeTeam" placeholder="Hjemmelag" />
+        <input id="awayTeam" placeholder="Bortelag" />
+        <input id="venue" class="wide" placeholder="Stadion/by valgfritt" />
+        <button class="wide" id="addMatchBtn">Legg til kamp</button>
+      </div>
+
+      <hr style="border:0;border-top:1px solid rgba(255,255,255,.10);margin:18px 0">
+      <div class="section-title"><h2>📋 Registrer resultat</h2></div>
+      <div id="resultAdminList" class="match-list"></div>
+
+      <hr style="border:0;border-top:1px solid rgba(255,255,255,.10);margin:18px 0">
+      <div class="section-title"><h2>💾 Backup / deling</h2></div>
+      <p class="muted">Denne enkle versjonen lagrer i nettleseren. Bruk eksport/import for backup. For ekte live-konkurranse mellom flere mobiler kobler vi på Firebase etterpå.</p>
+      <textarea id="backupBox" placeholder="Eksportert data vises her, eller lim inn data for import."></textarea>
+      <div class="tools">
+        <button class="secondary" id="exportBtn">Eksporter data</button>
+        <button class="secondary" id="importBtn">Importer data</button>
+        <button class="danger" id="resetBtn">Nullstill alt</button>
+      </div>
+    </section>
+
+    <p class="footer">VM 2026 Tippeligaen · privat vennekonkurranse · falske coins</p>
+  </main>
+
+<script>
+const STORAGE_KEY = "vm2026-tippeligaen-v1";
+const USER_KEY = "vm2026-current-user";
+
+const starterMatches = [
+  { id: crypto.randomUUID(), date:"2026-06-11T21:00", group:"Gruppe A", home:"Mexico", away:"South Africa", venue:"Mexico City Stadium", status:"open", resultHome:null, resultAway:null },
+  { id: crypto.randomUUID(), date:"2026-06-11T23:00", group:"Gruppe A", home:"Korea Republic", away:"Czechia", venue:"Estadio Guadalajara", status:"open", resultHome:null, resultAway:null },
+  { id: crypto.randomUUID(), date:"2026-06-14T18:00", group:"Gruppe E", home:"Côte d'Ivoire", away:"Ecuador", venue:"Philadelphia Stadium", status:"open", resultHome:null, resultAway:null },
+  { id: crypto.randomUUID(), date:"2026-06-14T21:00", group:"Gruppe F", home:"Netherlands", away:"Japan", venue:"Dallas Stadium", status:"open", resultHome:null, resultAway:null }
+];
+
+let state = loadState();
+let currentUser = localStorage.getItem(USER_KEY) || "";
+let activeTab = "matches";
+
+function loadState(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(raw){
+    try { return JSON.parse(raw); } catch(e) {}
+  }
+  return { users:{}, matches:starterMatches, bets:[] };
+}
+
+function saveState(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function ensureUser(name){
+  const clean = name.trim().replace(/\s+/g," ").slice(0,22);
+  if(!clean) return null;
+  if(!state.users[clean]){
+    state.users[clean] = { coins:1000, joinedAt:new Date().toISOString() };
+  }
+  currentUser = clean;
+  localStorage.setItem(USER_KEY, currentUser);
+  saveState();
+  return clean;
+}
+
+function fmtDate(value){
+  if(!value) return "Dato mangler";
+  const d = new Date(value);
+  return d.toLocaleString("no-NO", { weekday:"short", day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" });
+}
+
+function outcome(home, away){
+  if(home > away) return "H";
+  if(home < away) return "B";
+  return "U";
+}
+
+function getUserBets(user=currentUser){
+  return state.bets.filter(b => b.user === user);
+}
+
+function getBet(user, matchId){
+  return state.bets.find(b => b.user === user && b.matchId === matchId);
+}
+
+function calculateReward(bet, match){
+  const exact = Number(bet.homeScore) === Number(match.resultHome) && Number(bet.awayScore) === Number(match.resultAway);
+  const correctOutcome = outcome(Number(bet.homeScore), Number(bet.awayScore)) === outcome(Number(match.resultHome), Number(match.resultAway));
+  const oneScore = Number(bet.homeScore) === Number(match.resultHome) || Number(bet.awayScore) === Number(match.resultAway);
+
+  if(exact) return { payout: Math.round(bet.stake * 4), points:100, label:"Eksakt resultat" };
+  if(correctOutcome) return { payout: Math.round(bet.stake * 2), points:50, label:"Riktig utfall" };
+  if(oneScore) return { payout: Math.round(bet.stake * 0.5), points:15, label:"Én riktig score" };
+  return { payout:0, points:0, label:"Bom" };
+}
+
+function placeBet(matchId){
+  if(!currentUser){ alert("Logg inn med brukernavn først."); return; }
+  const match = state.matches.find(m => m.id === matchId);
+  if(!match || match.status !== "open"){ alert("Denne kampen er stengt."); return; }
+
+  const homeScore = Number(document.getElementById(`home-${matchId}`).value);
+  const awayScore = Number(document.getElementById(`away-${matchId}`).value);
+  const stake = Number(document.getElementById(`stake-${matchId}`).value);
+
+  if(!Number.isInteger(homeScore) || !Number.isInteger(awayScore) || homeScore < 0 || awayScore < 0){
+    alert("Skriv gyldig resultat, f.eks. 2 - 1."); return;
+  }
+  if(!Number.isInteger(stake) || stake < 10){ alert("Minimum innsats er 10 VM Coins."); return; }
+
+  const user = state.users[currentUser];
+  const existing = getBet(currentUser, matchId);
+  if(existing && existing.settled){ alert("Dette tipset er allerede avgjort."); return; }
+
+  if(existing){
+    user.coins += existing.stake;
+    state.bets = state.bets.filter(b => b.id !== existing.id);
+  }
+
+  if(user.coins < stake){ alert("Du har ikke nok VM Coins."); return; }
+
+  user.coins -= stake;
+  state.bets.push({
+    id: crypto.randomUUID(),
+    user: currentUser,
+    matchId,
+    homeScore,
+    awayScore,
+    stake,
+    placedAt:new Date().toISOString(),
+    settled:false,
+    payout:0,
+    points:0,
+    resultLabel:"Venter"
+  });
+  saveState();
+  render();
+}
+
+function addMatch(){
+  const date = document.getElementById("matchDate").value;
+  const group = document.getElementById("matchGroup").value.trim() || "VM 2026";
+  const home = document.getElementById("homeTeam").value.trim();
+  const away = document.getElementById("awayTeam").value.trim();
+  const venue = document.getElementById("venue").value.trim();
+  if(!date || !home || !away){ alert("Dato, hjemmelag og bortelag må fylles ut."); return; }
+  state.matches.push({ id: crypto.randomUUID(), date, group, home, away, venue, status:"open", resultHome:null, resultAway:null });
+  state.matches.sort((a,b)=> new Date(a.date) - new Date(b.date));
+  ["matchDate","matchGroup","homeTeam","awayTeam","venue"].forEach(id => document.getElementById(id).value = "");
+  saveState();
+  render();
+}
+
+function setResult(matchId){
+  const match = state.matches.find(m => m.id === matchId);
+  const rh = Number(document.getElementById(`rh-${matchId}`).value);
+  const ra = Number(document.getElementById(`ra-${matchId}`).value);
+  if(!Number.isInteger(rh) || !Number.isInteger(ra) || rh < 0 || ra < 0){ alert("Skriv gyldig resultat."); return; }
+  match.resultHome = rh;
+  match.resultAway = ra;
+  match.status = "finished";
+
+  state.bets.filter(b => b.matchId === matchId && !b.settled).forEach(bet => {
+    const reward = calculateReward(bet, match);
+    bet.settled = true;
+    bet.payout = reward.payout;
+    bet.points = reward.points;
+    bet.resultLabel = reward.label;
+    if(state.users[bet.user]) state.users[bet.user].coins += reward.payout;
+  });
+
+  saveState();
+  render();
+}
+
+function reopenMatch(matchId){
+  const match = state.matches.find(m => m.id === matchId);
+  if(!confirm("Åpne kampen igjen? Avgjorende tips blir ikke automatisk reversert.")) return;
+  match.status = "open";
+  match.resultHome = null;
+  match.resultAway = null;
+  saveState();
+  render();
+}
+
+function deleteMatch(matchId){
+  if(!confirm("Slette kampen og alle tips på denne kampen?")) return;
+  const bets = state.bets.filter(b => b.matchId === matchId && !b.settled);
+  bets.forEach(b => { if(state.users[b.user]) state.users[b.user].coins += b.stake; });
+  state.bets = state.bets.filter(b => b.matchId !== matchId);
+  state.matches = state.matches.filter(m => m.id !== matchId);
+  saveState();
+  render();
+}
+
+function leaderboard(){
+  return Object.entries(state.users).map(([name,u]) => {
+    const bets = state.bets.filter(b => b.user === name);
+    return {
+      name,
+      coins:u.coins,
+      tips:bets.length,
+      points:bets.reduce((sum,b)=>sum + (b.points || 0),0),
+      won:bets.filter(b=>b.payout > b.stake).length
+    };
+  }).sort((a,b)=> b.coins - a.coins || b.points - a.points || a.name.localeCompare(b.name));
+}
+
+function renderMatches(){
+  const list = document.getElementById("matchList");
+  const sorted = [...state.matches].sort((a,b)=> new Date(a.date) - new Date(b.date));
+  document.getElementById("openMatchesLabel").textContent = `${sorted.filter(m=>m.status === "open").length} åpne`;
+
+  if(!sorted.length){
+    list.innerHTML = `<div class="notice">Ingen kamper ennå. Gå til Admin og legg inn første kamp.</div>`;
+    return;
+  }
+
+  list.innerHTML = sorted.map(m => {
+    const bet = currentUser ? getBet(currentUser, m.id) : null;
+    const closed = m.status !== "open";
+    return `<article class="match">
+      <div class="match-head">
+        <span>${fmtDate(m.date)} · ${m.group || "VM 2026"}</span>
+        <span>${m.venue || ""}</span>
+      </div>
+      <div class="teams">
+        <div class="team">${escapeHtml(m.home)}</div>
+        <div class="versus">${closed ? `${m.resultHome} - ${m.resultAway}` : "VS"}</div>
+        <div class="team">${escapeHtml(m.away)}</div>
+      </div>
+      ${bet ? `<p class="muted">Ditt tips: <b class="gold">${bet.homeScore}-${bet.awayScore}</b> · innsats ${bet.stake} · ${bet.settled ? `<span class="${bet.payout ? 'green':'red'}">${bet.resultLabel}, gevinst ${bet.payout}</span>` : "venter"}</p>` : ""}
+      ${closed ? `<p class="muted">Kampen er ferdig. Tips er låst.</p>` : `
+        <div class="bet-form">
+          <input id="home-${m.id}" type="number" min="0" placeholder="${m.home.substring(0,3)}" value="${bet?.homeScore ?? ""}">
+          <input id="away-${m.id}" type="number" min="0" placeholder="${m.away.substring(0,3)}" value="${bet?.awayScore ?? ""}">
+          <input id="stake-${m.id}" type="number" min="10" placeholder="Innsats VM Coins" value="${bet?.stake ?? 50}">
+          <button onclick="placeBet('${m.id}')">${bet ? "Endre tips" : "Tipp"}</button>
+        </div>`}
+    </article>`;
+  }).join("");
+}
+
+function renderLeaderboard(){
+  const rows = leaderboard();
+  const markup = rows.length ? rows.map((r,i)=>`
+    <div class="rank">
+      <div class="medal">${i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i+1}</div>
+      <div><b>${escapeHtml(r.name)}</b><br><span class="muted">${r.tips} tips · ${r.points} poeng · ${r.won} sterke treff</span></div>
+      <b class="gold">${r.coins} 🪙</b>
+    </div>`).join("") : `<div class="notice">Ingen spillere ennå. Logg inn for å starte.</div>`;
+  document.getElementById("leaderboardList").innerHTML = markup;
+  document.getElementById("sideLeaderboard").innerHTML = rows.slice(0,5).map((r,i)=>`
+    <div class="rank">
+      <div class="medal">${i+1}</div>
+      <div><b>${escapeHtml(r.name)}</b><br><span class="muted">${r.tips} tips</span></div>
+      <b class="gold">${r.coins}</b>
+    </div>`).join("") || `<div class="notice">Ingen spillere ennå.</div>`;
+}
+
+function renderMyBets(){
+  const list = document.getElementById("myBetsList");
+  if(!currentUser){ list.innerHTML = `<div class="notice">Logg inn for å se dine tips.</div>`; return; }
+  const bets = getUserBets().slice().sort((a,b)=> new Date(b.placedAt) - new Date(a.placedAt));
+  if(!bets.length){ list.innerHTML = `<div class="notice">Du har ikke lagt inn noen tips ennå.</div>`; return; }
+
+  list.innerHTML = bets.map(b => {
+    const m = state.matches.find(x => x.id === b.matchId);
+    if(!m) return "";
+    return `<div class="history-item">
+      <b>${escapeHtml(m.home)} vs ${escapeHtml(m.away)}</b><br>
+      <span class="muted">${fmtDate(m.date)} · tips ${b.homeScore}-${b.awayScore} · innsats ${b.stake}</span><br>
+      ${b.settled ? `<span class="${b.payout ? 'green':'red'}">${b.resultLabel}: +${b.payout} coins, +${b.points} poeng</span>` : `<span class="blue">Venter på resultat</span>`}
+    </div>`;
+  }).join("");
+}
+
+function renderAdmin(){
+  const list = document.getElementById("resultAdminList");
+  const sorted = [...state.matches].sort((a,b)=> new Date(a.date) - new Date(b.date));
+  list.innerHTML = sorted.map(m => `
+    <article class="match">
+      <div class="match-head"><span>${fmtDate(m.date)} · ${m.group}</span><span>${m.status === "finished" ? "Ferdig" : "Åpen"}</span></div>
+      <div class="teams">
+        <div class="team">${escapeHtml(m.home)}</div>
+        <div class="versus">${m.status === "finished" ? `${m.resultHome} - ${m.resultAway}` : "VS"}</div>
+        <div class="team">${escapeHtml(m.away)}</div>
+      </div>
+      <div class="bet-form">
+        <input id="rh-${m.id}" type="number" min="0" placeholder="${m.home}" value="${m.resultHome ?? ""}">
+        <input id="ra-${m.id}" type="number" min="0" placeholder="${m.away}" value="${m.resultAway ?? ""}">
+        <button onclick="setResult('${m.id}')">Lagre resultat</button>
+        <button class="danger" onclick="deleteMatch('${m.id}')">Slett</button>
+      </div>
+    </article>`).join("") || `<div class="notice">Ingen kamper lagt inn.</div>`;
+}
+
+function renderStats(){
+  const user = currentUser ? state.users[currentUser] : null;
+  document.getElementById("statUser").textContent = currentUser || "Gjest";
+  document.getElementById("statCoins").textContent = user ? `${user.coins} 🪙` : "0";
+  document.getElementById("statMatches").textContent = state.matches.length;
+  document.getElementById("statBets").textContent = currentUser ? getUserBets().length : 0;
+  document.getElementById("usernameInput").value = currentUser || "";
+  document.getElementById("logoutBtn").classList.toggle("hidden", !currentUser);
+}
+
+function switchTab(tab){
+  activeTab = tab;
+  document.querySelectorAll(".tab").forEach(btn => btn.classList.toggle("active", btn.dataset.tab === tab));
+  document.getElementById("matchesPanel").parentElement.classList.toggle("hidden", tab !== "matches");
+  document.getElementById("mybetsPanel").classList.toggle("hidden", tab !== "mybets");
+  document.getElementById("leaderboardPanel").classList.toggle("hidden", tab !== "leaderboard");
+  document.getElementById("adminPanel").classList.toggle("hidden", tab !== "admin");
+}
+
+function render(){
+  renderStats();
+  renderMatches();
+  renderLeaderboard();
+  renderMyBets();
+  renderAdmin();
+  switchTab(activeTab);
+}
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>'"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
+}
+
+// Events
+document.getElementById("loginBtn").addEventListener("click", () => {
+  const name = ensureUser(document.getElementById("usernameInput").value);
+  if(!name) alert("Skriv et brukernavn først.");
+  render();
+});
+
+document.getElementById("usernameInput").addEventListener("keydown", e => {
+  if(e.key === "Enter") document.getElementById("loginBtn").click();
+});
+
+document.getElementById("logoutBtn").addEventListener("click", () => {
+  currentUser = "";
+  localStorage.removeItem(USER_KEY);
+  render();
+});
+
+document.querySelectorAll(".tab").forEach(btn => btn.addEventListener("click", () => switchTab(btn.dataset.tab)));
+document.getElementById("addMatchBtn").addEventListener("click", addMatch);
+
+document.getElementById("exportBtn").addEventListener("click", () => {
+  document.getElementById("backupBox").value = JSON.stringify(state, null, 2);
+});
+
+document.getElementById("importBtn").addEventListener("click", () => {
+  try{
+    const imported = JSON.parse(document.getElementById("backupBox").value);
+    if(!imported.users || !imported.matches || !imported.bets) throw new Error("Feil format");
+    state = imported;
+    saveState();
+    render();
+    alert("Data importert.");
+  } catch(e){ alert("Kunne ikke importere. Sjekk at teksten er gyldig JSON fra eksport."); }
+});
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if(!confirm("Nullstille hele konkurransen?")) return;
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(USER_KEY);
+  state = { users:{}, matches:starterMatches.map(m => ({...m, id:crypto.randomUUID()})), bets:[] };
+  currentUser = "";
+  saveState();
+  render();
+});
+
+render();
+</script>
+</body>
+</html>
