@@ -332,6 +332,7 @@ function renderMatches(){
 function selectOdd(matchId, pick){
   const match = state.matches.find(item => item.id === matchId);
   if(!match) return;
+  if(match.result) return toast("Kampen er allerede avgjort.");
 
   state.selected = state.selected.filter(item => item.matchId !== matchId);
 
@@ -393,6 +394,11 @@ function renderSlip(){
 function placeBet(){
   const stake = Math.max(0, Number(document.getElementById("stakeInput").value || 0));
   if(!state.selected.length) return toast("Velg odds først.");
+  const containsFinishedMatch = state.selected.some(selection => {
+    const match = state.matches.find(item => item.id === selection.matchId);
+    return match && match.result;
+  });
+  if(containsFinishedMatch) return toast("Du kan ikke plassere spill på en avgjort kamp.");
   if(stake < 10) return toast("Minimum innsats er 10 coins.");
   if(stake > MAX_STAKE) return toast(`Maks innsats per kamp er ${MAX_STAKE} VM Coins.`);
   if(stake > state.user.coins) return toast("Du har ikke nok VM Coins.");
@@ -654,6 +660,7 @@ function registerResult(event){
   }
 
   match.result = result;
+  state.selected = state.selected.filter(selection => selection.matchId !== matchId);
   state.activity.unshift({
     icon: "medal",
     text: `Resultat lagt inn: ${match.home} – ${match.away} (${resultLabel(result)})`,
@@ -683,7 +690,8 @@ function renderAll(){
 }
 
 function bindEvents(){
-  document.getElementById("stakeInput").max = MAX_STAKE;
+  const stakeInput = document.getElementById("stakeInput");
+  if(stakeInput) stakeInput.max = MAX_STAKE;
   document.querySelectorAll("[data-page]").forEach(btn => {
     btn.addEventListener("click", () => setPage(btn.dataset.page));
   });
@@ -691,25 +699,25 @@ function bindEvents(){
     btn.addEventListener("click", () => setPage(btn.dataset.go));
   });
 
-  document.getElementById("menuToggle").addEventListener("click", () => {
+  document.getElementById("menuToggle")?.addEventListener("click", () => {
     document.body.classList.toggle("menu-open");
   });
 
-  document.getElementById("stakeInput").addEventListener("input", renderSlip);
-  document.getElementById("placeBetBtn").addEventListener("click", placeBet);
-  document.getElementById("clearSlipBtn").addEventListener("click", () => {
+  document.getElementById("stakeInput")?.addEventListener("input", renderSlip);
+  document.getElementById("placeBetBtn")?.addEventListener("click", placeBet);
+  document.getElementById("clearSlipBtn")?.addEventListener("click", () => {
     state.selected = [];
     saveState();
     renderMatches();
     renderSlip();
   });
 
-  document.getElementById("matchForm").addEventListener("submit", addMatch);
-  document.getElementById("resultForm").addEventListener("submit", registerResult);
-  document.getElementById("postForm").addEventListener("submit", addPost);
-  document.getElementById("chatForm").addEventListener("submit", sendChat);
-  document.getElementById("editNameBtn").addEventListener("click", editName);
-  document.getElementById("searchInput").addEventListener("input", event => filterSearch(event.target.value));
+  document.getElementById("matchForm")?.addEventListener("submit", addMatch);
+  document.getElementById("resultForm")?.addEventListener("submit", registerResult);
+  document.getElementById("postForm")?.addEventListener("submit", addPost);
+  document.getElementById("chatForm")?.addEventListener("submit", sendChat);
+  document.getElementById("editNameBtn")?.addEventListener("click", editName);
+  document.getElementById("searchInput")?.addEventListener("input", event => filterSearch(event.target.value));
 
   document.querySelectorAll(".room").forEach(btn => {
     btn.addEventListener("click", () => {
