@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#06101d" />
   <title>VM Lounge 2026</title>
-  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
   <div class="app">
@@ -22,22 +22,29 @@
 
       <nav class="side-nav">
         <button class="nav-item active" data-page="home">
-          <span class="nav-icon" data-icon="home"></span><span>Home</span>
+          <span class="nav-icon" data-icon="home"></span>
+          <span>Home</span>
         </button>
         <button class="nav-item" data-page="betting">
-          <span class="nav-icon" data-icon="ball"></span><span>Betting</span>
+          <span class="nav-icon" data-icon="ball"></span>
+          <span>Betting</span>
         </button>
         <button class="nav-item" data-page="forum">
-          <span class="nav-icon" data-icon="users"></span><span>Forum</span>
+          <span class="nav-icon" data-icon="users"></span>
+          <span>Forum</span>
         </button>
         <button class="nav-item" data-page="chat">
-          <span class="nav-icon" data-icon="chat"></span><span>Chat</span><i class="dot"></i>
+          <span class="nav-icon" data-icon="chat"></span>
+          <span>Chat</span>
+          <i class="dot"></i>
         </button>
         <button class="nav-item" data-page="profile">
-          <span class="nav-icon" data-icon="profile"></span><span>Profil</span>
+          <span class="nav-icon" data-icon="profile"></span>
+          <span>Profil</span>
         </button>
         <button class="nav-item" data-page="chess">
-          <span class="nav-icon" data-icon="knight"></span><span>Sjakk</span>
+          <span class="nav-icon" data-icon="knight"></span>
+          <span>Sjakk</span>
         </button>
       </nav>
 
@@ -61,12 +68,13 @@
         </div>
 
         <div class="top-actions">
-          <button class="coin-pill">
+          <button class="coin-pill" id="coinPill">
             <span class="coin">◆</span>
             <strong data-bind="coins">250 000</strong>
           </button>
           <button class="bell" aria-label="Varsler">
-            <span class="nav-icon" data-icon="bell"></span><i></i>
+            <span class="nav-icon" data-icon="bell"></span>
+            <i></i>
           </button>
         </div>
       </header>
@@ -118,7 +126,33 @@
             <span class="nav-icon gold" data-icon="stats"></span>
             <h2>Din statistikk</h2>
           </div>
-          <div class="stats-grid" id="homeStats"></div>
+          <div class="stats-grid">
+            <div class="stat">
+              <span class="nav-icon gold" data-icon="cup"></span>
+              <small>Plasserte spill</small>
+              <strong data-bind="placedBets">124</strong>
+            </div>
+            <div class="stat">
+              <span class="nav-icon" data-icon="win"></span>
+              <small>Vunnede spill</small>
+              <strong data-bind="wonBets">68</strong>
+            </div>
+            <div class="stat">
+              <span class="nav-icon gold" data-icon="trend"></span>
+              <small>Treffprosent</small>
+              <strong data-bind="hitRate">54%</strong>
+            </div>
+            <div class="stat">
+              <span class="nav-icon gold" data-icon="medal"></span>
+              <small>Rangering</small>
+              <strong data-bind="rank">#5</strong>
+            </div>
+            <div class="stat profit">
+              <span class="nav-icon" data-icon="coins"></span>
+              <small>Netto gevinst</small>
+              <strong data-bind="netProfit">35 500</strong>
+            </div>
+          </div>
         </article>
 
         <article class="card activity-card">
@@ -241,7 +275,12 @@
           <button class="btn secondary compact" id="editNameBtn">Endre navn</button>
         </article>
 
-        <div class="stats-grid profile-stats" id="profileStats"></div>
+        <div class="stats-grid profile-stats">
+          <div class="stat"><span class="nav-icon gold" data-icon="knight"></span><small>Sjakk ELO</small><strong data-bind="elo">1032</strong></div>
+          <div class="stat"><span class="coin">◆</span><small>VM Coins</small><strong data-bind="coins">250 000</strong></div>
+          <div class="stat"><span class="nav-icon gold" data-icon="trend"></span><small>Treffprosent</small><strong data-bind="hitRate">54%</strong></div>
+          <div class="stat"><span class="nav-icon gold" data-icon="medal"></span><small>Rangering</small><strong data-bind="rank">#5</strong></div>
+        </div>
 
         <article class="card">
           <div class="card-title">
@@ -285,6 +324,6 @@
   </div>
 
   <div id="toast" class="toast" hidden></div>
-  <script type="module" src="js/app.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>

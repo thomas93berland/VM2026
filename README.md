@@ -1,50 +1,20 @@
-# VM Lounge 2026 – enkel mappestruktur
+# VM Lounge 2026 – fixed buttons
 
-Dette er samme app, men med færre mapper:
+Denne versjonen bruker vanlig JavaScript uten ES module-importer.
+Det gjør at knappene fungerer både på GitHub Pages og når du åpner `index.html` direkte for testing.
+
+## Struktur
 
 ```text
 index.html
 css/
-  main.css
-  theme.css
-  layout.css
-  components.css
-  responsive.css
-  home.css
-  betting.css
-  forum.css
-  chat.css
-  profile.css
-  chess.css
-
+  style.css
 js/
   app.js
-  helpers.js
-  store.js
-  router.js
-  stateBindings.js
-  icons.js
-  search.js
-  defaultState.js
-  home.js
-  betting.js
-  forum.js
-  chat.js
-  profile.js
-  chess.js
+README.md
 ```
 
-## Hvor endrer du hva?
+## Bruk
 
-- Home: `css/home.css` og `js/home.js`
-- Betting: `css/betting.css` og `js/betting.js`
-- Forum: `css/forum.css` og `js/forum.js`
-- Chat: `css/chat.css` og `js/chat.js`
-- Profil: `css/profile.css` og `js/profile.js`
-- Sjakk: `css/chess.css` og `js/chess.js`
-- Farger/tema: `css/theme.css`
-- Meny/layout: `css/layout.css` og `js/router.js`
-
-## GitHub Pages
-
-Last opp hele innholdet slik at `index.html`, `css/` og `js/` ligger i root på repoet.
+Last opp `index.html`, `css/` og `js/` direkte i root på GitHub-repoet.
+Ikke legg filene inni en ekstra mappe.
