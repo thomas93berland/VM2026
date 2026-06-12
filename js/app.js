@@ -508,6 +508,7 @@ function renderAll(){
 }
 
 function bindEvents(){
+  bindLeaderboardControls();
   document.querySelectorAll("[data-page]").forEach(btn => {
     btn.addEventListener("click", () => setPage(btn.dataset.page));
   });
