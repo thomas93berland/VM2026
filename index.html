@@ -29,6 +29,10 @@
           <span class="nav-icon" data-icon="ball"></span>
           <span>Betting</span>
         </button>
+        <button class="nav-item" data-page="leaderboard">
+          <span class="nav-icon" data-icon="medal"></span>
+          <span>Leaderboard</span>
+        </button>
         <button class="nav-item" data-page="forum">
           <span class="nav-icon" data-icon="users"></span>
           <span>Forum</span>
@@ -90,7 +94,7 @@
             <h1>VM 2026<br><span>Betting med venner</span></h1>
             <div class="hero-actions">
               <button class="btn primary" data-go="betting">Se kamper</button>
-              <button class="btn secondary" data-scroll="leaderboardSection">
+              <button class="btn secondary" data-go="leaderboard">
                 <span class="nav-icon" data-icon="medal"></span>
                 Leaderboard
               </button>
@@ -157,24 +161,12 @@
         <article class="card leaderboard-card">
           <div class="card-title split">
             <div>
-              <span class="nav-icon gold" data-icon="cup"></span>
-              <h2>Leaderboard</h2>
-            </div>
-            <button class="text-link" data-go="profile">Din plass <span data-bind="rank">#5</span> ›</button>
-          </div>
-          <div class="leaderboard-list" id="homeLeaderboard"></div>
-        </article>
-
-        
-        <article class="card leaderboard-card" id="leaderboardSection">
-          <div class="card-title split">
-            <div>
               <span class="nav-icon gold" data-icon="medal"></span>
               <h2>Leaderboard</h2>
             </div>
-            <button class="text-link" id="showFullLeaderboardBtn">Se hele leaderboardet ›</button>
+            <button class="text-link" data-go="leaderboard">Se hele leaderboardet ›</button>
           </div>
-          <div class="leaderboard-list" id="leaderboardList"></div>
+          <div class="leaderboard-list" id="homeLeaderboard"></div>
         </article>
 
         <article class="card activity-card">
@@ -186,6 +178,27 @@
             <button class="text-link">Se alle ›</button>
           </div>
           <div class="activity-list" id="homeActivity"></div>
+        </article>
+      </section>
+
+      <section class="page" id="page-leaderboard">
+        <div class="page-head">
+          <div>
+            <small>Toppliste</small>
+            <h1>Leaderboard</h1>
+          </div>
+          <button class="btn secondary compact" data-go="home">Tilbake home</button>
+        </div>
+
+        <article class="card leaderboard-page-card">
+          <div class="card-title split">
+            <div>
+              <span class="nav-icon gold" data-icon="medal"></span>
+              <h2>Alle spillere</h2>
+            </div>
+            <span class="leaderboard-note">Sortert etter VM Coins</span>
+          </div>
+          <div class="leaderboard-list full" id="leaderboardPageList"></div>
         </article>
       </section>
 
@@ -338,28 +351,13 @@
     <nav class="bottom-nav" aria-label="Mobilmeny">
       <button class="bottom-item active" data-page="home"><span class="nav-icon" data-icon="home"></span><small>Home</small></button>
       <button class="bottom-item" data-page="betting"><span class="nav-icon" data-icon="ball"></span><small>Betting</small></button>
+      <button class="bottom-item" data-page="leaderboard"><span class="nav-icon" data-icon="medal"></span><small>Toppliste</small></button>
       <button class="bottom-item" data-page="forum"><span class="nav-icon" data-icon="users"></span><small>Forum</small></button>
       <button class="bottom-item" data-page="chat"><span class="nav-icon" data-icon="chat"></span><i></i><small>Chat</small></button>
       <button class="bottom-item" data-page="profile"><span class="nav-icon" data-icon="profile"></span><small>Profil</small></button>
       <button class="bottom-item" data-page="chess"><span class="nav-icon" data-icon="knight"></span><small>Sjakk</small></button>
     </nav>
   </div>
-
-
-  <div class="modal" id="leaderboardModal" hidden>
-    <div class="modal-backdrop" data-close-leaderboard></div>
-    <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="fullLeaderboardTitle">
-      <div class="modal-head">
-        <div>
-          <small>Alle spillere</small>
-          <h2 id="fullLeaderboardTitle">Hele leaderboardet</h2>
-        </div>
-        <button class="modal-close" data-close-leaderboard aria-label="Lukk">×</button>
-      </div>
-      <div class="leaderboard-list full" id="fullLeaderboardList"></div>
-    </section>
-  </div>
-
   <div id="toast" class="toast" hidden></div>
   <script src="js/app.js"></script>
 </body>

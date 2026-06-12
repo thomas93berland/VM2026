@@ -44,3 +44,14 @@ Ikke legg filene inni en ekstra mappe.
   - markering av deg
   - sortering etter VM Coins
   - knapp for Se hele leaderboardet
+
+
+## Leaderboard-side
+
+Denne versjonen har en egen Leaderboard-side.
+
+- Hero-knappen "Leaderboard" går til Leaderboard-siden.
+- Knappen "Se hele leaderboardet" går til Leaderboard-siden.
+- Menyen har egen Leaderboard-knapp.
+- Leaderboard viser rank, brukernavn, VM Coins, vinn prosent, antall spill og markerer deg.
+- Listen sorteres etter VM Coins.
