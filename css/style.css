@@ -1289,3 +1289,109 @@ textarea.input{resize:vertical}
     grid-template-columns:1fr;
   }
 }
+
+
+/* Firebase login */
+.auth-screen{
+  position:fixed;
+  inset:0;
+  z-index:200;
+  display:grid;
+  place-items:center;
+  padding:18px;
+  background:
+    radial-gradient(circle at 25% 0,rgba(228,184,78,.14),transparent 28rem),
+    radial-gradient(circle at 80% 0,rgba(38,90,156,.24),transparent 30rem),
+    rgba(3,9,19,.96);
+  backdrop-filter:blur(12px);
+}
+
+.auth-screen[hidden]{
+  display:none;
+}
+
+.auth-card{
+  width:min(460px,100%);
+  border:1px solid var(--line-gold);
+  border-radius:30px;
+  background:linear-gradient(180deg,rgba(12,26,45,.96),rgba(5,13,24,.98));
+  box-shadow:0 30px 120px rgba(0,0,0,.55);
+  padding:22px;
+}
+
+.auth-brand{
+  margin-bottom:20px;
+}
+
+.auth-copy h1{
+  margin:0 0 8px;
+  font-size:42px;
+  letter-spacing:-.05em;
+}
+
+.auth-copy p{
+  margin:0;
+  color:#d8dde6;
+  line-height:1.5;
+}
+
+.auth-tabs{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin:20px 0 12px;
+  padding:5px;
+  border-radius:18px;
+  background:rgba(255,255,255,.035);
+  border:1px solid var(--line);
+}
+
+.auth-tab{
+  min-height:42px;
+  border-radius:14px;
+  background:transparent;
+  color:var(--muted);
+  font-weight:850;
+}
+
+.auth-tab.active{
+  color:#171004;
+  background:linear-gradient(180deg,#f2c96a,#cf982e);
+}
+
+.auth-form{
+  display:grid;
+  gap:10px;
+}
+
+.auth-note{
+  margin:14px 0 0;
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.45;
+  text-align:center;
+}
+
+.logout-btn{
+  min-height:48px;
+}
+
+.odd:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}
+
+@media (max-width:620px){
+  .logout-btn{
+    display:none;
+  }
+
+  .auth-card{
+    padding:18px;
+    border-radius:24px;
+  }
+
+  .auth-copy h1{
+    font-size:34px;
+  }
+}
