@@ -31,6 +31,13 @@ const seed = {
     rank: "#5",
     netProfit: 35500
   },
+  leaderboard: [
+    { name: "Elise", coins: 285500, elo: 1018, hitRate: "61%" },
+    { name: "Kjell", coins: 272250, elo: 980, hitRate: "57%" },
+    { name: "Heidi", coins: 260800, elo: 1045, hitRate: "55%" },
+    { name: "Thomas", coins: 250000, elo: 1032, hitRate: "54%" },
+    { name: "Marius", coins: 231400, elo: 1090, hitRate: "49%" }
+  ],
   selected: [
     { matchId: "m1", pick: "home", label: "Brasil", title: "Brasil – Frankrike", odds: 1.82 },
     { matchId: "m2", pick: "away", label: "Tyskland", title: "Argentina – Tyskland", odds: 1.95 }
@@ -113,6 +120,52 @@ function injectIcons(){
     const name = el.dataset.icon;
     if(ICONS[name]) el.innerHTML = ICONS[name];
   });
+}
+
+function ensureLeaderboard(){
+  if(!Array.isArray(state.leaderboard)){
+    state.leaderboard = structuredClone(seed.leaderboard);
+  }
+
+  const current = state.leaderboard.find(player => player.name === state.user.name);
+  if(current){
+    current.coins = state.user.coins;
+    current.elo = state.user.elo;
+    current.hitRate = state.user.hitRate;
+  }else{
+    state.leaderboard.push({
+      name: state.user.name,
+      coins: state.user.coins,
+      elo: state.user.elo,
+      hitRate: state.user.hitRate
+    });
+  }
+
+  state.leaderboard.sort((a, b) => Number(b.coins || 0) - Number(a.coins || 0));
+  const userIndex = state.leaderboard.findIndex(player => player.name === state.user.name);
+  if(userIndex >= 0){
+    state.user.rank = `#${userIndex + 1}`;
+  }
+}
+
+function renderLeaderboard(){
+  ensureLeaderboard();
+  const wrap = document.getElementById("homeLeaderboard");
+  if(!wrap) return;
+
+  wrap.innerHTML = state.leaderboard.slice(0, 5).map((player, index) => `
+    <div class="leader-row ${player.name === state.user.name ? "current-user" : ""}">
+      <div class="leader-rank">${index + 1}</div>
+      <div class="leader-person">
+        <strong>${escapeHtml(player.name)}</strong>
+        <small>Sjakk ELO ${escapeHtml(player.elo || "-")} • Treffer ${escapeHtml(player.hitRate || "-")}</small>
+      </div>
+      <div class="leader-score">
+        <strong>${formatNumber(player.coins)}</strong>
+        <small>VM Coins</small>
+      </div>
+    </div>
+  `).join("");
 }
 
 function bindText(){
@@ -291,6 +344,7 @@ function placeBet(){
   });
   state.selected = [];
 
+  ensureLeaderboard();
   saveState();
   renderAll();
   toast("Spill plassert!");
@@ -416,7 +470,17 @@ function sendChat(event){
 function editName(){
   const name = prompt("Nytt navn:", state.user.name);
   if(!name) return;
-  state.user.name = name.trim();
+
+  const previousName = state.user.name;
+  const nextName = name.trim();
+  const leaderboardRow = Array.isArray(state.leaderboard)
+    ? state.leaderboard.find(player => player.name === previousName)
+    : null;
+
+  if(leaderboardRow) leaderboardRow.name = nextName;
+  state.user.name = nextName;
+
+  ensureLeaderboard();
   saveState();
   renderAll();
   toast("Navn oppdatert.");
@@ -430,9 +494,11 @@ function filterSearch(value){
 }
 
 function renderAll(){
+  ensureLeaderboard();
   injectIcons();
   bindText();
   renderHomeActivity();
+  renderLeaderboard();
   renderMatches();
   renderSlip();
   renderForum();
