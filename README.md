@@ -18,3 +18,10 @@ README.md
 
 Last opp `index.html`, `css/` og `js/` direkte i root på GitHub-repoet.
 Ikke legg filene inni en ekstra mappe.
+
+
+## Nytt i denne versjonen
+
+- Leaderboard på Home page
+- Leaderboard oppdaterer rangering etter VM Coins
+- Din bruker markeres i topplisten
