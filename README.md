@@ -1,8 +1,17 @@
 # VM Lounge 2026
 
-Profesjonell demo-nettside for VM 2026 tippekonkurranse med venner og falsk valuta.
+Oppdatert, mer minimalistisk og mørkere versjon av VM 2026 betting-siden.
 
-## Sider
+## Endringer i denne versjonen
+
+- Mørkere design i kongeblått / mørk marine
+- Gullaktige detaljer og mer premium typografi
+- Mer minimalistisk layout
+- Meny med både ikoner og tekstnavn på sidene
+- Sjakk ELO lagt til på brukerprofilene
+- ELO vises også i leaderboard og på chat-brukere
+
+## Innhold
 
 - Home
 - Betting
@@ -11,18 +20,7 @@ Profesjonell demo-nettside for VM 2026 tippekonkurranse med venner og falsk valu
 - Profil
 - Sjakk
 
-## Nytt i denne versjonen
+## Teknisk
 
-- Finpusset side-meny med egne SVG-ikoner
-- Mer profesjonell aktiv markering
-- Badge på Betting og Chat
-- Bedre mobilmeny med alle seks sidene
-- Mer premium sportsbook/app-følelse
-
-## GitHub Pages
-
-Last opp filene `index.html`, `styles.css` og `app.js` i repoet ditt. Gå til Settings → Pages og velg branch `main` og `/root`.
-
-## Viktig
-
-Denne versjonen bruker localStorage. For ekte vennekonkurranse der alle ser samme data live, kobles den senere til Firebase.
+Denne versjonen bruker fortsatt `localStorage`, så alt fungerer direkte uten backend.
+Hvis du vil at alle vennene dine skal se samme data live, er neste steg Firebase/Firestore.
