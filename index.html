@@ -3,342 +3,288 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#06101d" />
   <title>VM Lounge 2026</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="assets/css/main.css" />
 </head>
 <body>
   <div class="app">
     <aside class="sidebar" id="sidebar" aria-label="Hovedmeny">
-      <div class="brand-card">
-        <div class="brand-mark">VM</div>
-        <div class="brand-copy">
+      <div class="brand">
+        <div class="brand-logo" aria-hidden="true">
+          <svg viewBox="0 0 64 64"><path d="M32 6c9 0 16 7 16 16 0 11-9 21-16 30C25 43 16 33 16 22 16 13 23 6 32 6Z"/><path d="M24 22h16M32 14v16M22 52h20M26 58h12"/></svg>
+        </div>
+        <div>
           <strong>VM Lounge</strong>
-          <small>Friends League 2026</small>
+          <span>2026</span>
         </div>
       </div>
 
-      <div class="menu-label">Hovedmeny</div>
-
-      <nav class="menu-list">
-        <button class="menu-item active" data-page="home" aria-current="page">
-          <span class="menu-icon">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.8 10.7 12 4l8.2 6.7"/><path d="M6.5 9.6v9.1h4.1v-5.2h2.8v5.2h4.1V9.6"/></svg>
-          </span>
-          <span class="menu-text"><strong>Home</strong><small>Oversikt</small></span>
+      <nav class="side-nav">
+        <button class="nav-item active" data-page="home">
+          <span class="nav-icon" data-icon="home"></span><span>Home</span>
         </button>
-
-        <button class="menu-item" data-page="betting">
-          <span class="menu-icon">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.2"/><circle cx="12" cy="12" r="3.8"/><path d="M12 3.8v4.4M12 15.8v4.4M3.8 12h4.4M15.8 12h4.4"/></svg>
-          </span>
-          <span class="menu-text"><strong>Betting</strong><small>VM odds</small></span>
-          <em class="menu-badge">Live</em>
+        <button class="nav-item" data-page="betting">
+          <span class="nav-icon" data-icon="ball"></span><span>Betting</span>
         </button>
-
-        <button class="menu-item" data-page="forum">
-          <span class="menu-icon">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.2h14a1.7 1.7 0 0 1 1.7 1.7v8.2a1.7 1.7 0 0 1-1.7 1.7H9.2L5 20v-3.2A1.7 1.7 0 0 1 3.3 15.1V6.9A1.7 1.7 0 0 1 5 5.2Z"/><path d="M7.3 9.2h9.4M7.3 12.3h6.1"/></svg>
-          </span>
-          <span class="menu-text"><strong>Forum</strong><small>Diskusjoner</small></span>
+        <button class="nav-item" data-page="forum">
+          <span class="nav-icon" data-icon="users"></span><span>Forum</span>
         </button>
-
-        <button class="menu-item" data-page="chat">
-          <span class="menu-icon">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.2 14.8H5.7a2 2 0 0 1-2-2V6.4a2 2 0 0 1 2-2h9.4a2 2 0 0 1 2 2v1.3"/><path d="M8.2 10.4h10.1a2 2 0 0 1 2 2v5.2a2 2 0 0 1-2 2h-5.5L9.2 22v-2.4h-1a2 2 0 0 1-2-2v-5.2a2 2 0 0 1 2-2Z"/></svg>
-          </span>
-          <span class="menu-text"><strong>Chat</strong><small>Meldinger</small></span>
-          <em class="menu-badge subtle">3</em>
+        <button class="nav-item" data-page="chat">
+          <span class="nav-icon" data-icon="chat"></span><span>Chat</span><i class="dot"></i>
         </button>
-
-        <button class="menu-item" data-page="profile">
-          <span class="menu-icon">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5.2 20.1a6.8 6.8 0 0 1 13.6 0"/></svg>
-          </span>
-          <span class="menu-text"><strong>Profil</strong><small>Konto</small></span>
+        <button class="nav-item" data-page="profile">
+          <span class="nav-icon" data-icon="profile"></span><span>Profil</span>
         </button>
-
-        <button class="menu-item" data-page="chess">
-          <span class="menu-icon">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.4v3.2M10.4 5h3.2"/><path d="M8.1 9.2h7.8l-1.1 7.1H9.2L8.1 9.2Z"/><path d="M7.1 16.3h9.8M6.3 20h11.4M9.4 9.2 8.2 6.8h7.6l-1.2 2.4"/></svg>
-          </span>
-          <span class="menu-text"><strong>Sjakk</strong><small>ELO & spill</small></span>
+        <button class="nav-item" data-page="chess">
+          <span class="nav-icon" data-icon="knight"></span><span>Sjakk</span>
         </button>
       </nav>
 
-      <section class="wallet-card">
-        <div class="wallet-head">
-          <span class="wallet-icon">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.2"/><path d="M8.8 12h6.4M12 8.8v6.4"/></svg>
-          </span>
-          <small>VM Coins</small>
-        </div>
-        <strong id="coinsRail">10 000</strong>
-        <span>Tilgjengelig saldo</span>
-        <div class="wallet-bar" aria-hidden="true"><i id="walletBar"></i></div>
-      </section>
+      <div class="side-wallet">
+        <small>VM Coins</small>
+        <strong data-bind="coins">250 000</strong>
+      </div>
     </aside>
 
     <main class="main">
       <header class="topbar">
-        <div class="topbar-left">
-          <button class="icon-button" id="menuToggle" aria-label="Åpne meny">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 6.8h15M4.5 12h15M4.5 17.2h15"/></svg>
-          </button>
-          <label class="search-box">
-            <span>
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m16 16 4 4"/></svg>
-            </span>
-            <input id="search" type="search" placeholder="Søk kamp, forum eller venn..." />
-          </label>
+        <button class="menu-toggle" id="menuToggle" aria-label="Åpne meny">
+          <span></span><span></span><span></span>
+        </button>
+
+        <div class="mobile-brand">
+          <div class="brand-logo small" aria-hidden="true">
+            <svg viewBox="0 0 64 64"><path d="M32 6c9 0 16 7 16 16 0 11-9 21-16 30C25 43 16 33 16 22 16 13 23 6 32 6Z"/><path d="M24 22h16M32 14v16M22 52h20M26 58h12"/></svg>
+          </div>
+          <div><strong>VM Lounge</strong><span>2026</span></div>
         </div>
 
-        <div class="topbar-actions">
-          <button class="button button-soft" id="resetBtn">Nullstill</button>
-          <button class="button button-soft" id="loginBtn">Logg inn</button>
-          <button class="button button-primary" id="registerBtn">Registrer</button>
+        <div class="top-actions">
+          <button class="coin-pill">
+            <span class="coin">◆</span>
+            <strong data-bind="coins">250 000</strong>
+          </button>
+          <button class="bell" aria-label="Varsler">
+            <span class="nav-icon" data-icon="bell"></span><i></i>
+          </button>
         </div>
       </header>
 
-      <section id="home" class="page active">
-        <div class="hero-card">
-          <div class="hero-copy">
-            <p class="eyebrow">VM 2026 • privat vennekonkurranse</p>
-            <h1>Minimalistisk sportsbook-design for VM betting med venner.</h1>
-            <p class="lead">Tipp på VM-kamper med falske coins, hold styr på leaderboard, diskuter i forum, chat live og følg sjakk-ELO på profilene.</p>
+      <label class="search">
+        <span class="nav-icon" data-icon="search"></span>
+        <input id="searchInput" type="search" placeholder="Søk etter lag, turneringer eller spillere..." />
+      </label>
+
+      <section class="page active" id="page-home">
+        <article class="hero">
+          <div class="hero-text">
+            <h1>VM 2026<br><span>Betting med venner</span></h1>
+            <p>Spill på fotball-VM 2026 sammen med venner. Bruk fake coins og kjemp om toppen!</p>
             <div class="hero-actions">
-              <button class="button button-primary button-large" data-go="betting">Start betting</button>
-              <button class="button button-soft button-large" data-go="forum">Åpne forum</button>
+              <button class="btn primary" data-go="betting">Se kamper</button>
+              <button class="btn secondary" data-go="forum">
+                <span class="nav-icon" data-icon="invite"></span>
+                Inviter venner
+              </button>
             </div>
           </div>
-
-          <div class="hero-stats">
-            <div class="hero-pill">
-              <small>Mulig gevinst</small>
-              <strong id="homeWin">0</strong>
-            </div>
-            <div class="hero-pill muted">
-              <small>Sjakk ELO</small>
-              <strong id="homeElo">1032</strong>
-            </div>
+          <div class="hero-art" aria-hidden="true">
+            <div class="trophy-shadow"></div>
+            <div class="globe"></div>
           </div>
-        </div>
+        </article>
 
-        <div class="section-head">
-          <div>
-            <small>Recommended</small>
-            <h2>Anbefalte kamper</h2>
+        <article class="card profile-summary">
+          <div class="card-title">
+            <span class="nav-icon gold" data-icon="profile"></span>
+            <h2>Din profil</h2>
           </div>
-          <button class="link-button" data-go="betting">Se alle</button>
-        </div>
-        <div class="card-grid three" id="homeMatches"></div>
-
-        <div class="two-col">
-          <article class="surface">
-            <div class="section-head compact">
-              <div>
-                <small>Leaderboard</small>
-                <h2>Toppliste</h2>
+          <div class="profile-row">
+            <div class="avatar" id="homeAvatar">T</div>
+            <div class="profile-main">
+              <h3 data-bind="name">Thomas</h3>
+              <div class="profile-meta">
+                <span><i class="nav-icon gold" data-icon="knight"></i> Sjakk ELO <b data-bind="elo">1032</b></span>
+                <span><i class="coin tiny">◆</i> VM Coins <b data-bind="coins">250 000</b></span>
               </div>
             </div>
-            <div id="leaderboard"></div>
-          </article>
+            <button class="chevron" data-go="profile" aria-label="Åpne profil">›</button>
+          </div>
+        </article>
 
-          <article class="surface">
-            <div class="section-head compact">
-              <div>
-                <small>Aktivitet</small>
-                <h2>Siste nytt</h2>
-              </div>
+        <article class="card">
+          <div class="card-title">
+            <span class="nav-icon gold" data-icon="stats"></span>
+            <h2>Din statistikk</h2>
+          </div>
+          <div class="stats-grid" id="homeStats"></div>
+        </article>
+
+        <article class="card activity-card">
+          <div class="card-title split">
+            <div>
+              <span class="nav-icon gold" data-icon="clock"></span>
+              <h2>Nylig aktivitet</h2>
             </div>
-            <div id="activity"></div>
-          </article>
-        </div>
+            <button class="text-link">Se alle ›</button>
+          </div>
+          <div class="activity-list" id="homeActivity"></div>
+        </article>
       </section>
 
-      <section id="betting" class="page">
-        <div class="section-head">
+      <section class="page" id="page-betting">
+        <div class="page-head">
           <div>
             <small>Sportsbook</small>
-            <h2>VM Betting</h2>
+            <h1>VM Betting</h1>
           </div>
-          <div class="tab-row">
-            <button class="tab active">Alle</button>
-            <button class="tab">I dag</button>
-            <button class="tab">Favoritter</button>
-          </div>
+          <button class="btn secondary compact" id="clearSlipBtn">Tøm slip</button>
         </div>
 
-        <div class="chip-row">
+        <div class="chips">
           <button class="chip active">VM 2026</button>
-          <button class="chip">Sluttspill</button>
           <button class="chip">Populære</button>
-          <button class="chip">Mine favoritter</button>
+          <button class="chip">I dag</button>
+          <button class="chip">Favoritter</button>
         </div>
 
-        <div class="bet-layout">
-          <div id="matchList" class="match-list"></div>
+        <div class="betting-layout">
+          <div class="match-list" id="matchList"></div>
 
-          <aside class="slip-card">
-            <div class="slip-head">
-              <strong>Bet Slip</strong>
-              <button class="icon-button small" id="clearSlip" aria-label="Tøm kupong">×</button>
+          <aside class="card bet-slip" id="betSlip">
+            <div class="card-title split">
+              <div>
+                <span class="nav-icon gold" data-icon="ticket"></span>
+                <h2>Bet Slip</h2>
+                <em id="slipCount">0</em>
+              </div>
             </div>
-            <div id="emptySlip" class="empty-box">Velg odds for å lage kupong.</div>
-            <div id="slipBody" hidden>
+
+            <div id="slipEmpty" class="empty">Velg odds på en kamp for å lage kupong.</div>
+            <div id="slipContent" hidden>
               <div id="slipItems"></div>
-              <label class="field-label" for="stake">Innsats</label>
-              <input id="stake" type="number" min="10" step="10" value="100" />
-              <div class="slip-line"><span>Total odds</span><b id="totalOdds">1.00</b></div>
-              <div class="slip-line"><span>Mulig gevinst</span><b id="possibleWin">0</b></div>
-              <button class="button button-primary full" id="placeBet">Plasser bet</button>
+              <label class="field-label" for="stakeInput">Innsats</label>
+              <input id="stakeInput" class="input" type="number" min="10" step="10" value="1000" />
+              <div class="summary-line"><span>Total odds</span><b id="totalOdds">1.00</b></div>
+              <div class="summary-line"><span>Mulig gevinst</span><b class="green" id="possibleWin">0</b></div>
+              <button class="btn primary full" id="placeBetBtn">Plasser spill</button>
             </div>
           </aside>
         </div>
 
-        <details class="surface admin-box">
+        <details class="card admin-card">
           <summary>Admin: legg til kamp</summary>
           <form id="matchForm" class="admin-form">
-            <input name="home" placeholder="Hjemmelag" required />
-            <input name="away" placeholder="Bortelag" required />
-            <input name="time" type="datetime-local" required />
-            <input name="oh" type="number" step="0.01" value="2.10" />
-            <input name="ox" type="number" step="0.01" value="3.20" />
-            <input name="oa" type="number" step="0.01" value="2.90" />
-            <button class="button button-primary">Legg til</button>
+            <input class="input" name="home" placeholder="Hjemmelag" required />
+            <input class="input" name="away" placeholder="Bortelag" required />
+            <input class="input" name="time" type="datetime-local" required />
+            <input class="input" name="homeOdds" type="number" step="0.01" value="2.10" required />
+            <input class="input" name="drawOdds" type="number" step="0.01" value="3.20" required />
+            <input class="input" name="awayOdds" type="number" step="0.01" value="2.90" required />
+            <button class="btn primary">Legg til</button>
           </form>
         </details>
       </section>
 
-      <section id="forum" class="page">
-        <div class="section-head">
+      <section class="page" id="page-forum">
+        <div class="page-head">
           <div>
             <small>Community</small>
-            <h2>Forum</h2>
+            <h1>Forum</h1>
           </div>
         </div>
-
-        <div class="forum-layout">
-          <form id="postForm" class="surface composer">
-            <input id="postTitle" placeholder="Tittel" required />
-            <textarea id="postText" rows="5" placeholder="Skriv innlegg..." required></textarea>
-            <button class="button button-primary">Publiser</button>
-          </form>
-          <div id="posts" class="posts"></div>
-        </div>
+        <form class="card composer" id="postForm">
+          <input class="input" id="postTitle" placeholder="Tittel" required />
+          <textarea class="input" id="postText" rows="4" placeholder="Skriv innlegg..." required></textarea>
+          <button class="btn primary">Publiser</button>
+        </form>
+        <div class="posts" id="posts"></div>
       </section>
 
-      <section id="chat" class="page">
-        <div class="section-head">
+      <section class="page" id="page-chat">
+        <div class="page-head">
           <div>
             <small>Live</small>
-            <h2>Chat</h2>
+            <h1>Chat</h1>
           </div>
         </div>
-
         <div class="chat-layout">
-          <aside class="surface users-panel">
-            <h3>Påloggede</h3>
-            <button class="room active" data-room="public">
-              <span>Offentlig chat</span>
-              <small>Alle</small>
-            </button>
-            <button class="room" data-room="Elise">
-              <span>Elise</span>
-              <small>ELO 1018</small>
-            </button>
-            <button class="room" data-room="Kjell">
-              <span>Kjell</span>
-              <small>ELO 980</small>
-            </button>
-            <button class="room" data-room="Heidi">
-              <span>Heidi</span>
-              <small>ELO 1045</small>
-            </button>
+          <aside class="card room-list">
+            <button class="room active" data-room="public">Offentlig chat <small>Alle</small></button>
+            <button class="room" data-room="Elise">Elise <small>ELO 1018</small></button>
+            <button class="room" data-room="Kjell">Kjell <small>ELO 980</small></button>
+            <button class="room" data-room="Heidi">Heidi <small>ELO 1045</small></button>
           </aside>
-
-          <section class="surface chat-panel">
+          <section class="card chat-card">
             <div class="chat-head">
               <strong id="roomTitle">Offentlig chat</strong>
               <small>Demo lagres lokalt</small>
             </div>
-            <div id="messages" class="messages"></div>
+            <div class="messages" id="messages"></div>
             <form id="chatForm" class="chat-form">
-              <input id="chatInput" placeholder="Skriv melding..." required />
-              <button class="button button-primary">Send</button>
+              <input class="input" id="chatInput" placeholder="Skriv melding..." required />
+              <button class="btn primary">Send</button>
             </form>
           </section>
         </div>
       </section>
 
-      <section id="profile" class="page">
-        <article class="surface profile-hero">
-          <div class="avatar" id="avatarInitial">T</div>
-          <div class="profile-copy">
+      <section class="page" id="page-profile">
+        <article class="card profile-detail">
+          <div class="avatar large" id="profileAvatar">T</div>
+          <div>
             <small>Brukerprofil</small>
-            <h2 id="profileName">Thomas</h2>
+            <h1 data-bind="name">Thomas</h1>
             <p>VM-tipster • Chess Lounge member</p>
           </div>
-          <div class="elo-badge">
-            <span>Sjakk ELO</span>
-            <strong id="profileEloBadge">1032</strong>
-          </div>
-          <button class="button button-primary" id="editName">Endre navn</button>
+          <button class="btn secondary compact" id="editNameBtn">Endre navn</button>
         </article>
 
-        <div class="stats-grid">
-          <article class="stat-card"><span>Saldo</span><b id="coinsProfile">10 000</b></article>
-          <article class="stat-card"><span>Aktive bets</span><b id="activeBets">0</b></article>
-          <article class="stat-card"><span>Foruminnlegg</span><b id="postCount">0</b></article>
-          <article class="stat-card"><span>Rangering</span><b id="rankNo">1</b></article>
-          <article class="stat-card"><span>Sjakk ELO</span><b id="profileElo">1032</b></article>
-        </div>
+        <div class="stats-grid profile-stats" id="profileStats"></div>
 
-        <article class="surface">
-          <div class="section-head compact">
-            <div>
-              <small>Historikk</small>
-              <h2>Mine bets</h2>
-            </div>
+        <article class="card">
+          <div class="card-title">
+            <span class="nav-icon gold" data-icon="ticket"></span>
+            <h2>Mine spill</h2>
           </div>
-          <div id="myBets"></div>
+          <div id="myBets" class="my-bets"></div>
         </article>
       </section>
 
-      <section id="chess" class="page">
-        <div class="chess-layout">
-          <article class="surface chess-intro">
-            <small>Bonus-side</small>
-            <h2>Sjakk</h2>
-            <p>Bruk denne siden til å koble sjakkdelen inn i samme univers. Her kan du vise spillerens sjakk-ELO, åpne sjakkrommet og bygge bro mellom betting og sjakk-communityet.</p>
-            <div class="chess-meta">
-              <div>
-                <span>Din ELO</span>
-                <strong id="chessElo">1032</strong>
-              </div>
-              <div>
-                <span>Format</span>
-                <strong>Rapid</strong>
-              </div>
-            </div>
-            <a class="button button-primary button-large link-inline" href="play.html">Åpne sjakkrom</a>
-          </article>
-
-          <div class="board" id="board"></div>
+      <section class="page" id="page-chess">
+        <div class="page-head">
+          <div>
+            <small>Chess Lounge</small>
+            <h1>Sjakk</h1>
+          </div>
         </div>
+        <article class="card chess-card">
+          <div>
+            <h2>Sjakkrom</h2>
+            <p>Koble denne siden til sjakkspillet ditt. Profilene viser sjakk-ELO sammen med VM-statistikk.</p>
+            <div class="chess-stats">
+              <div><small>Din ELO</small><strong data-bind="elo">1032</strong></div>
+              <div><small>Nivå</small><strong>Gull III</strong></div>
+            </div>
+            <a class="btn primary" href="play.html">Åpne sjakkrom</a>
+          </div>
+          <div class="mini-board" id="miniBoard"></div>
+        </article>
       </section>
     </main>
 
-    <nav class="mobile-nav" aria-label="Mobilmeny">
-      <button class="mobile-item active" data-page="home"><span class="mobile-icon">⌂</span><span>Home</span></button>
-      <button class="mobile-item" data-page="betting"><span class="mobile-icon">◎</span><span>Betting</span></button>
-      <button class="mobile-item" data-page="forum"><span class="mobile-icon">☰</span><span>Forum</span></button>
-      <button class="mobile-item" data-page="chat"><span class="mobile-icon">✦</span><span>Chat</span></button>
-      <button class="mobile-item" data-page="profile"><span class="mobile-icon">◔</span><span>Profil</span></button>
-      <button class="mobile-item" data-page="chess"><span class="mobile-icon">♜</span><span>Sjakk</span></button>
+    <nav class="bottom-nav" aria-label="Mobilmeny">
+      <button class="bottom-item active" data-page="home"><span class="nav-icon" data-icon="home"></span><small>Home</small></button>
+      <button class="bottom-item" data-page="betting"><span class="nav-icon" data-icon="ball"></span><small>Betting</small></button>
+      <button class="bottom-item" data-page="forum"><span class="nav-icon" data-icon="users"></span><small>Forum</small></button>
+      <button class="bottom-item" data-page="chat"><span class="nav-icon" data-icon="chat"></span><i></i><small>Chat</small></button>
+      <button class="bottom-item" data-page="profile"><span class="nav-icon" data-icon="profile"></span><small>Profil</small></button>
+      <button class="bottom-item" data-page="chess"><span class="nav-icon" data-icon="knight"></span><small>Sjakk</small></button>
     </nav>
   </div>
 
   <div id="toast" class="toast" hidden></div>
-  <script src="app.js"></script>
+  <script type="module" src="assets/js/app.js"></script>
 </body>
 </html>
