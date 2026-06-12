@@ -1,0 +1,67 @@
+.chess-card{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 320px;
+  gap:20px;
+  align-items:center;
+}
+
+.chess-card h2{
+  margin:0 0 8px;
+  font-size:32px;
+}
+
+.chess-card p{
+  color:#d6dbe3;
+  line-height:1.55;
+}
+
+.chess-stats{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin:18px 0;
+}
+
+.chess-stats div{
+  padding:12px 16px;
+  border-radius:16px;
+  background:rgba(255,255,255,.035);
+  border:1px solid rgba(255,255,255,.065);
+}
+
+.chess-stats small{
+  display:block;
+  color:var(--muted);
+}
+
+.chess-stats strong{
+  display:block;
+  color:var(--gold);
+  font-size:23px;
+  margin-top:3px;
+}
+
+.mini-board{
+  aspect-ratio:1;
+  border-radius:22px;
+  overflow:hidden;
+  display:grid;
+  grid-template-columns:repeat(8,1fr);
+  border:1px solid rgba(255,255,255,.08);
+}
+
+.mini-board div{
+  display:grid;
+  place-items:center;
+  font-size:28px;
+}
+
+.mini-board .light{
+  background:#d8bc8c;
+  color:#201508;
+}
+
+.mini-board .dark{
+  background:#55405c;
+  color:#fff2d5;
+}

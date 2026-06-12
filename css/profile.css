@@ -1,0 +1,49 @@
+.profile-detail{
+  display:flex;
+  align-items:center;
+  gap:18px;
+}
+
+.profile-detail small{
+  color:var(--gold);
+  text-transform:uppercase;
+  letter-spacing:.1em;
+  font-weight:850;
+}
+
+.profile-detail h1{
+  margin:4px 0 4px;
+  font-size:42px;
+  letter-spacing:-.055em;
+}
+
+.profile-detail p{
+  margin:0;
+  color:var(--muted);
+}
+
+.profile-detail .btn{margin-left:auto}
+
+.profile-stats{margin-top:18px}
+
+.my-bets{
+  display:grid;
+  gap:10px;
+}
+
+.bet-row{
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  gap:12px;
+  align-items:center;
+  padding:12px;
+  border-radius:18px;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.055);
+}
+
+.bet-row small{
+  display:block;
+  color:var(--muted);
+  margin-top:3px;
+}
