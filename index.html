@@ -8,6 +8,46 @@
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
+
+  <section class="auth-screen" id="authScreen">
+    <div class="auth-card">
+      <div class="brand auth-brand">
+        <div class="brand-logo" aria-hidden="true">
+          <svg viewBox="0 0 64 64"><path d="M32 6c9 0 16 7 16 16 0 11-9 21-16 30C25 43 16 33 16 22 16 13 23 6 32 6Z"/><path d="M24 22h16M32 14v16M22 52h20M26 58h12"/></svg>
+        </div>
+        <div>
+          <strong>VM Lounge</strong>
+          <span>2026</span>
+        </div>
+      </div>
+
+      <div class="auth-copy">
+        <h1>Logg inn</h1>
+        <p>Registrer deg for å få ekte VM Coins, leaderboard, chat, forum og betting sammen med venner.</p>
+      </div>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-auth-tab="login">Logg inn</button>
+        <button class="auth-tab" data-auth-tab="register">Registrer</button>
+      </div>
+
+      <form id="loginForm" class="auth-form">
+        <input class="input" id="loginEmail" type="email" placeholder="E-post" autocomplete="email" required />
+        <input class="input" id="loginPassword" type="password" placeholder="Passord" autocomplete="current-password" required />
+        <button class="btn primary full">Logg inn</button>
+      </form>
+
+      <form id="registerForm" class="auth-form" hidden>
+        <input class="input" id="registerName" type="text" placeholder="Brukernavn" autocomplete="nickname" required />
+        <input class="input" id="registerEmail" type="email" placeholder="E-post" autocomplete="email" required />
+        <input class="input" id="registerPassword" type="password" placeholder="Passord, minst 6 tegn" autocomplete="new-password" minlength="6" required />
+        <button class="btn primary full">Opprett bruker</button>
+      </form>
+
+      <p class="auth-note">Startsaldo: 5 000 VM Coins · Maks innsats: 500 per kamp</p>
+    </div>
+  </section>
+
   <div class="app">
     <aside class="sidebar" id="sidebar" aria-label="Hovedmeny">
       <div class="brand">
@@ -387,6 +427,11 @@
     </nav>
   </div>
   <div id="toast" class="toast" hidden></div>
+  <script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-analytics-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
