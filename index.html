@@ -88,12 +88,11 @@
         <article class="hero">
           <div class="hero-text">
             <h1>VM 2026<br><span>Betting med venner</span></h1>
-            <p>Spill på fotball-VM 2026 sammen med venner. Bruk fake coins og kjemp om toppen!</p>
             <div class="hero-actions">
               <button class="btn primary" data-go="betting">Se kamper</button>
-              <button class="btn secondary" data-go="forum">
-                <span class="nav-icon" data-icon="invite"></span>
-                Inviter venner
+              <button class="btn secondary" data-scroll="leaderboardSection">
+                <span class="nav-icon" data-icon="medal"></span>
+                Leaderboard
               </button>
             </div>
           </div>
@@ -164,6 +163,18 @@
             <button class="text-link" data-go="profile">Din plass <span data-bind="rank">#5</span> ›</button>
           </div>
           <div class="leaderboard-list" id="homeLeaderboard"></div>
+        </article>
+
+        
+        <article class="card leaderboard-card" id="leaderboardSection">
+          <div class="card-title split">
+            <div>
+              <span class="nav-icon gold" data-icon="medal"></span>
+              <h2>Leaderboard</h2>
+            </div>
+            <button class="text-link" id="showFullLeaderboardBtn">Se hele leaderboardet ›</button>
+          </div>
+          <div class="leaderboard-list" id="leaderboardList"></div>
         </article>
 
         <article class="card activity-card">
@@ -332,6 +343,21 @@
       <button class="bottom-item" data-page="profile"><span class="nav-icon" data-icon="profile"></span><small>Profil</small></button>
       <button class="bottom-item" data-page="chess"><span class="nav-icon" data-icon="knight"></span><small>Sjakk</small></button>
     </nav>
+  </div>
+
+
+  <div class="modal" id="leaderboardModal" hidden>
+    <div class="modal-backdrop" data-close-leaderboard></div>
+    <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="fullLeaderboardTitle">
+      <div class="modal-head">
+        <div>
+          <small>Alle spillere</small>
+          <h2 id="fullLeaderboardTitle">Hele leaderboardet</h2>
+        </div>
+        <button class="modal-close" data-close-leaderboard aria-label="Lukk">×</button>
+      </div>
+      <div class="leaderboard-list full" id="fullLeaderboardList"></div>
+    </section>
   </div>
 
   <div id="toast" class="toast" hidden></div>
