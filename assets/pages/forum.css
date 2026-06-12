@@ -1,0 +1,36 @@
+.composer{
+  display:grid;
+  gap:10px;
+}
+
+.posts{
+  display:grid;
+  gap:12px;
+  margin-top:18px;
+}
+
+.post-card{
+  padding:18px;
+  border-radius:22px;
+  border:1px solid var(--line);
+  background:linear-gradient(180deg,rgba(12,26,45,.78),rgba(5,13,24,.88));
+}
+
+.post-card h3{
+  margin:0 0 8px;
+  font-size:21px;
+}
+
+.post-card p{
+  margin:0;
+  color:#d6dbe3;
+  line-height:1.5;
+}
+
+.post-card footer{
+  display:flex;
+  gap:12px;
+  color:var(--muted);
+  margin-top:12px;
+  font-size:13px;
+}
