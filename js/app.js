@@ -32,11 +32,11 @@ const seed = {
     netProfit: 35500
   },
   leaderboard: [
-    { name: "Elise", coins: 285500, elo: 1018, hitRate: "61%" },
-    { name: "Kjell", coins: 272250, elo: 980, hitRate: "57%" },
-    { name: "Heidi", coins: 260800, elo: 1045, hitRate: "55%" },
-    { name: "Thomas", coins: 250000, elo: 1032, hitRate: "54%" },
-    { name: "Marius", coins: 231400, elo: 1090, hitRate: "49%" }
+    { name: "Elise", coins: 285500, elo: 1018, hitRate: "61%", winPercent: 61, bets: 118 },
+    { name: "Kjell", coins: 272250, elo: 980, hitRate: "57%", winPercent: 57, bets: 103 },
+    { name: "Heidi", coins: 260800, elo: 1045, hitRate: "55%", winPercent: 55, bets: 91 },
+    { name: "Thomas", coins: 250000, elo: 1032, hitRate: "54%", winPercent: 54, bets: 124 },
+    { name: "Marius", coins: 231400, elo: 1090, hitRate: "49%", winPercent: 49, bets: 86 }
   ],
   selected: [
     { matchId: "m1", pick: "home", label: "Brasil", title: "Brasil – Frankrike", odds: 1.82 },
@@ -124,25 +124,41 @@ function injectIcons(){
 
 function ensureLeaderboard(){
   if(!Array.isArray(state.leaderboard)){
-    state.leaderboard = structuredClone(seed.leaderboard);
+    state.leaderboard = structuredClone(seed.leaderboard || []);
   }
 
-  const current = state.leaderboard.find(player => player.name === state.user.name);
+  const userName = state.user.name || "Thomas";
+  const userWinPercent = Number(String(state.user.hitRate || "0").replace("%", "")) || 0;
+  const userBets = Number(state.user.placedBets || 0);
+
+  const current = state.leaderboard.find(player => player.name === userName);
   if(current){
-    current.coins = state.user.coins;
+    current.coins = Number(state.user.coins || 0);
     current.elo = state.user.elo;
     current.hitRate = state.user.hitRate;
+    current.winPercent = userWinPercent;
+    current.bets = userBets;
   }else{
     state.leaderboard.push({
-      name: state.user.name,
-      coins: state.user.coins,
+      name: userName,
+      coins: Number(state.user.coins || 0),
       elo: state.user.elo,
-      hitRate: state.user.hitRate
+      hitRate: state.user.hitRate,
+      winPercent: userWinPercent,
+      bets: userBets
     });
   }
 
+  state.leaderboard.forEach((player, index) => {
+    player.coins = Number(player.coins || 0);
+    player.winPercent = Number(player.winPercent ?? String(player.hitRate || "0").replace("%", "")) || 0;
+    player.hitRate = `${player.winPercent}%`;
+    player.bets = Number(player.bets ?? player.placedBets ?? (124 - index * 9));
+    player.isMe = player.name === userName;
+  });
+
   state.leaderboard.sort((a, b) => Number(b.coins || 0) - Number(a.coins || 0));
-  const userIndex = state.leaderboard.findIndex(player => player.name === state.user.name);
+  const userIndex = state.leaderboard.findIndex(player => player.name === userName);
   if(userIndex >= 0){
     state.user.rank = `#${userIndex + 1}`;
   }
@@ -150,22 +166,45 @@ function ensureLeaderboard(){
 
 function renderLeaderboard(){
   ensureLeaderboard();
-  const wrap = document.getElementById("homeLeaderboard");
-  if(!wrap) return;
 
-  wrap.innerHTML = state.leaderboard.slice(0, 5).map((player, index) => `
-    <div class="leader-row ${player.name === state.user.name ? "current-user" : ""}">
-      <div class="leader-rank">${index + 1}</div>
-      <div class="leader-person">
-        <strong>${escapeHtml(player.name)}</strong>
-        <small>Sjakk ELO ${escapeHtml(player.elo || "-")} • Treffer ${escapeHtml(player.hitRate || "-")}</small>
+  const homeWrap = document.getElementById("homeLeaderboard");
+  const pageWrap = document.getElementById("leaderboardPageList");
+
+  function template(player, index){
+    const rank = index + 1;
+    const isMe = player.name === state.user.name;
+    const you = isMe ? '<span class="you-badge">deg</span>' : '';
+
+    return `
+      <div class="leaderboard-row ${isMe ? "me" : ""}">
+        <div class="leaderboard-rank">#${rank}</div>
+        <div class="leaderboard-user">
+          <strong>${escapeHtml(player.name)} ${you}</strong>
+          <small>Sjakk ELO ${escapeHtml(player.elo || "-")}</small>
+        </div>
+        <div class="leaderboard-stat coins">
+          <span>VM Coins</span>
+          <b>${formatNumber(player.coins)}</b>
+        </div>
+        <div class="leaderboard-stat win">
+          <span>Vinn %</span>
+          <b>${escapeHtml(player.hitRate || "0%")}</b>
+        </div>
+        <div class="leaderboard-stat bets">
+          <span>Spill</span>
+          <b>${formatNumber(player.bets)}</b>
+        </div>
       </div>
-      <div class="leader-score">
-        <strong>${formatNumber(player.coins)}</strong>
-        <small>VM Coins</small>
-      </div>
-    </div>
-  `).join("");
+    `;
+  }
+
+  if(homeWrap){
+    homeWrap.innerHTML = state.leaderboard.slice(0, 5).map(template).join("");
+  }
+
+  if(pageWrap){
+    pageWrap.innerHTML = state.leaderboard.map(template).join("");
+  }
 }
 
 function bindText(){
@@ -508,7 +547,6 @@ function renderAll(){
 }
 
 function bindEvents(){
-  bindLeaderboardControls();
   document.querySelectorAll("[data-page]").forEach(btn => {
     btn.addEventListener("click", () => setPage(btn.dataset.page));
   });
