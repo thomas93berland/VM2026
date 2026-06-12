@@ -1,8 +1,5 @@
-const STORAGE_KEY = "vm-lounge-2026-rules-admin-v1";
-
-const START_COINS = 5000;
-const MAX_STAKE = 500;
-const ADMIN_USERNAME = "Thomas";
+const START_COINS = window.VM_RULES?.START_COINS ?? 5000;
+const MAX_STAKE = window.VM_RULES?.MAX_STAKE ?? 500;
 
 const ICONS = {
   home: '<svg viewBox="0 0 24 24"><path d="M3.8 10.7 12 4l8.2 6.7"/><path d="M6.5 9.6v9.1h4.1v-5.2h2.8v5.2h4.1V9.6"/></svg>',
@@ -24,66 +21,47 @@ const ICONS = {
   ticket: '<svg viewBox="0 0 24 24"><path d="M4 7.5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2.2a2.3 2.3 0 0 0 0 4.6v2.2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2.2a2.3 2.3 0 0 0 0-4.6V7.5Z"/><path d="M9 8.5h6M9 12h6M9 15.5h4"/></svg>'
 };
 
-const seed = {
-  user: {
-    name: "Thomas",
-    coins: START_COINS,
-    elo: 1032,
-    placedBets: 0,
-    wonBets: 0,
-    completedBets: 0,
-    hitRate: "0%",
-    rank: "#1",
-    netProfit: 0
-  },
-  leaderboard: [
-    { name: "Thomas", coins: 5000, elo: 1032, wonBets: 0, completedBets: 0, bets: 0 },
-    { name: "Elise", coins: 4700, elo: 1018, wonBets: 8, completedBets: 15, bets: 18 },
-    { name: "Kjell", coins: 4200, elo: 980, wonBets: 6, completedBets: 14, bets: 17 },
-    { name: "Heidi", coins: 3900, elo: 1045, wonBets: 7, completedBets: 13, bets: 16 },
-    { name: "Marius", coins: 3100, elo: 1090, wonBets: 4, completedBets: 12, bets: 14 }
-  ],
+const seedActivity = [
+  { icon: "cup", text: "Startsaldo er 5 000 VM Coins", time: "Info" },
+  { icon: "ticket", text: "Maks innsats per kamp er 500 VM Coins", time: "Info" },
+  { icon: "medal", text: "Leaderboard sorteres etter VM Coins", time: "Info" }
+];
+
+let app;
+let auth;
+let db;
+let currentUser = null;
+let currentRoom = "public";
+let unsubscribers = [];
+
+const state = {
+  user: null,
+  leaderboard: [],
   selected: [],
   bets: [],
-  matches: [
-    { id: "m1", home: "Brasil", away: "Frankrike", flags: ["🇧🇷", "🇫🇷"], time: "2026-06-15T18:00", group: "Gruppe A", odds: { home: 1.82, draw: 3.60, away: 4.55 }, result: null },
-    { id: "m2", home: "Argentina", away: "Tyskland", flags: ["🇦🇷", "🇩🇪"], time: "2026-06-15T21:00", group: "Gruppe B", odds: { home: 1.95, draw: 3.45, away: 3.95 }, result: null },
-    { id: "m3", home: "Portugal", away: "Uruguay", flags: ["🇵🇹", "🇺🇾"], time: "2026-06-16T18:00", group: "Gruppe C", odds: { home: 2.10, draw: 3.30, away: 3.70 }, result: null }
-  ],
-  activity: [
-    { icon: "cup", text: "Reglene er satt: 5 000 VM Coins i startsaldo", time: "Nå" },
-    { icon: "ticket", text: "Maks innsats per kamp er 500 VM Coins", time: "Nå" },
-    { icon: "medal", text: "Leaderboard sorteres etter VM Coins", time: "Nå" }
-  ],
-  forum: [
-    { title: "Regler for VM Lounge", text: "Startsaldo er 5 000 VM Coins. Maks innsats per kamp er 500. Vinnprosent regnes som vunne spill delt på ferdige spill.", author: "Admin", likes: 8 },
-    { title: "Hvem blir toppscorer i VM?", text: "Jeg tror Brasil kommer sterkt, men Frankrike ser farlige ut.", author: "Thomas", likes: 4 }
-  ],
-  chat: {
-    public: [
-      { from: "Admin", text: "Velkommen til VM Lounge! Startsaldo er 5 000 VM Coins." },
-      { from: "Elise", text: "Jeg er klar for VM-konkurranse 😄" }
-    ],
-    Elise: [{ from: "Elise", text: "Husk å invitere meg til ligaen!" }],
-    Kjell: [{ from: "Kjell", text: "Dette blir spennende." }],
-    Heidi: [{ from: "Heidi", text: "Heia!" }]
-  }
+  matches: [],
+  forum: [],
+  chat: [],
+  activity: [...seedActivity]
 };
 
-let state = loadState();
-let currentRoom = "public";
-
-function loadState(){
-  try{
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : structuredClone(seed);
-  }catch{
-    return structuredClone(seed);
+function initFirebase(){
+  if(!window.firebase || !window.VM_FIREBASE_CONFIG){
+    throw new Error("Firebase mangler. Sjekk at firebase-config.js lastes inn.");
   }
-}
 
-function saveState(){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  app = firebase.initializeApp(window.VM_FIREBASE_CONFIG);
+
+  try{
+    if(window.VM_FIREBASE_CONFIG.measurementId && firebase.analytics){
+      firebase.analytics();
+    }
+  }catch(error){
+    console.warn("Analytics ble ikke startet:", error);
+  }
+
+  auth = firebase.auth();
+  db = firebase.firestore();
 }
 
 function formatNumber(value){
@@ -100,6 +78,7 @@ function escapeHtml(value){
 }
 
 function formatTime(value){
+  if(!value) return "-";
   const date = new Date(value);
   if(Number.isNaN(date.getTime())) return value;
   return date.toLocaleString("nb-NO", {
@@ -118,10 +97,11 @@ function resultLabel(result){
 
 function toast(message){
   const el = document.getElementById("toast");
+  if(!el) return alert(message);
   el.textContent = message;
   el.hidden = false;
   clearTimeout(toast.timer);
-  toast.timer = setTimeout(() => el.hidden = true, 2400);
+  toast.timer = setTimeout(() => el.hidden = true, 3000);
 }
 
 function injectIcons(){
@@ -131,130 +111,215 @@ function injectIcons(){
   });
 }
 
-function isAdmin(){
-  return String(state.user?.name || "").trim().toLowerCase() === ADMIN_USERNAME.toLowerCase();
-}
-
 function calculateWinPercent(won, completed){
   const w = Number(won || 0);
   const c = Number(completed || 0);
   return c > 0 ? Math.round((w / c) * 100) : 0;
 }
 
-function ensureUserDefaults(){
-  state.user.coins = Number(state.user.coins ?? START_COINS);
-  state.user.placedBets = Number(state.user.placedBets || 0);
-  state.user.wonBets = Number(state.user.wonBets || 0);
-  state.user.completedBets = Number(state.user.completedBets || 0);
-  state.user.netProfit = Number(state.user.netProfit || 0);
-  const percent = calculateWinPercent(state.user.wonBets, state.user.completedBets);
-  state.user.hitRate = `${percent}%`;
+function userWithDefaults(data = {}){
+  const completed = Number(data.completedBets || 0);
+  const won = Number(data.wonBets || 0);
+  return {
+    uid: data.uid || currentUser?.uid || "",
+    name: data.name || data.username || currentUser?.displayName || "Spiller",
+    email: data.email || currentUser?.email || "",
+    coins: Number(data.coins ?? START_COINS),
+    elo: Number(data.elo ?? data.chessElo ?? 1000),
+    placedBets: Number(data.placedBets || 0),
+    wonBets: won,
+    completedBets: completed,
+    hitRate: `${calculateWinPercent(won, completed)}%`,
+    rank: data.rank || "-",
+    netProfit: Number(data.netProfit || 0),
+    isAdmin: data.isAdmin === true
+  };
 }
 
-function ensureLeaderboard(){
-  ensureUserDefaults();
+function isAdmin(){
+  return state.user?.isAdmin === true;
+}
 
-  if(!Array.isArray(state.leaderboard)){
-    state.leaderboard = structuredClone(seed.leaderboard || []);
+function detachListeners(){
+  unsubscribers.forEach(fn => {
+    try{ fn(); }catch{}
+  });
+  unsubscribers = [];
+}
+
+async function ensureUserDocument(user, chosenName = ""){
+  const ref = db.collection("users").doc(user.uid);
+  const snap = await ref.get();
+
+  if(!snap.exists){
+    const safeName = chosenName || user.displayName || user.email.split("@")[0] || "Spiller";
+    await ref.set({
+      uid: user.uid,
+      name: safeName,
+      email: user.email || "",
+      coins: START_COINS,
+      elo: 1000,
+      placedBets: 0,
+      wonBets: 0,
+      completedBets: 0,
+      netProfit: 0,
+      isAdmin: false,
+      createdAtMs: Date.now(),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+  }
+}
+
+function attachListeners(){
+  detachListeners();
+
+  const uid = currentUser.uid;
+
+  unsubscribers.push(
+    db.collection("users").doc(uid).onSnapshot(snapshot => {
+      if(snapshot.exists){
+        state.user = userWithDefaults(snapshot.data());
+        renderAll();
+      }
+    }, handleFirebaseError)
+  );
+
+  unsubscribers.push(
+    db.collection("users").onSnapshot(snapshot => {
+      state.leaderboard = snapshot.docs.map(doc => {
+        const data = userWithDefaults({ uid: doc.id, ...doc.data() });
+        data.isMe = currentUser && doc.id === currentUser.uid;
+        data.winPercent = calculateWinPercent(data.wonBets, data.completedBets);
+        data.hitRate = `${data.winPercent}%`;
+        return data;
+      }).sort((a,b) => Number(b.coins || 0) - Number(a.coins || 0));
+
+      const ownIndex = state.leaderboard.findIndex(player => player.uid === currentUser?.uid);
+      if(state.user && ownIndex >= 0) state.user.rank = `#${ownIndex + 1}`;
+
+      renderAll();
+    }, handleFirebaseError)
+  );
+
+  unsubscribers.push(
+    db.collection("matches").onSnapshot(snapshot => {
+      state.matches = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+        .sort((a,b) => String(a.time || "").localeCompare(String(b.time || "")));
+      renderAll();
+    }, handleFirebaseError)
+  );
+
+  unsubscribers.push(
+    db.collection("bets").where("userId","==",uid).onSnapshot(snapshot => {
+      state.bets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+        .sort((a,b) => Number(b.createdAtMs || 0) - Number(a.createdAtMs || 0));
+      renderAll();
+    }, handleFirebaseError)
+  );
+
+  unsubscribers.push(
+    db.collection("forumPosts").onSnapshot(snapshot => {
+      state.forum = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+        .sort((a,b) => Number(b.createdAtMs || 0) - Number(a.createdAtMs || 0))
+        .slice(0, 40);
+      renderForum();
+    }, handleFirebaseError)
+  );
+
+  listenToRoom(currentRoom);
+}
+
+let unsubscribeRoom = null;
+
+function listenToRoom(room){
+  if(unsubscribeRoom){
+    try{ unsubscribeRoom(); }catch{}
+    unsubscribeRoom = null;
   }
 
-  const userName = state.user.name || ADMIN_USERNAME;
-  const current = state.leaderboard.find(player => player.name === userName);
+  unsubscribeRoom = db.collection("chatMessages")
+    .where("room","==",room)
+    .onSnapshot(snapshot => {
+      state.chat = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+        .sort((a,b) => Number(a.createdAtMs || 0) - Number(b.createdAtMs || 0))
+        .slice(-80);
+      renderChat();
+    }, handleFirebaseError);
 
-  if(current){
-    current.coins = Number(state.user.coins || 0);
-    current.elo = state.user.elo;
-    current.wonBets = Number(state.user.wonBets || 0);
-    current.completedBets = Number(state.user.completedBets || 0);
-    current.bets = Number(state.user.placedBets || 0);
-  }else{
-    state.leaderboard.push({
-      name: userName,
-      coins: Number(state.user.coins || 0),
-      elo: state.user.elo,
-      wonBets: Number(state.user.wonBets || 0),
-      completedBets: Number(state.user.completedBets || 0),
-      bets: Number(state.user.placedBets || 0)
+  unsubscribers.push(unsubscribeRoom);
+}
+
+function handleFirebaseError(error){
+  console.error(error);
+  toast(error.message || "Firebase-feil.");
+}
+
+function showAuth(show){
+  const authScreen = document.getElementById("authScreen");
+  if(authScreen) authScreen.hidden = !show;
+}
+
+function bindAuth(){
+  document.querySelectorAll("[data-auth-tab]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const tab = btn.dataset.authTab;
+      document.querySelectorAll("[data-auth-tab]").forEach(item => item.classList.toggle("active", item === btn));
+      document.getElementById("loginForm").hidden = tab !== "login";
+      document.getElementById("registerForm").hidden = tab !== "register";
     });
-  }
-
-  state.leaderboard.forEach((player) => {
-    player.coins = Number(player.coins || 0);
-    player.wonBets = Number(player.wonBets || 0);
-    player.completedBets = Number(player.completedBets || 0);
-    player.bets = Number(player.bets ?? player.placedBets ?? 0);
-    player.winPercent = calculateWinPercent(player.wonBets, player.completedBets);
-    player.hitRate = `${player.winPercent}%`;
-    player.isMe = player.name === userName;
   });
 
-  state.leaderboard.sort((a, b) => Number(b.coins || 0) - Number(a.coins || 0));
-  const userIndex = state.leaderboard.findIndex(player => player.name === userName);
-  if(userIndex >= 0){
-    state.user.rank = `#${userIndex + 1}`;
-  }
-}
+  document.getElementById("loginForm")?.addEventListener("submit", async event => {
+    event.preventDefault();
+    const email = document.getElementById("loginEmail").value.trim();
+    const password = document.getElementById("loginPassword").value;
+    try{
+      await auth.signInWithEmailAndPassword(email, password);
+    }catch(error){
+      handleFirebaseError(error);
+    }
+  });
 
-function renderLeaderboard(){
-  ensureLeaderboard();
+  document.getElementById("registerForm")?.addEventListener("submit", async event => {
+    event.preventDefault();
+    const name = document.getElementById("registerName").value.trim();
+    const email = document.getElementById("registerEmail").value.trim();
+    const password = document.getElementById("registerPassword").value;
 
-  const homeWrap = document.getElementById("homeLeaderboard");
-  const pageWrap = document.getElementById("leaderboardPageList");
+    try{
+      const result = await auth.createUserWithEmailAndPassword(email, password);
+      await result.user.updateProfile({ displayName: name });
+      await ensureUserDocument(result.user, name);
+      toast("Bruker opprettet.");
+    }catch(error){
+      handleFirebaseError(error);
+    }
+  });
 
-  function template(player, index){
-    const rank = index + 1;
-    const isMe = player.name === state.user.name;
-    const you = isMe ? '<span class="you-badge">deg</span>' : '';
-
-    return `
-      <div class="leaderboard-row ${isMe ? "me" : ""}">
-        <div class="leaderboard-rank">#${rank}</div>
-        <div class="leaderboard-user">
-          <strong>${escapeHtml(player.name)} ${you}</strong>
-          <small>Sjakk ELO ${escapeHtml(player.elo || "-")}</small>
-        </div>
-        <div class="leaderboard-stat coins">
-          <span>VM Coins</span>
-          <b>${formatNumber(player.coins)}</b>
-        </div>
-        <div class="leaderboard-stat win">
-          <span>Vinn %</span>
-          <b>${escapeHtml(player.hitRate || "0%")}</b>
-        </div>
-        <div class="leaderboard-stat bets">
-          <span>Spill</span>
-          <b>${formatNumber(player.bets)}</b>
-        </div>
-      </div>
-    `;
-  }
-
-  if(homeWrap){
-    homeWrap.innerHTML = state.leaderboard.slice(0, 5).map(template).join("");
-  }
-
-  if(pageWrap){
-    pageWrap.innerHTML = state.leaderboard.map(template).join("");
-  }
+  document.getElementById("logoutBtn")?.addEventListener("click", () => auth.signOut());
 }
 
 function bindText(){
-  ensureUserDefaults();
+  const user = state.user || userWithDefaults();
+
   const values = {
-    name: state.user.name,
-    coins: formatNumber(state.user.coins),
-    elo: state.user.elo,
-    placedBets: state.user.placedBets,
-    wonBets: state.user.wonBets,
-    hitRate: state.user.hitRate,
-    rank: state.user.rank,
-    netProfit: formatNumber(state.user.netProfit)
+    name: user.name,
+    coins: formatNumber(user.coins),
+    elo: user.elo,
+    placedBets: user.placedBets,
+    wonBets: user.wonBets,
+    hitRate: user.hitRate,
+    rank: user.rank,
+    netProfit: formatNumber(user.netProfit)
   };
+
   document.querySelectorAll("[data-bind]").forEach(el => {
     const key = el.dataset.bind;
     if(key in values) el.textContent = values[key];
   });
-  const initial = (state.user.name || "T").trim().charAt(0).toUpperCase();
+
+  const initial = (user.name || "T").trim().charAt(0).toUpperCase();
   document.getElementById("homeAvatar").textContent = initial;
   document.getElementById("profileAvatar").textContent = initial;
 }
@@ -276,7 +341,20 @@ function setPage(page){
 
 function renderHomeActivity(){
   const wrap = document.getElementById("homeActivity");
-  wrap.innerHTML = state.activity.map(item => `
+  if(!wrap) return;
+
+  const dynamic = [];
+  if(state.bets[0]){
+    dynamic.push({
+      icon: "ticket",
+      text: `Siste spill: ${state.bets[0].selections.map(item => item.label).join(" + ")}`,
+      time: state.bets[0].status || "Aktiv"
+    });
+  }
+
+  const items = [...dynamic, ...seedActivity].slice(0, 5);
+
+  wrap.innerHTML = items.map(item => `
     <div class="activity">
       <span class="nav-icon gold" data-icon="${item.icon}"></span>
       <p>${escapeHtml(item.text)}</p>
@@ -286,29 +364,75 @@ function renderHomeActivity(){
   injectIcons();
 }
 
+function renderLeaderboard(){
+  const sorted = [...state.leaderboard].sort((a,b) => Number(b.coins || 0) - Number(a.coins || 0));
+  const homeWrap = document.getElementById("homeLeaderboard");
+  const pageWrap = document.getElementById("leaderboardPageList");
+
+  function template(player, index){
+    const rank = index + 1;
+    const isMe = currentUser && player.uid === currentUser.uid;
+    const you = isMe ? '<span class="you-badge">deg</span>' : '';
+
+    return `
+      <div class="leaderboard-row ${isMe ? "me" : ""}">
+        <div class="leaderboard-rank">#${rank}</div>
+        <div class="leaderboard-user">
+          <strong>${escapeHtml(player.name)} ${you}</strong>
+          <small>Sjakk ELO ${escapeHtml(player.elo || "-")}</small>
+        </div>
+        <div class="leaderboard-stat coins">
+          <span>VM Coins</span>
+          <b>${formatNumber(player.coins)}</b>
+        </div>
+        <div class="leaderboard-stat win">
+          <span>Vinn %</span>
+          <b>${escapeHtml(player.hitRate || "0%")}</b>
+        </div>
+        <div class="leaderboard-stat bets">
+          <span>Spill</span>
+          <b>${formatNumber(player.placedBets || 0)}</b>
+        </div>
+      </div>
+    `;
+  }
+
+  const empty = '<div class="empty">Ingen brukere enda.</div>';
+  if(homeWrap) homeWrap.innerHTML = sorted.length ? sorted.slice(0, 5).map(template).join("") : empty;
+  if(pageWrap) pageWrap.innerHTML = sorted.length ? sorted.map(template).join("") : empty;
+}
+
 function renderMatches(){
   const wrap = document.getElementById("matchList");
+  if(!wrap) return;
+
+  if(!state.matches.length){
+    wrap.innerHTML = '<div class="empty">Ingen kamper lagt inn enda. Admin kan legge inn kamper nederst på siden.</div>';
+    return;
+  }
+
   wrap.innerHTML = state.matches.map(match => {
     const selected = state.selected.find(item => item.matchId === match.id);
     const odds = [
-      ["home", "1", match.odds.home],
-      ["draw", "X", match.odds.draw],
-      ["away", "2", match.odds.away]
+      ["home", "1", match.odds?.home],
+      ["draw", "X", match.odds?.draw],
+      ["away", "2", match.odds?.away]
     ];
+
     return `
       <article class="match-card search-item">
         <div class="match-top">
-          <span>VM 2026 • ${escapeHtml(match.group)} ${match.result ? `<em class="match-result">${resultLabel(match.result)}</em>` : ""}</span>
+          <span>VM 2026 • ${escapeHtml(match.group || "Kamp")} ${match.result ? `<em class="match-result">${resultLabel(match.result)}</em>` : ""}</span>
           <span>${escapeHtml(formatTime(match.time))}</span>
         </div>
         <div class="match-body">
           <div class="team">
-            <div class="flag">${match.flags[0]}</div>
+            <div class="flag">${escapeHtml(match.flags?.[0] || "⚽")}</div>
             <strong>${escapeHtml(match.home)}</strong>
           </div>
           <div class="vs">VS</div>
           <div class="team away">
-            <div class="flag">${match.flags[1]}</div>
+            <div class="flag">${escapeHtml(match.flags?.[1] || "⚽")}</div>
             <strong>${escapeHtml(match.away)}</strong>
           </div>
         </div>
@@ -316,7 +440,7 @@ function renderMatches(){
           ${odds.map(([pick,label,value]) => `
             <button class="odd ${selected?.pick === pick ? "selected" : ""}" data-match="${match.id}" data-pick="${pick}" ${match.result ? "disabled" : ""}>
               <small>${label}</small>
-              <b>${Number(value).toFixed(2)}</b>
+              <b>${Number(value || 0).toFixed(2)}</b>
             </button>
           `).join("")}
         </div>
@@ -324,7 +448,7 @@ function renderMatches(){
     `;
   }).join("");
 
-  document.querySelectorAll(".odd").forEach(btn => {
+  wrap.querySelectorAll(".odd").forEach(btn => {
     btn.addEventListener("click", () => selectOdd(btn.dataset.match, btn.dataset.pick));
   });
 }
@@ -342,10 +466,9 @@ function selectOdd(matchId, pick){
     pick,
     label,
     title: `${match.home} – ${match.away}`,
-    odds: match.odds[pick]
+    odds: Number(match.odds[pick])
   });
 
-  saveState();
   renderMatches();
   renderSlip();
 }
@@ -355,6 +478,7 @@ function renderSlip(){
   const empty = document.getElementById("slipEmpty");
   const content = document.getElementById("slipContent");
   const items = document.getElementById("slipItems");
+  if(!count || !empty || !content || !items) return;
 
   count.textContent = state.selected.length;
   const has = state.selected.length > 0;
@@ -375,24 +499,30 @@ function renderSlip(){
     </div>
   `).join("");
 
-  document.querySelectorAll("[data-remove]").forEach(btn => {
+  items.querySelectorAll("[data-remove]").forEach(btn => {
     btn.addEventListener("click", () => {
       state.selected.splice(Number(btn.dataset.remove), 1);
-      saveState();
       renderMatches();
       renderSlip();
     });
   });
 
+  updateSlipNumbers();
+  injectIcons();
+}
+
+function updateSlipNumbers(){
+  if(!state.selected.length) return;
   const totalOdds = state.selected.reduce((acc, item) => acc * Number(item.odds), 1);
   const stake = Math.max(0, Number(document.getElementById("stakeInput").value || 0));
   document.getElementById("totalOdds").textContent = totalOdds.toFixed(2);
   document.getElementById("possibleWin").textContent = formatNumber(Math.round(stake * totalOdds));
-  injectIcons();
 }
 
-function placeBet(){
+async function placeBet(){
+  if(!currentUser || !state.user) return toast("Du må være logget inn.");
   const stake = Math.max(0, Number(document.getElementById("stakeInput").value || 0));
+
   if(!state.selected.length) return toast("Velg odds først.");
   const containsFinishedMatch = state.selected.some(selection => {
     const match = state.matches.find(item => item.id === selection.matchId);
@@ -401,41 +531,63 @@ function placeBet(){
   if(containsFinishedMatch) return toast("Du kan ikke plassere spill på en avgjort kamp.");
   if(stake < 10) return toast("Minimum innsats er 10 coins.");
   if(stake > MAX_STAKE) return toast(`Maks innsats per kamp er ${MAX_STAKE} VM Coins.`);
-  if(stake > state.user.coins) return toast("Du har ikke nok VM Coins.");
+  if(stake > Number(state.user.coins || 0)) return toast("Du har ikke nok VM Coins.");
 
   const totalOdds = state.selected.reduce((acc, item) => acc * Number(item.odds), 1);
   const possibleWin = Math.round(stake * totalOdds);
+  const userRef = db.collection("users").doc(currentUser.uid);
+  const betRef = db.collection("bets").doc();
 
-  state.user.coins -= stake;
-  state.user.placedBets += 1;
-  state.bets.unshift({
-    selections: structuredClone(state.selected),
-    stake,
-    totalOdds,
-    possibleWin,
-    status: "Aktiv"
-  });
-  state.activity.unshift({
-    icon: "ticket",
-    text: `Du plasserte et spill på ${formatNumber(stake)} VM Coins`,
-    time: "nå"
-  });
-  state.selected = [];
+  try{
+    await db.runTransaction(async tx => {
+      const userSnap = await tx.get(userRef);
+      if(!userSnap.exists) throw new Error("Fant ikke brukerprofil.");
+      const coins = Number(userSnap.data().coins || 0);
+      if(coins < stake) throw new Error("Du har ikke nok VM Coins.");
 
-  ensureLeaderboard();
-  saveState();
-  renderAll();
-  toast("Spill plassert!");
+      tx.update(userRef, {
+        coins: coins - stake,
+        placedBets: firebase.firestore.FieldValue.increment(1),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      tx.set(betRef, {
+        userId: currentUser.uid,
+        userName: state.user.name,
+        selections: structuredClone(state.selected),
+        stake,
+        totalOdds,
+        possibleWin,
+        status: "Aktiv",
+        createdAtMs: Date.now(),
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    });
+
+    state.selected = [];
+    renderMatches();
+    renderSlip();
+    toast("Spill plassert!");
+  }catch(error){
+    handleFirebaseError(error);
+  }
 }
 
 function renderForum(){
   const wrap = document.getElementById("posts");
+  if(!wrap) return;
+
+  if(!state.forum.length){
+    wrap.innerHTML = '<div class="empty">Ingen foruminnlegg enda.</div>';
+    return;
+  }
+
   wrap.innerHTML = state.forum.map(post => `
     <article class="post-card search-item">
       <h3>${escapeHtml(post.title)}</h3>
       <p>${escapeHtml(post.text)}</p>
       <footer>
-        <span>Av ${escapeHtml(post.author)}</span>
+        <span>Av ${escapeHtml(post.author || "Ukjent")}</span>
         <span>♡ ${post.likes || 0}</span>
       </footer>
     </article>
@@ -445,11 +597,18 @@ function renderForum(){
 function renderChat(){
   const title = document.getElementById("roomTitle");
   const messages = document.getElementById("messages");
+  if(!title || !messages) return;
+
   title.textContent = currentRoom === "public" ? "Offentlig chat" : `Privat chat med ${currentRoom}`;
 
-  messages.innerHTML = (state.chat[currentRoom] || []).map(msg => `
-    <div class="message ${msg.from === state.user.name ? "me" : ""}">
-      <small>${escapeHtml(msg.from)}</small>
+  if(!state.chat.length){
+    messages.innerHTML = '<div class="empty">Ingen meldinger enda.</div>';
+    return;
+  }
+
+  messages.innerHTML = state.chat.map(msg => `
+    <div class="message ${msg.userId === currentUser?.uid ? "me" : ""}">
+      <small>${escapeHtml(msg.from || "Ukjent")}</small>
       ${escapeHtml(msg.text)}
     </div>
   `).join("");
@@ -458,16 +617,19 @@ function renderChat(){
 
 function renderMyBets(){
   const wrap = document.getElementById("myBets");
+  if(!wrap) return;
+
   if(!state.bets.length){
     wrap.innerHTML = '<div class="empty">Du har ingen plasserte spill enda.</div>';
     return;
   }
+
   wrap.innerHTML = state.bets.map(bet => `
     <div class="bet-row">
       <span class="nav-icon gold" data-icon="ticket"></span>
       <div>
-        <strong>${bet.selections.map(item => escapeHtml(item.label)).join(" + ")}</strong>
-        <small>${bet.selections.map(item => escapeHtml(item.title)).join(", ")}</small>
+        <strong>${(bet.selections || []).map(item => escapeHtml(item.label)).join(" + ")}</strong>
+        <small>${(bet.selections || []).map(item => escapeHtml(item.title)).join(", ")}</small>
       </div>
       <div style="text-align:right">
         <strong>${formatNumber(bet.possibleWin)}</strong>
@@ -479,6 +641,9 @@ function renderMyBets(){
 }
 
 function renderBoard(){
+  const board = document.getElementById("miniBoard");
+  if(!board) return;
+
   const pieces = [
     "♜","♞","♝","♛","♚","♝","♞","♜",
     "♟","♟","♟","♟","♟","♟","♟","♟",
@@ -489,103 +654,118 @@ function renderBoard(){
     "♙","♙","♙","","","♙","♙","♙",
     "♖","","♗","♕","♔","♗","","♖"
   ];
-  document.getElementById("miniBoard").innerHTML = pieces.map((piece, i) => {
+
+  board.innerHTML = pieces.map((piece, i) => {
     const row = Math.floor(i / 8);
     const col = i % 8;
     return `<div class="${(row + col) % 2 ? "dark" : "light"}">${piece}</div>`;
   }).join("");
 }
 
-function addMatch(event){
+async function addMatch(event){
   event.preventDefault();
-  if(!isAdmin()) return toast("Kun Thomas kan legge inn kamper.");
+  if(!isAdmin()) return toast("Kun Thomas/admin kan legge inn kamper.");
+
   const form = new FormData(event.target);
-  const id = `m${Date.now()}`;
-  state.matches.unshift({
-    id,
-    home: form.get("home").trim(),
-    away: form.get("away").trim(),
-    flags: ["⚽", "⚽"],
-    time: form.get("time"),
-    group: "Ny kamp",
-    result: null,
-    odds: {
-      home: Number(form.get("homeOdds")),
-      draw: Number(form.get("drawOdds")),
-      away: Number(form.get("awayOdds"))
-    }
-  });
-  state.activity.unshift({ icon: "ball", text: `Ny kamp lagt inn: ${form.get("home")} – ${form.get("away")}`, time: "nå" });
-  event.target.reset();
-  saveState();
-  renderAll();
-  toast("Kamp lagt til.");
+
+  try{
+    await db.collection("matches").add({
+      home: form.get("home").trim(),
+      away: form.get("away").trim(),
+      flags: ["⚽", "⚽"],
+      time: form.get("time"),
+      group: "Ny kamp",
+      result: null,
+      odds: {
+        home: Number(form.get("homeOdds")),
+        draw: Number(form.get("drawOdds")),
+        away: Number(form.get("awayOdds"))
+      },
+      createdBy: currentUser.uid,
+      createdAtMs: Date.now(),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    event.target.reset();
+    toast("Kamp lagt til.");
+  }catch(error){
+    handleFirebaseError(error);
+  }
 }
 
-function addPost(event){
+async function addPost(event){
   event.preventDefault();
+  if(!state.user) return toast("Du må være logget inn.");
+
   const title = document.getElementById("postTitle").value.trim();
   const text = document.getElementById("postText").value.trim();
   if(!title || !text) return;
-  state.forum.unshift({ title, text, author: state.user.name, likes: 0 });
-  state.activity.unshift({ icon: "chat", text: "Du publiserte et foruminnlegg", time: "nå" });
-  event.target.reset();
-  saveState();
-  renderAll();
-  toast("Innlegg publisert.");
+
+  try{
+    await db.collection("forumPosts").add({
+      title,
+      text,
+      author: state.user.name,
+      userId: currentUser.uid,
+      likes: 0,
+      createdAtMs: Date.now(),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    event.target.reset();
+    toast("Innlegg publisert.");
+  }catch(error){
+    handleFirebaseError(error);
+  }
 }
 
-function sendChat(event){
+async function sendChat(event){
   event.preventDefault();
+  if(!state.user) return toast("Du må være logget inn.");
+
   const input = document.getElementById("chatInput");
   const text = input.value.trim();
   if(!text) return;
-  state.chat[currentRoom] ??= [];
-  state.chat[currentRoom].push({ from: state.user.name, text });
-  input.value = "";
-  saveState();
-  renderChat();
+
+  try{
+    await db.collection("chatMessages").add({
+      room: currentRoom,
+      text,
+      from: state.user.name,
+      userId: currentUser.uid,
+      createdAtMs: Date.now(),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    input.value = "";
+  }catch(error){
+    handleFirebaseError(error);
+  }
 }
 
-function editName(){
-  const name = prompt("Nytt navn:", state.user.name);
+async function editName(){
+  if(!currentUser) return;
+  const name = prompt("Nytt navn:", state.user?.name || "");
   if(!name) return;
 
-  const previousName = state.user.name;
-  const nextName = name.trim();
-  const leaderboardRow = Array.isArray(state.leaderboard)
-    ? state.leaderboard.find(player => player.name === previousName)
-    : null;
-
-  if(leaderboardRow) leaderboardRow.name = nextName;
-  state.user.name = nextName;
-
-  ensureLeaderboard();
-  saveState();
-  renderAll();
-  toast("Navn oppdatert.");
+  try{
+    const clean = name.trim();
+    await currentUser.updateProfile({ displayName: clean });
+    await db.collection("users").doc(currentUser.uid).update({
+      name: clean,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    toast("Navn oppdatert.");
+  }catch(error){
+    handleFirebaseError(error);
+  }
 }
-
-function filterSearch(value){
-  const query = value.trim().toLowerCase();
-  document.querySelectorAll(".search-item").forEach(item => {
-    item.style.display = item.textContent.toLowerCase().includes(query) ? "" : "none";
-  });
-}
-
 
 function renderAdminControls(){
   const adminPanel = document.getElementById("adminPanel");
   const adminLocked = document.getElementById("adminLocked");
   const select = document.getElementById("resultMatchSelect");
 
-  if(adminPanel){
-    adminPanel.hidden = !isAdmin();
-  }
-
-  if(adminLocked){
-    adminLocked.hidden = isAdmin();
-  }
+  if(adminPanel) adminPanel.hidden = !isAdmin();
+  if(adminLocked) adminLocked.hidden = isAdmin();
 
   if(select){
     const openMatches = state.matches.filter(match => !match.result);
@@ -599,83 +779,92 @@ function renderAdminControls(){
   }
 }
 
-function settleBetsAfterResult(){
-  let settled = 0;
-  let wins = 0;
-
-  state.bets.forEach(bet => {
-    if(bet.status !== "Aktiv") return;
-
-    const allSelectionsHaveResults = bet.selections.every(selection => {
-      const match = state.matches.find(item => item.id === selection.matchId);
-      return match && match.result;
-    });
-
-    if(!allSelectionsHaveResults) return;
-
-    const allCorrect = bet.selections.every(selection => {
-      const match = state.matches.find(item => item.id === selection.matchId);
-      return match && match.result === selection.pick;
-    });
-
-    bet.status = allCorrect ? "Vunnet" : "Tapt";
-    state.user.completedBets += 1;
-    settled += 1;
-
-    if(allCorrect){
-      state.user.wonBets += 1;
-      state.user.coins += Number(bet.possibleWin || 0);
-      state.user.netProfit += Number(bet.possibleWin || 0) - Number(bet.stake || 0);
-      wins += 1;
-    }else{
-      state.user.netProfit -= Number(bet.stake || 0);
-    }
-  });
-
-  if(settled > 0){
-    state.activity.unshift({
-      icon: wins > 0 ? "win" : "ticket",
-      text: `${settled} spill ble avgjort. Vunne spill: ${wins}`,
-      time: "nå"
-    });
-  }
-}
-
-function registerResult(event){
+async function registerResult(event){
   event.preventDefault();
-
-  if(!isAdmin()){
-    toast("Kun Thomas kan legge inn resultater.");
-    return;
-  }
+  if(!isAdmin()) return toast("Kun admin kan legge inn resultater.");
 
   const form = new FormData(event.target);
   const matchId = form.get("matchId");
   const result = form.get("result");
   const match = state.matches.find(item => item.id === matchId);
 
-  if(!match || !result){
-    toast("Velg kamp og resultat.");
-    return;
-  }
+  if(!match || !result) return toast("Velg kamp og resultat.");
 
-  match.result = result;
-  state.selected = state.selected.filter(selection => selection.matchId !== matchId);
-  state.activity.unshift({
-    icon: "medal",
-    text: `Resultat lagt inn: ${match.home} – ${match.away} (${resultLabel(result)})`,
-    time: "nå"
+  try{
+    await db.collection("matches").doc(matchId).update({
+      result,
+      resultBy: currentUser.uid,
+      resultAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    const updatedMatches = state.matches.map(item => item.id === matchId ? { ...item, result } : item);
+    await settleBetsAfterResult(updatedMatches);
+
+    state.selected = state.selected.filter(selection => selection.matchId !== matchId);
+    event.target.reset();
+    toast("Resultat lagt inn.");
+  }catch(error){
+    handleFirebaseError(error);
+  }
+}
+
+async function settleBetsAfterResult(matchesSnapshot){
+  const matchesById = Object.fromEntries(matchesSnapshot.map(match => [match.id, match]));
+  const activeBets = await db.collection("bets").where("status","==","Aktiv").get();
+
+  const batch = db.batch();
+  let updates = 0;
+
+  activeBets.forEach(doc => {
+    const bet = doc.data();
+    const selections = bet.selections || [];
+
+    const allSelectionsHaveResults = selections.every(selection => {
+      const match = matchesById[selection.matchId];
+      return match && match.result;
+    });
+
+    if(!allSelectionsHaveResults) return;
+
+    const allCorrect = selections.every(selection => {
+      const match = matchesById[selection.matchId];
+      return match && match.result === selection.pick;
+    });
+
+    const status = allCorrect ? "Vunnet" : "Tapt";
+    const payout = allCorrect ? Number(bet.possibleWin || 0) : 0;
+    const stake = Number(bet.stake || 0);
+    const profit = allCorrect ? payout - stake : -stake;
+
+    batch.update(doc.ref, {
+      status,
+      payout,
+      settledAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    batch.update(db.collection("users").doc(bet.userId), {
+      completedBets: firebase.firestore.FieldValue.increment(1),
+      wonBets: firebase.firestore.FieldValue.increment(allCorrect ? 1 : 0),
+      coins: firebase.firestore.FieldValue.increment(payout),
+      netProfit: firebase.firestore.FieldValue.increment(profit),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    updates += 1;
   });
 
-  settleBetsAfterResult();
-  ensureLeaderboard();
-  saveState();
-  renderAll();
-  toast("Resultat lagt inn.");
+  if(updates > 0) await batch.commit();
+}
+
+function filterSearch(value){
+  const query = value.trim().toLowerCase();
+  document.querySelectorAll(".search-item").forEach(item => {
+    item.style.display = item.textContent.toLowerCase().includes(query) ? "" : "none";
+  });
 }
 
 function renderAll(){
-  ensureLeaderboard();
   injectIcons();
   bindText();
   renderHomeActivity();
@@ -690,11 +879,18 @@ function renderAll(){
 }
 
 function bindEvents(){
+  bindAuth();
+
   const stakeInput = document.getElementById("stakeInput");
-  if(stakeInput) stakeInput.max = MAX_STAKE;
+  if(stakeInput){
+    stakeInput.max = MAX_STAKE;
+    if(Number(stakeInput.value || 0) > MAX_STAKE) stakeInput.value = "100";
+  }
+
   document.querySelectorAll("[data-page]").forEach(btn => {
     btn.addEventListener("click", () => setPage(btn.dataset.page));
   });
+
   document.querySelectorAll("[data-go]").forEach(btn => {
     btn.addEventListener("click", () => setPage(btn.dataset.go));
   });
@@ -703,11 +899,10 @@ function bindEvents(){
     document.body.classList.toggle("menu-open");
   });
 
-  document.getElementById("stakeInput")?.addEventListener("input", renderSlip);
+  document.getElementById("stakeInput")?.addEventListener("input", updateSlipNumbers);
   document.getElementById("placeBetBtn")?.addEventListener("click", placeBet);
   document.getElementById("clearSlipBtn")?.addEventListener("click", () => {
     state.selected = [];
-    saveState();
     renderMatches();
     renderSlip();
   });
@@ -724,10 +919,52 @@ function bindEvents(){
       document.querySelectorAll(".room").forEach(item => item.classList.remove("active"));
       btn.classList.add("active");
       currentRoom = btn.dataset.room;
+      listenToRoom(currentRoom);
       renderChat();
     });
   });
 }
 
-bindEvents();
-renderAll();
+function boot(){
+  try{
+    initFirebase();
+    bindEvents();
+    injectIcons();
+    renderBoard();
+    showAuth(true);
+
+    auth.onAuthStateChanged(async user => {
+      currentUser = user;
+
+      if(!user){
+        detachListeners();
+        if(unsubscribeRoom){
+          try{ unsubscribeRoom(); }catch{}
+          unsubscribeRoom = null;
+        }
+        state.user = null;
+        state.leaderboard = [];
+        state.bets = [];
+        state.matches = [];
+        state.forum = [];
+        state.chat = [];
+        showAuth(true);
+        return;
+      }
+
+      try{
+        await ensureUserDocument(user);
+        showAuth(false);
+        attachListeners();
+        toast("Logget inn.");
+      }catch(error){
+        handleFirebaseError(error);
+      }
+    });
+  }catch(error){
+    console.error(error);
+    toast(error.message || "Kunne ikke starte appen.");
+  }
+}
+
+boot();
