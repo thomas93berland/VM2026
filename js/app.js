@@ -1,4 +1,8 @@
-const STORAGE_KEY = "vm-lounge-2026-upload-ready-v1";
+const STORAGE_KEY = "vm-lounge-2026-rules-admin-v1";
+
+const START_COINS = 5000;
+const MAX_STAKE = 500;
+const ADMIN_USERNAME = "Thomas";
 
 const ICONS = {
   home: '<svg viewBox="0 0 24 24"><path d="M3.8 10.7 12 4l8.2 6.7"/><path d="M6.5 9.6v9.1h4.1v-5.2h2.8v5.2h4.1V9.6"/></svg>',
@@ -23,43 +27,41 @@ const ICONS = {
 const seed = {
   user: {
     name: "Thomas",
-    coins: 250000,
+    coins: START_COINS,
     elo: 1032,
-    placedBets: 124,
-    wonBets: 68,
-    hitRate: "54%",
-    rank: "#5",
-    netProfit: 35500
+    placedBets: 0,
+    wonBets: 0,
+    completedBets: 0,
+    hitRate: "0%",
+    rank: "#1",
+    netProfit: 0
   },
   leaderboard: [
-    { name: "Elise", coins: 285500, elo: 1018, hitRate: "61%", winPercent: 61, bets: 118 },
-    { name: "Kjell", coins: 272250, elo: 980, hitRate: "57%", winPercent: 57, bets: 103 },
-    { name: "Heidi", coins: 260800, elo: 1045, hitRate: "55%", winPercent: 55, bets: 91 },
-    { name: "Thomas", coins: 250000, elo: 1032, hitRate: "54%", winPercent: 54, bets: 124 },
-    { name: "Marius", coins: 231400, elo: 1090, hitRate: "49%", winPercent: 49, bets: 86 }
+    { name: "Thomas", coins: 5000, elo: 1032, wonBets: 0, completedBets: 0, bets: 0 },
+    { name: "Elise", coins: 4700, elo: 1018, wonBets: 8, completedBets: 15, bets: 18 },
+    { name: "Kjell", coins: 4200, elo: 980, wonBets: 6, completedBets: 14, bets: 17 },
+    { name: "Heidi", coins: 3900, elo: 1045, wonBets: 7, completedBets: 13, bets: 16 },
+    { name: "Marius", coins: 3100, elo: 1090, wonBets: 4, completedBets: 12, bets: 14 }
   ],
-  selected: [
-    { matchId: "m1", pick: "home", label: "Brasil", title: "Brasil – Frankrike", odds: 1.82 },
-    { matchId: "m2", pick: "away", label: "Tyskland", title: "Argentina – Tyskland", odds: 1.95 }
-  ],
+  selected: [],
   bets: [],
   matches: [
-    { id: "m1", home: "Brasil", away: "Frankrike", flags: ["🇧🇷", "🇫🇷"], time: "2026-06-15T18:00", group: "Gruppe A", odds: { home: 1.82, draw: 3.60, away: 4.55 } },
-    { id: "m2", home: "Argentina", away: "Tyskland", flags: ["🇦🇷", "🇩🇪"], time: "2026-06-15T21:00", group: "Gruppe B", odds: { home: 1.95, draw: 3.45, away: 3.95 } },
-    { id: "m3", home: "Portugal", away: "Uruguay", flags: ["🇵🇹", "🇺🇾"], time: "2026-06-16T18:00", group: "Gruppe C", odds: { home: 2.10, draw: 3.30, away: 3.70 } }
+    { id: "m1", home: "Brasil", away: "Frankrike", flags: ["🇧🇷", "🇫🇷"], time: "2026-06-15T18:00", group: "Gruppe A", odds: { home: 1.82, draw: 3.60, away: 4.55 }, result: null },
+    { id: "m2", home: "Argentina", away: "Tyskland", flags: ["🇦🇷", "🇩🇪"], time: "2026-06-15T21:00", group: "Gruppe B", odds: { home: 1.95, draw: 3.45, away: 3.95 }, result: null },
+    { id: "m3", home: "Portugal", away: "Uruguay", flags: ["🇵🇹", "🇺🇾"], time: "2026-06-16T18:00", group: "Gruppe C", odds: { home: 2.10, draw: 3.30, away: 3.70 }, result: null }
   ],
   activity: [
-    { icon: "cup", text: "Du klatret til #5 på topplisten", time: "I dag" },
-    { icon: "trend", text: "Vant 2 spill og tjente 3 550 VM Coins", time: "I går" },
-    { icon: "win", text: "Treffprosenten din er nå 54%", time: "2 dager siden" }
+    { icon: "cup", text: "Reglene er satt: 5 000 VM Coins i startsaldo", time: "Nå" },
+    { icon: "ticket", text: "Maks innsats per kamp er 500 VM Coins", time: "Nå" },
+    { icon: "medal", text: "Leaderboard sorteres etter VM Coins", time: "Nå" }
   ],
   forum: [
-    { title: "Hvem blir toppscorer i VM?", text: "Jeg tror Brasil kommer sterkt, men Frankrike ser farlige ut.", author: "Thomas", likes: 4 },
-    { title: "Forslag til regler", text: "Maks innsats per kamp, og egen premie til best treffprosent.", author: "Admin", likes: 8 }
+    { title: "Regler for VM Lounge", text: "Startsaldo er 5 000 VM Coins. Maks innsats per kamp er 500. Vinnprosent regnes som vunne spill delt på ferdige spill.", author: "Admin", likes: 8 },
+    { title: "Hvem blir toppscorer i VM?", text: "Jeg tror Brasil kommer sterkt, men Frankrike ser farlige ut.", author: "Thomas", likes: 4 }
   ],
   chat: {
     public: [
-      { from: "Admin", text: "Velkommen til VM Lounge!" },
+      { from: "Admin", text: "Velkommen til VM Lounge! Startsaldo er 5 000 VM Coins." },
       { from: "Elise", text: "Jeg er klar for VM-konkurranse 😄" }
     ],
     Elise: [{ from: "Elise", text: "Husk å invitere meg til ligaen!" }],
@@ -107,6 +109,13 @@ function formatTime(value){
   });
 }
 
+function resultLabel(result){
+  if(result === "home") return "H";
+  if(result === "draw") return "U";
+  if(result === "away") return "B";
+  return "";
+}
+
 function toast(message){
   const el = document.getElementById("toast");
   el.textContent = message;
@@ -122,38 +131,60 @@ function injectIcons(){
   });
 }
 
+function isAdmin(){
+  return String(state.user?.name || "").trim().toLowerCase() === ADMIN_USERNAME.toLowerCase();
+}
+
+function calculateWinPercent(won, completed){
+  const w = Number(won || 0);
+  const c = Number(completed || 0);
+  return c > 0 ? Math.round((w / c) * 100) : 0;
+}
+
+function ensureUserDefaults(){
+  state.user.coins = Number(state.user.coins ?? START_COINS);
+  state.user.placedBets = Number(state.user.placedBets || 0);
+  state.user.wonBets = Number(state.user.wonBets || 0);
+  state.user.completedBets = Number(state.user.completedBets || 0);
+  state.user.netProfit = Number(state.user.netProfit || 0);
+  const percent = calculateWinPercent(state.user.wonBets, state.user.completedBets);
+  state.user.hitRate = `${percent}%`;
+}
+
 function ensureLeaderboard(){
+  ensureUserDefaults();
+
   if(!Array.isArray(state.leaderboard)){
     state.leaderboard = structuredClone(seed.leaderboard || []);
   }
 
-  const userName = state.user.name || "Thomas";
-  const userWinPercent = Number(String(state.user.hitRate || "0").replace("%", "")) || 0;
-  const userBets = Number(state.user.placedBets || 0);
-
+  const userName = state.user.name || ADMIN_USERNAME;
   const current = state.leaderboard.find(player => player.name === userName);
+
   if(current){
     current.coins = Number(state.user.coins || 0);
     current.elo = state.user.elo;
-    current.hitRate = state.user.hitRate;
-    current.winPercent = userWinPercent;
-    current.bets = userBets;
+    current.wonBets = Number(state.user.wonBets || 0);
+    current.completedBets = Number(state.user.completedBets || 0);
+    current.bets = Number(state.user.placedBets || 0);
   }else{
     state.leaderboard.push({
       name: userName,
       coins: Number(state.user.coins || 0),
       elo: state.user.elo,
-      hitRate: state.user.hitRate,
-      winPercent: userWinPercent,
-      bets: userBets
+      wonBets: Number(state.user.wonBets || 0),
+      completedBets: Number(state.user.completedBets || 0),
+      bets: Number(state.user.placedBets || 0)
     });
   }
 
-  state.leaderboard.forEach((player, index) => {
+  state.leaderboard.forEach((player) => {
     player.coins = Number(player.coins || 0);
-    player.winPercent = Number(player.winPercent ?? String(player.hitRate || "0").replace("%", "")) || 0;
+    player.wonBets = Number(player.wonBets || 0);
+    player.completedBets = Number(player.completedBets || 0);
+    player.bets = Number(player.bets ?? player.placedBets ?? 0);
+    player.winPercent = calculateWinPercent(player.wonBets, player.completedBets);
     player.hitRate = `${player.winPercent}%`;
-    player.bets = Number(player.bets ?? player.placedBets ?? (124 - index * 9));
     player.isMe = player.name === userName;
   });
 
@@ -208,6 +239,7 @@ function renderLeaderboard(){
 }
 
 function bindText(){
+  ensureUserDefaults();
   const values = {
     name: state.user.name,
     coins: formatNumber(state.user.coins),
@@ -266,7 +298,7 @@ function renderMatches(){
     return `
       <article class="match-card search-item">
         <div class="match-top">
-          <span>VM 2026 • ${escapeHtml(match.group)}</span>
+          <span>VM 2026 • ${escapeHtml(match.group)} ${match.result ? `<em class="match-result">${resultLabel(match.result)}</em>` : ""}</span>
           <span>${escapeHtml(formatTime(match.time))}</span>
         </div>
         <div class="match-body">
@@ -282,7 +314,7 @@ function renderMatches(){
         </div>
         <div class="odds-row">
           ${odds.map(([pick,label,value]) => `
-            <button class="odd ${selected?.pick === pick ? "selected" : ""}" data-match="${match.id}" data-pick="${pick}">
+            <button class="odd ${selected?.pick === pick ? "selected" : ""}" data-match="${match.id}" data-pick="${pick}" ${match.result ? "disabled" : ""}>
               <small>${label}</small>
               <b>${Number(value).toFixed(2)}</b>
             </button>
@@ -362,6 +394,7 @@ function placeBet(){
   const stake = Math.max(0, Number(document.getElementById("stakeInput").value || 0));
   if(!state.selected.length) return toast("Velg odds først.");
   if(stake < 10) return toast("Minimum innsats er 10 coins.");
+  if(stake > MAX_STAKE) return toast(`Maks innsats per kamp er ${MAX_STAKE} VM Coins.`);
   if(stake > state.user.coins) return toast("Du har ikke nok VM Coins.");
 
   const totalOdds = state.selected.reduce((acc, item) => acc * Number(item.odds), 1);
@@ -459,6 +492,7 @@ function renderBoard(){
 
 function addMatch(event){
   event.preventDefault();
+  if(!isAdmin()) return toast("Kun Thomas kan legge inn kamper.");
   const form = new FormData(event.target);
   const id = `m${Date.now()}`;
   state.matches.unshift({
@@ -468,6 +502,7 @@ function addMatch(event){
     flags: ["⚽", "⚽"],
     time: form.get("time"),
     group: "Ny kamp",
+    result: null,
     odds: {
       home: Number(form.get("homeOdds")),
       draw: Number(form.get("drawOdds")),
@@ -532,6 +567,106 @@ function filterSearch(value){
   });
 }
 
+
+function renderAdminControls(){
+  const adminPanel = document.getElementById("adminPanel");
+  const adminLocked = document.getElementById("adminLocked");
+  const select = document.getElementById("resultMatchSelect");
+
+  if(adminPanel){
+    adminPanel.hidden = !isAdmin();
+  }
+
+  if(adminLocked){
+    adminLocked.hidden = isAdmin();
+  }
+
+  if(select){
+    const openMatches = state.matches.filter(match => !match.result);
+    if(!openMatches.length){
+      select.innerHTML = '<option value="">Ingen åpne kamper</option>';
+    }else{
+      select.innerHTML = '<option value="">Velg kamp</option>' + openMatches.map(match => `
+        <option value="${match.id}">${escapeHtml(match.home)} – ${escapeHtml(match.away)}</option>
+      `).join("");
+    }
+  }
+}
+
+function settleBetsAfterResult(){
+  let settled = 0;
+  let wins = 0;
+
+  state.bets.forEach(bet => {
+    if(bet.status !== "Aktiv") return;
+
+    const allSelectionsHaveResults = bet.selections.every(selection => {
+      const match = state.matches.find(item => item.id === selection.matchId);
+      return match && match.result;
+    });
+
+    if(!allSelectionsHaveResults) return;
+
+    const allCorrect = bet.selections.every(selection => {
+      const match = state.matches.find(item => item.id === selection.matchId);
+      return match && match.result === selection.pick;
+    });
+
+    bet.status = allCorrect ? "Vunnet" : "Tapt";
+    state.user.completedBets += 1;
+    settled += 1;
+
+    if(allCorrect){
+      state.user.wonBets += 1;
+      state.user.coins += Number(bet.possibleWin || 0);
+      state.user.netProfit += Number(bet.possibleWin || 0) - Number(bet.stake || 0);
+      wins += 1;
+    }else{
+      state.user.netProfit -= Number(bet.stake || 0);
+    }
+  });
+
+  if(settled > 0){
+    state.activity.unshift({
+      icon: wins > 0 ? "win" : "ticket",
+      text: `${settled} spill ble avgjort. Vunne spill: ${wins}`,
+      time: "nå"
+    });
+  }
+}
+
+function registerResult(event){
+  event.preventDefault();
+
+  if(!isAdmin()){
+    toast("Kun Thomas kan legge inn resultater.");
+    return;
+  }
+
+  const form = new FormData(event.target);
+  const matchId = form.get("matchId");
+  const result = form.get("result");
+  const match = state.matches.find(item => item.id === matchId);
+
+  if(!match || !result){
+    toast("Velg kamp og resultat.");
+    return;
+  }
+
+  match.result = result;
+  state.activity.unshift({
+    icon: "medal",
+    text: `Resultat lagt inn: ${match.home} – ${match.away} (${resultLabel(result)})`,
+    time: "nå"
+  });
+
+  settleBetsAfterResult();
+  ensureLeaderboard();
+  saveState();
+  renderAll();
+  toast("Resultat lagt inn.");
+}
+
 function renderAll(){
   ensureLeaderboard();
   injectIcons();
@@ -544,9 +679,11 @@ function renderAll(){
   renderChat();
   renderMyBets();
   renderBoard();
+  renderAdminControls();
 }
 
 function bindEvents(){
+  document.getElementById("stakeInput").max = MAX_STAKE;
   document.querySelectorAll("[data-page]").forEach(btn => {
     btn.addEventListener("click", () => setPage(btn.dataset.page));
   });
@@ -568,6 +705,7 @@ function bindEvents(){
   });
 
   document.getElementById("matchForm").addEventListener("submit", addMatch);
+  document.getElementById("resultForm").addEventListener("submit", registerResult);
   document.getElementById("postForm").addEventListener("submit", addPost);
   document.getElementById("chatForm").addEventListener("submit", sendChat);
   document.getElementById("editNameBtn").addEventListener("click", editName);
