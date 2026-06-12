@@ -32,3 +32,8 @@ For at alle venner skal se samme:
 - resultater
 
 må neste steg være Firebase Authentication + Firestore.
+
+
+## Gjennomgang
+
+Denne versjonen er gjennomgått og fikset for admin/resultat-panelet, maks innsats, leaderboard og knapper.
