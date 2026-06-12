@@ -1,0 +1,98 @@
+@media (max-width:1100px){
+  .app{display:block}
+
+  .sidebar{
+    position:fixed;
+    left:0;
+    top:0;
+    transform:translateX(-110%);
+    transition:.22s ease;
+    width:280px;
+  }
+
+  body.menu-open .sidebar{transform:translateX(0)}
+
+  .menu-toggle{display:block}
+  .mobile-brand{display:flex}
+  .main{padding:18px 14px 112px}
+  .bottom-nav{display:grid}
+}
+
+@media (max-width:880px){
+  .hero{
+    grid-template-columns:1fr;
+    min-height:360px;
+  }
+
+  .hero-art{
+    position:absolute;
+    right:0;
+    top:70px;
+    width:48%;
+    height:260px;
+    opacity:.9;
+  }
+
+  .globe{
+    right:-110px;
+    top:0;
+  }
+
+  .trophy-shadow{
+    left:10px;
+    opacity:.16;
+  }
+
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .betting-layout,.chat-layout,.chess-card{grid-template-columns:1fr}
+  .bet-slip{position:static}
+  .admin-form{grid-template-columns:1fr}
+}
+
+@media (max-width:620px){
+  .topbar{align-items:flex-start}
+  .mobile-brand strong{font-size:22px}
+  .brand-logo.small{width:48px;height:48px}
+  .coin-pill{min-height:44px;padding:0 12px}
+  .bell{width:44px;height:44px}
+  .search{height:58px;border-radius:21px}
+  .hero{padding:26px;min-height:340px;border-radius:24px}
+  .hero h1{font-size:42px}
+  .hero p{font-size:16px;max-width:70%}
+  .hero-actions{margin-top:22px}
+  .btn{min-height:48px;padding:0 16px}
+  .card{padding:18px;border-radius:22px}
+  .profile-row{gap:14px}
+  .avatar{width:78px;height:78px;font-size:34px}
+  .profile-main h3{font-size:28px}
+  .profile-meta{font-size:16px}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .stat{min-height:122px}
+  .stat.profit{grid-column:1 / -1}
+  .match-body{grid-template-columns:1fr;gap:10px}
+  .team.away{text-align:left}
+  .team.away .flag{margin-left:0}
+  .vs{width:100%;height:38px}
+  .profile-detail{align-items:flex-start;flex-direction:column}
+  .profile-detail .btn{margin-left:0}
+  .bottom-nav{height:86px;width:calc(100% - 16px)}
+}
+
+@media (max-width:430px){
+  .main{padding:10px 10px 108px}
+  .mobile-brand strong{font-size:18px}
+  .mobile-brand span{font-size:11px}
+  .brand-logo.small{width:42px;height:42px}
+  .top-actions{gap:6px}
+  .coin-pill strong{font-size:15px}
+  .search input{font-size:15px}
+  .hero{padding:22px;min-height:320px}
+  .hero h1{font-size:36px}
+  .hero p{font-size:15px}
+  .hero-actions{gap:10px}
+  .btn.secondary .nav-icon{display:none}
+  .profile-meta b{margin-left:4px}
+  .activity{grid-template-columns:auto 1fr}
+  .activity time{grid-column:2;color:var(--gold)}
+  .bottom-item small{font-size:11px}
+}
