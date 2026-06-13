@@ -34,8 +34,9 @@ window.VM_RULES = {
   load('gamblingRatingRenameScript', 'js/rename-gambling-rating.js?v=1');
   load('bettingGuardScript', 'js/betting-guard.js?v=1');
   load('bottomNavIconsScript', 'js/bottom-nav-icons.js?v=2');
-  load('vmMatchCardsScript', 'js/vm-match-cards.js?v=2');
-  load('activeBetsCouponScript', 'js/active-bets-coupon.js?v=1');
+  load('vmMatchCardsScript', 'js/vm-match-cards.js?v=3');
+  load('activeBetsCouponScript', 'js/active-bets-coupon.js?v=2');
   load('publicProfilesScript', 'js/public-profiles.js?v=1');
   load('profilePhotosScript', 'js/profile-photos.js?v=1');
+  load('chessRoomImageScript', 'js/chess-room-image.js?v=1');
 })();
