@@ -39,4 +39,5 @@ window.VM_RULES = {
   load('publicProfilesScript', 'js/public-profiles.js?v=1');
   load('profilePhotosScript', 'js/profile-photos.js?v=1');
   load('chessRoomImageScript', 'js/chess-room-image.js?v=1');
+  load('chessRoomImageFixScript', 'js/chess-room-image-fix.js?v=1');
 })();
