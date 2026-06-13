@@ -25,10 +25,12 @@ service cloud.firestore {
         && request.resource.data.coins == 5000
         && request.resource.data.isAdmin == false;
 
-      allow update: if isOwner(uid)
+      // Testing/demo: sjakkrommet oppdaterer ELO for begge spillere etter ferdig parti.
+      // Dette kan strammes inn senere med Cloud Functions.
+      allow update: if signedIn()
         && request.resource.data.isAdmin == resource.data.isAdmin;
 
-      allow update, delete: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     match /matches/{matchId} {
