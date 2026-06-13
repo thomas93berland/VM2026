@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VM2026 Firebase Auth Test</title>
+  <style>
+    body{margin:0;min-height:100vh;background:#07111f;color:#f7efe4;font-family:Arial,sans-serif;display:grid;place-items:center;padding:20px}
+    main{width:min(520px,100%);background:#0e2036;border:1px solid rgba(228,184,78,.35);border-radius:24px;padding:22px;box-shadow:0 20px 70px rgba(0,0,0,.45)}
+    h1{margin:0 0 8px;font-size:26px}p{color:#b8c4d4}.input,button{width:100%;box-sizing:border-box;border-radius:14px;padding:13px;margin:7px 0;font-size:16px}.input{background:#07111f;color:#fff;border:1px solid #30435f}button{border:0;background:#e4b84e;color:#07111f;font-weight:800}.secondary{background:#243852;color:#fff}pre{white-space:pre-wrap;background:#050b13;border:1px solid #263a56;border-radius:14px;padding:12px;min-height:130px;color:#d9e7ff}.ok{color:#81e39b}.bad{color:#ff9b9b}
+  </style>
+</head>
+<body>
+<main>
+  <h1>Firebase Auth Test</h1>
+  <p>Denne siden tester bare Firebase Authentication. Hvis dette ikke fungerer, er feilen i Firebase-innstillinger/API-nøkkel/domene, ikke i VM Lounge-koden.</p>
+  <input id="email" class="input" type="email" placeholder="E-post" />
+  <input id="password" class="input" type="password" placeholder="Passord minst 6 tegn" />
+  <button id="registerBtn">Test registrering</button>
+  <button id="loginBtn" class="secondary">Test login</button>
+  <button id="logoutBtn" class="secondary">Logg ut</button>
+  <pre id="log">Starter...</pre>
+</main>
+<script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-auth-compat.js"></script>
+<script src="js/firebase-config.js?v=auth-test-1"></script>
+<script>
+const logEl = document.getElementById('log');
+function log(message, isBad=false){
+  const line = `[${new Date().toLocaleTimeString('nb-NO')}] ${message}`;
+  logEl.innerHTML += '\n' + (isBad ? '<span class="bad">' + line + '</span>' : '<span class="ok">' + line + '</span>');
+  console.log(message);
+}
+window.onerror = function(msg, src, line, col, err){ log('JS-feil: ' + msg + ' @ ' + line + ':' + col, true); };
+(async function(){
+  try{
+    if(!window.firebase) throw new Error('Firebase SDK ble ikke lastet');
+    if(!window.VM_FIREBASE_CONFIG) throw new Error('js/firebase-config.js ble ikke lastet');
+    firebase.initializeApp(window.VM_FIREBASE_CONFIG);
+    const auth = firebase.auth();
+    log('Firebase config OK. projectId=' + window.VM_FIREBASE_CONFIG.projectId);
+    log('Nåværende domene: ' + location.hostname);
+    auth.onAuthStateChanged(user => log(user ? 'Innlogget som: ' + user.email : 'Ikke innlogget'));
+    document.getElementById('registerBtn').onclick = async () => {
+      try{
+        const email = document.getElementById('email').value.trim();
+        const pass = document.getElementById('password').value;
+        log('Prøver registrering for ' + email + ' ...');
+        const cred = await auth.createUserWithEmailAndPassword(email, pass);
+        log('SUCCESS: Bruker opprettet: ' + cred.user.uid);
+      }catch(e){
+        log('ERROR: ' + (e.code || '') + ' ' + (e.message || e), true);
+      }
+    };
+    document.getElementById('loginBtn').onclick = async () => {
+      try{
+        const email = document.getElementById('email').value.trim();
+        const pass = document.getElementById('password').value;
+        log('Prøver login for ' + email + ' ...');
+        const cred = await auth.signInWithEmailAndPassword(email, pass);
+        log('SUCCESS: Logget inn: ' + cred.user.uid);
+      }catch(e){
+        log('ERROR: ' + (e.code || '') + ' ' + (e.message || e), true);
+      }
+    };
+    document.getElementById('logoutBtn').onclick = () => auth.signOut();
+  }catch(e){
+    log('STARTFEIL: ' + (e.message || e), true);
+  }
+})();
+</script>
+</body>
+</html>
