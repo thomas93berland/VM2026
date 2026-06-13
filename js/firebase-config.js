@@ -16,3 +16,12 @@ window.VM_RULES = {
   START_COINS: 5000,
   MAX_STAKE: 500
 };
+
+(function loadHomeImageAdminScript(){
+  if (document.getElementById('homeImageAdminScript')) return;
+  var s = document.createElement('script');
+  s.id = 'homeImageAdminScript';
+  s.src = 'js/home-image.js?v=1';
+  s.defer = true;
+  document.head.appendChild(s);
+})();
