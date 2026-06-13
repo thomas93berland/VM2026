@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VM Lounge Debug Loader</title>
+  <style>
+    body{margin:0;background:#07111f;color:#f7efe4;font-family:Arial,sans-serif;padding:18px}
+    main{max-width:760px;margin:auto;background:#0e2036;border:1px solid rgba(228,184,78,.45);border-radius:22px;padding:18px}
+    h1{margin-top:0}pre{white-space:pre-wrap;background:#050b13;border:1px solid #263a56;border-radius:14px;padding:12px;min-height:180px;color:#d9e7ff}.ok{color:#a4ffb5}.bad{color:#ff9b9b}.btn{display:block;text-align:center;margin-top:14px;background:#e4b84e;color:#07111f;font-weight:800;padding:14px;border-radius:14px;text-decoration:none}
+  </style>
+</head>
+<body>
+<main>
+  <h1>VM Lounge Debug Loader</h1>
+  <p>Denne sjekker om de faktiske filene som hovedappen bruker finnes og hvilken versjon som serveres.</p>
+  <pre id="log">Starter...</pre>
+  <a class="btn" href="index.html?v=debug4">Åpne hovedappen etterpå</a>
+</main>
+<script>
+const logEl=document.getElementById('log');
+function log(m,bad=false){const line='['+new Date().toLocaleTimeString('nb-NO')+'] '+m;logEl.innerHTML+='\n<span class="'+(bad?'bad':'ok')+'">'+line.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))+'</span>';console.log(m)}
+async function check(path){try{const r=await fetch(path+'?cachebust='+Date.now(),{cache:'no-store'});const txt=await r.text();log(path+' → HTTP '+r.status+' · '+txt.length+' tegn');return txt}catch(e){log(path+' → FEIL '+e.message,true)}}
+(async()=>{
+  log('URL: '+location.href);
+  log('Host: '+location.hostname);
+  const index=await check('index.html');
+  const config=await check('js/firebase-config.js');
+  const app=await check('js/app.js');
+  if(index){log(index.includes('debug3')?'index.html inneholder debug3 ✅':'index.html inneholder IKKE debug3 ❌',!index.includes('debug3'))}
+  if(config){log(config.includes('VM_FIREBASE_CONFIG')?'firebase-config.js OK ✅':'firebase-config mangler config ❌',!config.includes('VM_FIREBASE_CONFIG'))}
+  if(app){log(app.includes('VM_APP_VERSION')?'app.js debug-versjon OK ✅':'app.js er gammel/ikke debug ❌',!app.includes('VM_APP_VERSION'))}
+})();
+</script>
+</body>
+</html>
