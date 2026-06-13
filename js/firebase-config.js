@@ -32,4 +32,5 @@ window.VM_RULES = {
   load('leaderboardCleanScript', 'js/leaderboard-clean.js?v=1');
   load('bottomNavCleanScript', 'js/bottom-nav-clean.js?v=1');
   load('gamblingRatingRenameScript', 'js/rename-gambling-rating.js?v=1');
+  load('bettingGuardScript', 'js/betting-guard.js?v=1');
 })();
