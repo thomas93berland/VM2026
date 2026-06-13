@@ -6,8 +6,25 @@
     users:'<svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="9" r="3" stroke="currentColor" stroke-width="2.1"/><circle cx="16.5" cy="10.5" r="2.5" stroke="currentColor" stroke-width="2.1"/><path d="M4.5 18c.8-2.3 2.9-3.5 4.5-3.5s3.7 1.2 4.5 3.5" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/><path d="M14 18c.5-1.6 2-2.5 3.2-2.5 1 0 2.2.5 3 1.7" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></svg>',
     profile:'<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.6" stroke="currentColor" stroke-width="2.2"/><path d="M5 19c1.2-3 4-4.5 7-4.5s5.8 1.5 7 4.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>'
   };
-  function style(){if(document.getElementById('bottomNavIconsStyle'))return;let s=document.createElement('style');s.id='bottomNavIconsStyle';s.textContent='.bottom-nav .nav-icon{display:inline-flex!important;align-items:center!important;justify-content:center!important}.bottom-nav .nav-icon svg{width:100%!important;height:100%!important;display:block!important;filter:drop-shadow(0 0 8px rgba(228,184,78,.18))}.bottom-nav .bottom-item.active .nav-icon svg{filter:none!important}';document.head.appendChild(s)}
-  function apply(){document.querySelectorAll('.bottom-nav .nav-icon[data-icon]').forEach(el=>{let i=icons[el.dataset.icon];if(i&&el.innerHTML!==i)el.innerHTML=i})}
-  function boot(){style();apply();new MutationObserver(apply).observe(document.body,{childList:true,subtree:true})}
+  function style(){
+    if(document.getElementById('bottomNavIconsStyle'))return;
+    let s=document.createElement('style');
+    s.id='bottomNavIconsStyle';
+    s.textContent='.bottom-nav .nav-icon{display:inline-flex!important;align-items:center!important;justify-content:center!important}.bottom-nav .nav-icon svg{width:100%!important;height:100%!important;display:block!important;filter:drop-shadow(0 0 8px rgba(228,184,78,.18))}.bottom-nav .bottom-item.active .nav-icon svg{filter:none!important}';
+    document.head.appendChild(s);
+  }
+  function apply(){
+    document.querySelectorAll('.bottom-nav .nav-icon[data-icon]').forEach(el=>{
+      if(el.dataset.svgDone==='1')return;
+      let i=icons[el.dataset.icon];
+      if(i){el.innerHTML=i;el.dataset.svgDone='1'}
+    });
+  }
+  function boot(){
+    style();
+    apply();
+    setTimeout(apply,500);
+    setTimeout(apply,1500);
+  }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
