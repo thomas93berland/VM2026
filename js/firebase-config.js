@@ -42,4 +42,5 @@ window.VM_RULES = {
   load('chessRoomImageFixScript', 'js/chess-room-image-fix.js?v=1');
   load('homeLiveMatchScript', 'js/home-live-match.js?v=2');
   load('chessRoomPolishScript', 'js/chess-room-polish.js?v=1');
+  load('homeScoreResultOverrideScript', 'js/home-score-result-override.js?v=1');
 })();
