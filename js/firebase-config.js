@@ -30,4 +30,5 @@ window.VM_RULES = {
   load('adminUsersScript', 'js/admin-users.js?v=1');
   load('chatFixScript', 'js/chat-fix.js?v=1');
   load('leaderboardCleanScript', 'js/leaderboard-clean.js?v=1');
+  load('bottomNavCleanScript', 'js/bottom-nav-clean.js?v=1');
 })();
