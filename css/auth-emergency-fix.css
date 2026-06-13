@@ -1,0 +1,28 @@
+html,body{min-height:100%;}
+.auth-screen:not([hidden]){
+  position:fixed!important;
+  inset:0!important;
+  z-index:999999!important;
+  pointer-events:auto!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
+.auth-screen:not([hidden]) .auth-card,
+.auth-screen:not([hidden]) .auth-card *{
+  pointer-events:auto!important;
+}
+.auth-screen:not([hidden]) input,
+.auth-screen:not([hidden]) button,
+.auth-screen:not([hidden]) form{
+  position:relative!important;
+  z-index:1000000!important;
+  pointer-events:auto!important;
+  touch-action:manipulation!important;
+}
+body:has(.auth-screen:not([hidden])) .app,
+body:has(.auth-screen:not([hidden])) .bottom-nav,
+body:has(.auth-screen:not([hidden])) .sidebar,
+body:has(.auth-screen:not([hidden])) .main{
+  pointer-events:none!important;
+}
