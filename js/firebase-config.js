@@ -36,4 +36,5 @@ window.VM_RULES = {
   load('bottomNavIconsScript', 'js/bottom-nav-icons.js?v=2');
   load('vmMatchCardsScript', 'js/vm-match-cards.js?v=2');
   load('activeBetsCouponScript', 'js/active-bets-coupon.js?v=1');
+  load('publicProfilesScript', 'js/public-profiles.js?v=1');
 })();
