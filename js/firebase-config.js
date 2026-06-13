@@ -17,11 +17,15 @@ window.VM_RULES = {
   MAX_STAKE: 500
 };
 
-(function loadHomeImageAdminScript(){
-  if (document.getElementById('homeImageAdminScript')) return;
-  var s = document.createElement('script');
-  s.id = 'homeImageAdminScript';
-  s.src = 'js/home-image.js?v=1';
-  s.defer = true;
-  document.head.appendChild(s);
+(function loadExtraScripts(){
+  function load(id, src) {
+    if (document.getElementById(id)) return;
+    var s = document.createElement('script');
+    s.id = id;
+    s.src = src;
+    s.defer = true;
+    document.head.appendChild(s);
+  }
+  load('homeImageAdminScript', 'js/home-image.js?v=2');
+  load('adminUsersScript', 'js/admin-users.js?v=1');
 })();
