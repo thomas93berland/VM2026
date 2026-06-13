@@ -28,4 +28,5 @@ window.VM_RULES = {
   }
   load('homeImageAdminScript', 'js/home-image.js?v=2');
   load('adminUsersScript', 'js/admin-users.js?v=1');
+  load('chatFixScript', 'js/chat-fix.js?v=1');
 })();
