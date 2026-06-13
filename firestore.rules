@@ -70,5 +70,10 @@ service cloud.firestore {
       allow update: if signedIn();
       allow delete: if isAdmin();
     }
+
+    match /siteSettings/{settingId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isAdmin();
+    }
   }
 }
