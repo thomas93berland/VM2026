@@ -31,4 +31,5 @@ window.VM_RULES = {
   load('chatFixScript', 'js/chat-fix.js?v=1');
   load('leaderboardCleanScript', 'js/leaderboard-clean.js?v=1');
   load('bottomNavCleanScript', 'js/bottom-nav-clean.js?v=1');
+  load('gamblingRatingRenameScript', 'js/rename-gambling-rating.js?v=1');
 })();
