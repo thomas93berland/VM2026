@@ -34,4 +34,5 @@ window.VM_RULES = {
   load('gamblingRatingRenameScript', 'js/rename-gambling-rating.js?v=1');
   load('bettingGuardScript', 'js/betting-guard.js?v=1');
   load('bottomNavIconsScript', 'js/bottom-nav-icons.js?v=2');
+  load('vmMatchCardsScript', 'js/vm-match-cards.js?v=1');
 })();
