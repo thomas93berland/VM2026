@@ -14,7 +14,19 @@
     return doc.exists?doc.data():null;
   }
   function matchResult(match){
-    return match&&match.result?String(match.result):'';
+    const r=match&&match.result;
+    if(!r)return '';
+    const raw=String(r).trim().toLowerCase();
+    if(raw==='home'||raw==='draw'||raw==='away')return raw;
+    const nums=raw.match(/\d+/g);
+    if(nums&&nums.length>=2){
+      const h=Number(nums[0]);
+      const a=Number(nums[1]);
+      if(h>a)return 'home';
+      if(a>h)return 'away';
+      return 'draw';
+    }
+    return raw;
   }
   function isBetReady(bet,matchMap){
     const selections=bet.selections||[];
@@ -31,35 +43,38 @@
       const ms=await db.collection('matches').get();
       const matchMap={};
       ms.docs.forEach(d=>matchMap[d.id]={id:d.id,...d.data()});
-      const bs=await db.collection('bets').where('status','==','Aktiv').get();
-      for(const d of bs.docs){
+      const active=await db.collection('bets').where('status','==','Aktiv').get();
+      const unpaidWon=await db.collection('bets').where('status','==','Vunnet').get();
+      const docs=[...active.docs,...unpaidWon.docs];
+      for(const d of docs){
         const bet={id:d.id,...d.data()};
-        if(!isBetReady(bet,matchMap))continue;
-        const won=isBetWon(bet,matchMap);
+        if(bet.payoutPaid===true)continue;
+        if(!isBetReady(bet,matchMap)&&bet.status==='Aktiv')continue;
+        const won=bet.status==='Vunnet'?true:isBetWon(bet,matchMap);
         const userRef=db.collection('users').doc(bet.userId);
         const betRef=db.collection('bets').doc(bet.id);
         const stake=Number(bet.stake||0);
         const payout=Number(bet.possibleWin||0);
         const net=won?payout-stake:-stake;
         const batch=db.batch();
-        batch.update(betRef,{
+        const betUpdate={
           status:won?'Vunnet':'Tapt',
-          settledAtMs:Date.now(),
+          settledAtMs:bet.settledAtMs||Date.now(),
           settledAt:firebase.firestore.FieldValue.serverTimestamp(),
           gamblingEloDelta:won?WIN_ELO:LOSS_ELO,
           netResult:net
-        });
-        const userUpdate={
-          completedBets:firebase.firestore.FieldValue.increment(1),
-          netProfit:firebase.firestore.FieldValue.increment(net),
-          elo:firebase.firestore.FieldValue.increment(won?WIN_ELO:LOSS_ELO),
-          gamblingElo:firebase.firestore.FieldValue.increment(won?WIN_ELO:LOSS_ELO),
-          updatedAt:firebase.firestore.FieldValue.serverTimestamp()
         };
-        if(won){
-          userUpdate.wonBets=firebase.firestore.FieldValue.increment(1);
-          userUpdate.coins=firebase.firestore.FieldValue.increment(payout);
+        if(won)betUpdate.payoutPaid=true;
+        batch.update(betRef,betUpdate);
+        const userUpdate={updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+        if(bet.status==='Aktiv'){
+          userUpdate.completedBets=firebase.firestore.FieldValue.increment(1);
+          userUpdate.netProfit=firebase.firestore.FieldValue.increment(net);
+          userUpdate.elo=firebase.firestore.FieldValue.increment(won?WIN_ELO:LOSS_ELO);
+          userUpdate.gamblingElo=firebase.firestore.FieldValue.increment(won?WIN_ELO:LOSS_ELO);
+          if(won)userUpdate.wonBets=firebase.firestore.FieldValue.increment(1);
         }
+        if(won)userUpdate.coins=firebase.firestore.FieldValue.increment(payout);
         batch.update(userRef,userUpdate);
         await batch.commit();
       }
@@ -75,6 +90,7 @@
         settle();
         db.collection('matches').onSnapshot(()=>settle());
         db.collection('bets').where('status','==','Aktiv').onSnapshot(()=>settle());
+        db.collection('bets').where('status','==','Vunnet').onSnapshot(()=>settle());
       }
     });
   }
