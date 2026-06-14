@@ -46,4 +46,5 @@ window.VM_RULES = {
   load('friendsScript', 'js/friends.js?v=2');
   load('oddsButtonSizeScript', 'js/odds-button-size.js?v=1');
   load('gamblingEloSettlementScript', 'js/gambling-elo-settlement.js?v=2');
+  load('profileRankInlineScript', 'js/profile-rank-inline.js?v=1');
 })();
