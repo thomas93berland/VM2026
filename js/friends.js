@@ -23,15 +23,20 @@
   }
   function avatar(u){return u.photoData?`<img src="${u.photoData}" alt="">`:esc((u.name||u.displayName||u.email||'?').slice(0,1).toUpperCase())}
   function profileText(u){return `VM Coins: ${Number(u.coins||0).toLocaleString('nb-NO')} · Rating: ${u.gamblingRating||u.elo||500}`}
+  function place(host){
+    const profile=document.getElementById('page-profile')||document.querySelector('.page.active')||document.querySelector('.main');
+    const stats=profile?.querySelector('.profile-stats');
+    if(stats&&stats.parentNode){stats.parentNode.insertBefore(host,stats.nextSibling);return}
+    const card=profile?.querySelector('.profile-card,.card:last-child');
+    if(card&&card.parentNode)card.parentNode.insertBefore(host,card.nextSibling);else profile?.appendChild(host);
+  }
   function ensureCard(){
     css();
     let host=document.getElementById('friendsCard');
-    if(host)return host;
+    if(host){place(host);return host;}
     host=document.createElement('article');host.id='friendsCard';host.className='card friends-card';
     host.innerHTML=`<div class="friends-head"><div><small>Community</small><h3>Venner</h3></div><span id="friendsCount">0</span></div><div class="friends-search"><input id="friendsSearchInput" placeholder="Søk etter bruker"><button id="friendsSearchBtn" type="button">Søk</button></div><div id="friendsResults" class="friends-results"></div><div style="height:10px"></div><div id="friendsList" class="friends-list"></div>`;
-    const profile=document.getElementById('page-profile')||document.querySelector('.page.active')||document.querySelector('.main');
-    const card=profile?.querySelector('.profile-card,.card:last-child');
-    if(card&&card.parentNode)card.parentNode.insertBefore(host,card.nextSibling);else profile?.appendChild(host);
+    place(host);
     host.querySelector('#friendsSearchBtn').addEventListener('click',search);
     host.querySelector('#friendsSearchInput').addEventListener('input',()=>search(false));
     host.addEventListener('click',onClick);
