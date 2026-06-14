@@ -43,4 +43,5 @@ window.VM_RULES = {
   load('homeLiveMatchScript', 'js/home-live-match.js?v=2');
   load('chessRoomPolishScript', 'js/chess-room-polish.js?v=1');
   load('homeScoreResultOverrideScript', 'js/home-score-result-override.js?v=1');
+  load('homeLiveTvScript', 'js/home-live-tv.js?v=1');
 })();
