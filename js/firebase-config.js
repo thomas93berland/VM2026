@@ -45,4 +45,5 @@ window.VM_RULES = {
   load('homeScoreResultOverrideScript', 'js/home-score-result-override.js?v=1');
   load('homeLiveTvScript', 'js/home-live-tv.js?v=1');
   load('friendsScript', 'js/friends.js?v=1');
+  load('homeLiveStableScript', 'js/home-live-stable.js?v=1');
 })();
