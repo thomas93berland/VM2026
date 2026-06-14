@@ -56,4 +56,5 @@ window.VM_LIVE_SCORE_FUNCTION_URL = "https://us-central1-the-club-17c87.cloudfun
   load('homeLiveScoreFixScript', 'js/home-live-score-fix.js?v=1');
   load('liveScoreApiScript', 'js/live-score-api.js?v=1');
   load('homeLiveCleanNamesScript', 'js/home-live-clean-names.js?v=1');
+  load('recentBetsActivityScript', 'js/recent-bets-activity.js?v=1');
 })();
