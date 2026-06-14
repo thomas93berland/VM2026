@@ -44,4 +44,5 @@ window.VM_RULES = {
   load('chessRoomPolishScript', 'js/chess-room-polish.js?v=1');
   load('homeScoreResultOverrideScript', 'js/home-score-result-override.js?v=1');
   load('friendsScript', 'js/friends.js?v=1');
+  load('oddsButtonSizeScript', 'js/odds-button-size.js?v=1');
 })();
