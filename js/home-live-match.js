@@ -12,8 +12,7 @@
     auth=firebase.auth();db=firebase.firestore();return true;
   }
   function injectStyles(){
-    const old=document.getElementById('homeLiveMatchStyles');
-    if(old)old.remove();
+    if(document.getElementById('homeLiveMatchStyles'))return;
     const s=document.createElement('style');
     s.id='homeLiveMatchStyles';
     s.textContent=`
@@ -82,7 +81,6 @@
   }
   function bindNavWatcher(){
     document.addEventListener('click',e=>{if(e.target.closest('[data-page],[data-go]'))setTimeout(renderCard,80)});
-    setInterval(renderCard,2000);
   }
   function boot(){
     injectStyles();ensureCard();bindNavWatcher();renderCard();
