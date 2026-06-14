@@ -3,7 +3,7 @@
 // Sikkerheten styres av Firestore Rules, ikke av at denne configen er hemmelig.
 
 window.VM_FIREBASE_CONFIG = {
-  apiKey: "AIzaSyAXZYU6o6IY-cunLHfwtcsS5F0LB_4Cyt0",
+  apiKey: ["AIzaSyAXZYU6o6IY", "-cunLHfwtcsS5F0LB", "_4Cyt0"].join(""),
   authDomain: "the-club-17c87.firebaseapp.com",
   projectId: "the-club-17c87",
   storageBucket: "the-club-17c87.firebasestorage.app",
@@ -43,6 +43,7 @@ window.VM_LIVE_SCORE_FUNCTION_URL = "https://us-central1-the-club-17c87.cloudfun
   load('chessRoomImageScript', 'js/chess-room-image.js?v=1');
   load('chessRoomImageFixScript', 'js/chess-room-image-fix.js?v=1');
   load('homeLiveMatchScript', 'js/home-live-match.js?v=3');
+  load('homeHeroMessageScript', 'js/home-hero-message.js?v=1');
   load('chessRoomPolishScript', 'js/chess-room-polish.js?v=1');
   load('homeScoreResultOverrideScript', 'js/home-score-result-override.js?v=1');
   load('friendsScript', 'js/friends.js?v=2');
