@@ -6,7 +6,7 @@ admin.initializeApp();
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-apisports-key'
 };
 
 function env(name, fallback = '') {
@@ -15,6 +15,7 @@ function env(name, fallback = '') {
 
 function getArray(payload) {
   if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.response)) return payload.response;
   if (Array.isArray(payload?.matches)) return payload.matches;
   if (Array.isArray(payload?.data)) return payload.data;
   if (Array.isArray(payload?.results)) return payload.results;
@@ -36,44 +37,43 @@ function teamName(team) {
 }
 
 function normalizeMatch(m) {
-  const homeTeam = m.homeTeam || m.home_team || m.home || m.team1 || m.homeTeamData;
-  const awayTeam = m.awayTeam || m.away_team || m.away || m.team2 || m.awayTeamData;
+  const fixture = m.fixture || {};
+  const teams = m.teams || {};
+  const goals = m.goals || {};
   const score = m.score || m.result || {};
-  const homeScore = pick(m, ['homeScore', 'scoreHome', 'homeGoals', 'home_score']) ?? pick(score, ['homeScore', 'scoreHome', 'homeGoals', 'home', 'home_score']);
-  const awayScore = pick(m, ['awayScore', 'scoreAway', 'awayGoals', 'away_score']) ?? pick(score, ['awayScore', 'scoreAway', 'awayGoals', 'away', 'away_score']);
+  const homeTeam = teams.home || m.homeTeam || m.home_team || m.home || m.team1 || m.homeTeamData;
+  const awayTeam = teams.away || m.awayTeam || m.away_team || m.away || m.team2 || m.awayTeamData;
+  const homeScore = pick(m, ['homeScore', 'scoreHome', 'homeGoals', 'home_score']) ?? goals.home ?? pick(score, ['homeScore', 'scoreHome', 'homeGoals', 'home', 'home_score']);
+  const awayScore = pick(m, ['awayScore', 'scoreAway', 'awayGoals', 'away_score']) ?? goals.away ?? pick(score, ['awayScore', 'scoreAway', 'awayGoals', 'away', 'away_score']);
+  const status = fixture.status || m.status || {};
+  const venue = fixture.venue || m.venue || m.stadium || {};
+  const league = m.league || {};
 
   return {
-    apiId: String(m.id || m.matchId || m.match_id || ''),
+    apiId: String(fixture.id || m.id || m.matchId || m.match_id || ''),
     home: teamName(homeTeam) || String(m.homeName || m.home_name || ''),
     away: teamName(awayTeam) || String(m.awayName || m.away_name || ''),
     homeScore: homeScore === undefined ? null : Number(homeScore),
     awayScore: awayScore === undefined ? null : Number(awayScore),
-    status: String(m.status || m.matchStatus || m.state || ''),
-    group: String(m.group || m.groupName || m.stage || ''),
-    venue: teamName(m.venue || m.stadium) || String(m.venueName || m.stadiumName || ''),
-    time: m.time || m.date || m.utcDate || m.kickoff || m.startTime || null,
+    status: String(status.long || status.short || m.matchStatus || m.state || ''),
+    elapsed: status.elapsed ?? null,
+    group: String(league.round || m.group || m.groupName || m.stage || ''),
+    venue: teamName(venue) || String(m.venueName || m.stadiumName || ''),
+    time: fixture.date || m.time || m.date || m.utcDate || m.kickoff || m.startTime || null,
     raw: m
   };
 }
 
-async function getToken() {
-  const directToken = env('LIVE_API_TOKEN');
-  if (directToken) return directToken;
-
-  const base = env('LIVE_API_BASE_URL');
-  const username = env('LIVE_API_USERNAME');
-  const password = env('LIVE_API_PASSWORD');
-  const loginPath = env('LIVE_API_LOGIN_PATH', '/api/auth/login');
-  if (!base || !username || !password) return '';
-
-  const res = await fetch(base + loginPath, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, email: username, password })
-  });
-  if (!res.ok) throw new Error('Live API login failed: ' + res.status);
-  const data = await res.json();
-  return data.token || data.accessToken || data.access_token || data.jwt || '';
+function apiSportsUrl(mode) {
+  const base = env('LIVE_API_BASE_URL', 'https://v3.football.api-sports.io');
+  const leagueId = env('LIVE_API_LEAGUE_ID', '732');
+  const season = env('LIVE_API_SEASON', '2026');
+  const path = env('LIVE_API_FIXTURES_PATH', '/fixtures');
+  const params = new URLSearchParams();
+  params.set('league', leagueId);
+  params.set('season', season);
+  if (mode === 'live') params.set('live', 'all');
+  return base + path + '?' + params.toString();
 }
 
 exports.liveScores = onRequest({ region: 'us-central1', timeoutSeconds: 30 }, async (req, res) => {
@@ -82,24 +82,22 @@ exports.liveScores = onRequest({ region: 'us-central1', timeoutSeconds: 30 }, as
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const base = env('LIVE_API_BASE_URL');
-    if (!base) return res.status(500).json({ error: 'LIVE_API_BASE_URL is not configured' });
-
     const mode = String(req.query.mode || 'live');
-    const livePath = env('LIVE_API_LIVE_PATH', '/api/matches/live');
-    const matchesPath = env('LIVE_API_MATCHES_PATH', '/api/matches');
-    const url = base + (mode === 'all' ? matchesPath : livePath);
-    const token = await getToken();
+    const token = env('LIVE_API_TOKEN');
+    if (!token) return res.status(500).json({ error: 'LIVE_API_TOKEN is not configured' });
 
-    const headers = { 'Accept': 'application/json' };
-    if (token) headers.Authorization = 'Bearer ' + token;
+    const url = apiSportsUrl(mode === 'all' ? 'all' : 'live');
+    const headers = {
+      'Accept': 'application/json',
+      'x-apisports-key': token
+    };
 
     const apiRes = await fetch(url, { headers });
-    if (!apiRes.ok) return res.status(apiRes.status).json({ error: 'Live API failed', status: apiRes.status });
+    if (!apiRes.ok) return res.status(apiRes.status).json({ error: 'API Sports failed', status: apiRes.status });
     const payload = await apiRes.json();
     const matches = getArray(payload).map(normalizeMatch);
 
-    return res.json({ updatedAt: Date.now(), mode, matches });
+    return res.json({ updatedAt: Date.now(), provider: 'api-sports-football', leagueId: env('LIVE_API_LEAGUE_ID', '732'), season: env('LIVE_API_SEASON', '2026'), mode, matches });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: error.message || 'Live score error' });
