@@ -40,10 +40,8 @@ window.VM_RULES = {
   load('profilePhotosScript', 'js/profile-photos.js?v=1');
   load('chessRoomImageScript', 'js/chess-room-image.js?v=1');
   load('chessRoomImageFixScript', 'js/chess-room-image-fix.js?v=1');
-  load('homeLiveMatchScript', 'js/home-live-match.js?v=2');
+  load('homeLiveMatchScript', 'js/home-live-match.js?v=3');
   load('chessRoomPolishScript', 'js/chess-room-polish.js?v=1');
   load('homeScoreResultOverrideScript', 'js/home-score-result-override.js?v=1');
-  load('homeLiveTvScript', 'js/home-live-tv.js?v=1');
   load('friendsScript', 'js/friends.js?v=1');
-  load('homeLiveStableScript', 'js/home-live-stable.js?v=1');
 })();
