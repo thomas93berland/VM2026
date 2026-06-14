@@ -51,7 +51,6 @@ window.VM_LIVE_SCORE_FUNCTION_URL = "https://us-central1-the-club-17c87.cloudfun
   load('compactMatchCardsScript', 'js/compact-match-cards.js?v=1');
   load('biggerFlagsScript', 'js/bigger-flags.js?v=3');
   load('moveClearSlipScript', 'js/move-clear-slip.js?v=1');
-  load('homeLiveAdminResultScript', 'js/home-live-admin-result.js?v=1');
   load('gamblingEloSettlementScript', 'js/gambling-elo-settlement.js?v=2');
   load('profileRankInlineScript', 'js/profile-rank-inline.js?v=1');
   load('homeLiveScoreFixScript', 'js/home-live-score-fix.js?v=1');
