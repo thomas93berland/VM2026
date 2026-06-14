@@ -1,4 +1,5 @@
 (()=>{
+  function load(id,src){if(document.getElementById(id))return;const s=document.createElement('script');s.id=id;s.src=src;s.defer=true;document.head.appendChild(s)}
   function apply(){
     if(document.getElementById('oddsButtonSizeStyle'))return;
     const s=document.createElement('style');
@@ -38,6 +39,8 @@
       }
     `;
     document.head.appendChild(s);
+    load('gamblingEloSettlementScript','js/gambling-elo-settlement.js?v=1');
+    load('profileRankScript','js/profile-rank.js?v=1');
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply);else apply();
 })();
