@@ -17,6 +17,8 @@ window.VM_RULES = {
   MAX_STAKE: 500
 };
 
+window.VM_LIVE_SCORE_FUNCTION_URL = "https://us-central1-the-club-17c87.cloudfunctions.net/liveScores";
+
 (function loadExtraScripts(){
   function load(id, src) {
     if (document.getElementById(id)) return;
@@ -48,4 +50,5 @@ window.VM_RULES = {
   load('gamblingEloSettlementScript', 'js/gambling-elo-settlement.js?v=2');
   load('profileRankInlineScript', 'js/profile-rank-inline.js?v=1');
   load('homeLiveScoreFixScript', 'js/home-live-score-fix.js?v=1');
+  load('liveScoreApiScript', 'js/live-score-api.js?v=1');
 })();
