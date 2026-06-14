@@ -43,8 +43,7 @@ window.VM_RULES = {
   load('homeLiveMatchScript', 'js/home-live-match.js?v=3');
   load('chessRoomPolishScript', 'js/chess-room-polish.js?v=1');
   load('homeScoreResultOverrideScript', 'js/home-score-result-override.js?v=1');
-  load('friendsScript', 'js/friends.js?v=1');
+  load('friendsScript', 'js/friends.js?v=2');
   load('oddsButtonSizeScript', 'js/odds-button-size.js?v=1');
   load('gamblingEloSettlementScript', 'js/gambling-elo-settlement.js?v=2');
-  load('profileRankScript', 'js/profile-rank.js?v=1');
 })();
