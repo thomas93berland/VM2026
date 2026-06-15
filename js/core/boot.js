@@ -1,5 +1,5 @@
 (()=>{
-  let recentUnsub=null;
+  let recentUnsub=null,homeMatchUnsub=null;
   const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
   const fmt=v=>Number(v||0).toLocaleString('nb-NO');
 
@@ -38,6 +38,45 @@
     return d.toLocaleString('nb-NO',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
   }
 
+  function matchTime(v){
+    const d=new Date(v||0);
+    if(!v||isNaN(d))return '-';
+    return d.toLocaleString('nb-NO',{weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+  }
+
+  function addHomeMatchWidget(){
+    const home=document.getElementById('page-home');
+    if(!home||home.dataset.matchWidgetBooted==='1')return;
+    if(!window.firebase||!firebase.firestore)return;
+    home.dataset.matchWidgetBooted='1';
+    if(!document.getElementById('safeHomeMatchStyle')){
+      const s=document.createElement('style');
+      s.id='safeHomeMatchStyle';
+      s.textContent='.home-match-widget{margin:0 0 14px;padding:14px;border-radius:20px;background:linear-gradient(135deg,rgba(228,184,78,.14),rgba(5,13,27,.82));border:1px solid rgba(228,184,78,.23);box-shadow:0 14px 30px rgba(0,0,0,.18)}.home-match-widget small{color:var(--gold);font-weight:950;text-transform:uppercase;letter-spacing:.08em}.home-match-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px}.home-match-teams{min-width:0}.home-match-teams b{display:block;color:#fff;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.home-match-teams span{display:block;color:var(--muted);font-size:12px;margin-top:3px}.home-match-badge{padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.09);color:#fff;font-size:12px;font-weight:950;white-space:nowrap}.home-match-badge.live{background:rgba(54,211,153,.13);border-color:rgba(54,211,153,.25);color:#9ee7b7}@media(max-width:520px){.home-match-row{align-items:flex-start}.home-match-badge{font-size:11px}}';
+      document.head.appendChild(s);
+    }
+    const widget=document.createElement('article');
+    widget.className='home-match-widget';
+    widget.id='homeMatchWidget';
+    widget.innerHTML='<small>Neste kamp</small><div class="home-match-row"><div class="home-match-teams"><b>Laster kamp...</b><span>Henter VM-program</span></div><div class="home-match-badge">VM 2026</div></div>';
+    const first=home.firstElementChild;
+    home.insertBefore(widget,first);
+    const db=firebase.firestore();
+    try{
+      if(homeMatchUnsub)homeMatchUnsub();
+      homeMatchUnsub=db.collection('matches').onSnapshot(snap=>{
+        const now=Date.now();
+        const matches=snap.docs.map(d=>({id:d.id,...d.data()}));
+        const open=matches.filter(m=>!m.result).sort((a,b)=>String(a.time||'').localeCompare(String(b.time||'')));
+        const live=open.find(m=>{const t=new Date(m.time||0).getTime();return t&&now>=t&&now<t+130*60*1000;});
+        const next=live||open.find(m=>new Date(m.time||0).getTime()>=now)||open[0];
+        if(!next){widget.innerHTML='<small>Neste kamp</small><div class="home-match-row"><div class="home-match-teams"><b>Ingen åpne kamper</b><span>Thomas/admin kan legge inn kamper</span></div><div class="home-match-badge">Tomt</div></div>';return;}
+        const isLive=!!live;
+        widget.innerHTML='<small>'+(isLive?'Live nå':'Neste kamp')+'</small><div class="home-match-row"><div class="home-match-teams"><b>'+esc(next.home||'Hjemme')+' – '+esc(next.away||'Borte')+'</b><span>'+esc(next.group||'VM 2026')+' · '+esc(matchTime(next.time))+'</span></div><div class="home-match-badge '+(isLive?'live':'')+'">'+(isLive?'LIVE':'KOMMENDE')+'</div></div>';
+      },err=>{console.warn('home match widget',err);});
+    }catch(e){console.warn('home match widget start',e);}
+  }
+
   function addRecentBetsFeed(){
     const box=document.getElementById('homeActivity');
     if(!box||box.dataset.recentBooted==='1')return;
@@ -70,14 +109,16 @@
   function onReady(){
     const run=()=>{
       addBottomNavIcons();
+      addHomeMatchWidget();
       addRecentBetsFeed();
       setTimeout(addBottomNavIcons,500);
-      setTimeout(addRecentBetsFeed,800);
+      setTimeout(addHomeMatchWidget,700);
+      setTimeout(addRecentBetsFeed,900);
     };
     if(window.firebase&&firebase.auth){firebase.auth().onAuthStateChanged(user=>{if(user)run();});}
     document.addEventListener('click',e=>{if(e.target.closest?.('[data-page]'))setTimeout(run,250);});
   }
 
-  window.VM_SAFE_BOOT={startAll:()=>{addBottomNavIcons();addRecentBetsFeed();}};
+  window.VM_SAFE_BOOT={startAll:()=>{addBottomNavIcons();addHomeMatchWidget();addRecentBetsFeed();}};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',onReady);else onReady();
 })();
