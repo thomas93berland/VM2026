@@ -19,7 +19,6 @@ window.VM_RULES = {
 
 window.VM_LIVE_SCORE_FUNCTION_URL = "https://us-central1-the-club-17c87.cloudfunctions.net/liveScores";
 
-// Midlertidig trygg modus:
-// Ekstra patch-/feature-script er slått av for å stabilisere innlogging først.
-// Når login er bekreftet stabil, flytter vi scripts inn igjen ett og ett via en trygg loader.
-window.VM_EXTRA_SCRIPTS_DISABLED = true;
+// Ekstra funksjoner styres nå bare av js/core/boot.js.
+// Boot-loaderen starter kun godkjente scripts etter innlogging.
+window.VM_EXTRA_SCRIPTS_DISABLED = false;
