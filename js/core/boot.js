@@ -26,6 +26,25 @@
     });
   }
 
+  function addSafeProfileLayout(){
+    const page=document.getElementById('page-profile');
+    const card=page?.querySelector('.profile-detail');
+    if(!page||!card)return;
+    if(!document.getElementById('safeProfileStyle')){
+      const s=document.createElement('style');
+      s.id='safeProfileStyle';
+      s.textContent='.safe-premium-profile{position:relative;overflow:hidden;align-items:flex-start!important;padding:22px!important;border-radius:28px!important;background:linear-gradient(145deg,rgba(9,18,34,.96),rgba(4,10,22,.98))!important;border:1px solid rgba(228,184,78,.28)!important;box-shadow:0 22px 45px rgba(0,0,0,.28),inset 0 0 0 1px rgba(255,255,255,.035)!important}.safe-premium-profile:before{content:"";position:absolute;inset:-45% -25% auto auto;width:190px;height:190px;border-radius:999px;background:radial-gradient(circle,rgba(228,184,78,.18),transparent 68%);pointer-events:none}.safe-premium-profile .avatar.large{width:82px!important;height:82px!important;border-radius:999px!important;border:2px solid rgba(228,184,78,.72)!important;box-shadow:0 0 0 6px rgba(228,184,78,.10),0 14px 30px rgba(0,0,0,.35)!important;background:linear-gradient(145deg,#2a2418,#0d1424)!important;color:var(--gold)!important;font-size:34px!important;font-weight:950!important}.safe-premium-profile small{display:block!important;color:rgba(228,184,78,.9)!important;text-transform:uppercase!important;letter-spacing:.18em!important;font-size:11px!important;font-weight:950!important}.safe-premium-profile h1{margin:2px 0 0!important;font-size:50px!important;line-height:.94!important;letter-spacing:-.055em!important;color:var(--gold)!important;text-shadow:0 0 22px rgba(228,184,78,.22)!important;font-family:Georgia,"Times New Roman",serif!important}.safe-premium-profile .safe-rank{display:inline-flex!important;margin-top:11px!important;padding:8px 13px!important;border-radius:999px!important;background:rgba(228,184,78,.12)!important;border:1px solid rgba(228,184,78,.27)!important;color:#fff!important;font-weight:950!important;font-size:15px!important}.safe-premium-profile .btn{position:absolute!important;right:16px!important;bottom:16px!important}.safe-profile-subtitle{margin-top:6px!important;color:var(--muted)!important;font-size:12px!important}@media(max-width:520px){.safe-premium-profile{gap:14px!important;padding:18px!important}.safe-premium-profile .avatar.large{width:72px!important;height:72px!important}.safe-premium-profile h1{font-size:42px!important}.safe-premium-profile .btn{position:static!important;margin-left:0!important;margin-top:12px!important;width:100%!important}}';
+      document.head.appendChild(s);
+    }
+    card.classList.add('safe-premium-profile');
+    const label=card.querySelector('small');
+    const name=card.querySelector('[data-bind="name"]');
+    const p=card.querySelector('p');
+    if(label)label.textContent='NAVN';
+    if(name)name.textContent='Thomas';
+    if(p){p.className='safe-profile-subtitle';p.innerHTML='<span class="safe-rank">Legende ⭐</span><br>VM-tipster • Chess Lounge member';}
+  }
+
   function pickText(b){
     const sels=Array.isArray(b.selections)?b.selections:[];
     if(!sels.length)return 'Spill plassert';
@@ -109,9 +128,11 @@
   function onReady(){
     const run=()=>{
       addBottomNavIcons();
+      addSafeProfileLayout();
       addHomeMatchWidget();
       addRecentBetsFeed();
       setTimeout(addBottomNavIcons,500);
+      setTimeout(addSafeProfileLayout,650);
       setTimeout(addHomeMatchWidget,700);
       setTimeout(addRecentBetsFeed,900);
     };
@@ -119,6 +140,6 @@
     document.addEventListener('click',e=>{if(e.target.closest?.('[data-page]'))setTimeout(run,250);});
   }
 
-  window.VM_SAFE_BOOT={startAll:()=>{addBottomNavIcons();addHomeMatchWidget();addRecentBetsFeed();}};
+  window.VM_SAFE_BOOT={startAll:()=>{addBottomNavIcons();addSafeProfileLayout();addHomeMatchWidget();addRecentBetsFeed();}};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',onReady);else onReady();
 })();
