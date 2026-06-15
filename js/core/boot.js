@@ -1,5 +1,7 @@
 (()=>{
-  const FEATURES=[];
+  const FEATURES=[
+    { id:'bottomNavIconsScript', src:'js/bottom-nav-icons.js?v=2', enabled:true }
+  ];
   const loaded=new Set();
 
   function log(...args){
