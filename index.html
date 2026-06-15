@@ -81,7 +81,6 @@
         <button class="nav-item" data-page="chat">
           <span class="nav-icon" data-icon="chat"></span>
           <span>Chat</span>
-          <i class="dot"></i>
         </button>
         <button class="nav-item" data-page="profile">
           <span class="nav-icon" data-icon="profile"></span>
@@ -94,159 +93,93 @@
       </nav>
 
       <div class="side-wallet">
-        <small>VM Coins</small>
-        <strong data-bind="coins">5 000</strong>
+        <small>Din saldo</small>
+        <strong><span data-bind="coins">5 000</span></strong>
+        <span>VM Coins</span>
       </div>
     </aside>
 
     <main class="main">
       <header class="topbar">
-        <button class="menu-toggle" id="menuToggle" aria-label="Åpne meny">
-          <span></span><span></span><span></span>
-        </button>
-
+        <button class="menu-toggle" id="menuToggle" aria-label="Åpne meny"><span></span><span></span><span></span></button>
         <div class="mobile-brand">
-          <div class="brand-logo small" aria-hidden="true">
-            <svg viewBox="0 0 64 64"><path d="M32 6c9 0 16 7 16 16 0 11-9 21-16 30C25 43 16 33 16 22 16 13 23 6 32 6Z"/><path d="M24 22h16M32 14v16M22 52h20M26 58h12"/></svg>
-          </div>
+          <div class="brand-logo small" aria-hidden="true"><span class="nav-icon" data-icon="trophy"></span></div>
           <div><strong>VM Lounge</strong><span>2026</span></div>
         </div>
-
         <div class="top-actions">
-          <button class="coin-pill" id="coinPill">
-            <span class="coin">◆</span>
-            <strong data-bind="coins">5 000</strong>
-          </button>
-          <button class="bell" aria-label="Varsler">
-            <span class="nav-icon" data-icon="bell"></span>
-            <i></i>
-          </button>
+          <div class="coin-pill"><i class="coin">◆</i><strong data-bind="coins">5 000</strong></div>
+          <button class="bell" aria-label="Varsler"><i></i></button>
         </div>
       </header>
 
-      <label class="search">
+      <div class="search">
         <span class="nav-icon" data-icon="search"></span>
-        <input id="searchInput" type="search" placeholder="Søk etter lag, turneringer eller spillere..." />
-      </label>
+        <input id="searchInput" placeholder="Søk etter kamp, spiller eller innlegg" />
+      </div>
 
       <section class="page active" id="page-home">
         <article class="hero">
           <div class="hero-text">
-            <h1>VM 2026<br><span>Betting med venner</span></h1>
+            <small>VM 2026</small>
+            <h1>Betting med <span>venner</span></h1>
+            <p>Spill med falsk valuta, bygg status på leaderboardet og følg VM-kampene sammen.</p>
             <div class="hero-actions">
               <button class="btn primary" data-go="betting">Se kamper</button>
-              <button class="btn secondary" data-go="leaderboard">
-                <span class="nav-icon" data-icon="medal"></span>
-                Leaderboard
-              </button>
+              <button class="btn secondary" data-go="leaderboard">Leaderboard</button>
             </div>
           </div>
           <div class="hero-art" aria-hidden="true">
-            <div class="trophy-shadow"></div>
             <div class="globe"></div>
+            <div class="trophy-shadow"></div>
           </div>
         </article>
 
-        <article class="card profile-summary">
-          <div class="card-title">
-            <span class="nav-icon gold" data-icon="profile"></span>
-            <h2>Din profil</h2>
-          </div>
-          <div class="profile-row">
-            <div class="avatar" id="homeAvatar">T</div>
-            <div class="profile-main">
-              <h3 data-bind="name">Thomas</h3>
-              <div class="profile-meta">
-                <span><i class="nav-icon gold" data-icon="knight"></i> Sjakk ELO <b data-bind="elo">1032</b></span>
-                <span><i class="coin tiny">◆</i> VM Coins <b data-bind="coins">5 000</b></span>
-              </div>
-            </div>
-            <button class="chevron" data-go="profile" aria-label="Åpne profil">›</button>
-          </div>
-        </article>
+        <div class="stats-grid">
+          <div class="stat"><span class="nav-icon gold" data-icon="ticket"></span><small>Plasserte spill</small><strong data-bind="placedBets">0</strong></div>
+          <div class="stat"><span class="nav-icon gold" data-icon="medal"></span><small>Vinnprosent</small><strong data-bind="hitRate">0%</strong></div>
+          <div class="stat"><span class="coin">◆</span><small>VM Coins</small><strong data-bind="coins">5 000</strong></div>
+          <div class="stat profit"><span class="nav-icon gold" data-icon="trend"></span><small>Netto</small><strong data-bind="netProfit">0</strong></div>
+        </div>
 
-        <article class="card">
-          <div class="card-title">
-            <span class="nav-icon gold" data-icon="stats"></span>
-            <h2>Din statistikk</h2>
-          </div>
-          <div class="stats-grid">
-            <div class="stat">
-              <span class="nav-icon gold" data-icon="cup"></span>
-              <small>Plasserte spill</small>
-              <strong data-bind="placedBets">0</strong>
+        <div class="home-grid">
+          <article class="card">
+            <div class="card-title">
+              <span class="nav-icon gold" data-icon="trophy"></span>
+              <h2>Toppliste</h2>
             </div>
-            <div class="stat">
-              <span class="nav-icon" data-icon="win"></span>
-              <small>Vunnede spill</small>
-              <strong data-bind="wonBets">0</strong>
-            </div>
-            <div class="stat">
-              <span class="nav-icon gold" data-icon="trend"></span>
-              <small>Treffprosent</small>
-              <strong data-bind="hitRate">0%</strong>
-            </div>
-            <div class="stat">
-              <span class="nav-icon gold" data-icon="medal"></span>
-              <small>Rangering</small>
-              <strong data-bind="rank">#1</strong>
-            </div>
-            <div class="stat profit">
-              <span class="nav-icon" data-icon="coins"></span>
-              <small>Netto gevinst</small>
-              <strong data-bind="netProfit">0</strong>
-            </div>
-          </div>
-        </article>
+            <div id="homeLeaderboard" class="leaderboard"></div>
+          </article>
 
-        <article class="card leaderboard-card">
-          <div class="card-title split">
-            <div>
-              <span class="nav-icon gold" data-icon="medal"></span>
-              <h2>Leaderboard</h2>
-            </div>
-            <button class="text-link" data-go="leaderboard">Se hele leaderboardet ›</button>
-          </div>
-          <div class="leaderboard-list" id="homeLeaderboard"></div>
-        </article>
-
-        <article class="card activity-card">
-          <div class="card-title split">
-            <div>
-              <span class="nav-icon gold" data-icon="clock"></span>
+          <article class="card">
+            <div class="card-title">
+              <span class="nav-icon gold" data-icon="pulse"></span>
               <h2>Nylig aktivitet</h2>
             </div>
-            <button class="text-link">Se alle ›</button>
-          </div>
-          <div class="activity-list" id="homeActivity"></div>
-        </article>
+            <div id="homeActivity" class="activity-list">
+              <div class="activity"><i class="coin tiny">◆</i><p>Velkommen til VM Lounge 2026</p><time>Nå</time></div>
+              <div class="activity"><i class="coin tiny">◆</i><p>Startsaldo er satt til 5 000 VM Coins</p><time>Regel</time></div>
+              <div class="activity"><i class="coin tiny">◆</i><p>Maks innsats per kamp er 500 VM Coins</p><time>Regel</time></div>
+            </div>
+          </article>
+        </div>
       </section>
 
       <section class="page" id="page-leaderboard">
         <div class="page-head">
           <div>
-            <small>Toppliste</small>
+            <small>Venneliga</small>
             <h1>Leaderboard</h1>
           </div>
-          <button class="btn secondary compact" data-go="home">Tilbake home</button>
         </div>
-
-        <article class="card leaderboard-page-card">
-          <div class="card-title split">
-            <div>
-              <span class="nav-icon gold" data-icon="medal"></span>
-              <h2>Alle spillere</h2>
-            </div>
-            <span class="leaderboard-note">Sortert etter VM Coins</span>
-          </div>
-          <div class="leaderboard-list full" id="leaderboardPageList"></div>
+        <article class="card">
+          <div id="leaderboardPageList" class="leaderboard big"></div>
         </article>
       </section>
 
       <section class="page" id="page-betting">
         <div class="page-head">
           <div>
-            <small>Sportsbook</small>
+            <small>VM-kamper</small>
             <h1>VM Betting</h1>
           </div>
           <button class="btn secondary compact" id="clearSlipBtn">Tøm slip</button>
@@ -418,21 +351,22 @@
     </main>
 
     <nav class="bottom-nav" aria-label="Mobilmeny">
-      <button class="bottom-item active" data-page="home"><span class="nav-icon" data-icon="home"></span><small>Home</small></button>
+      <button class="bottom-item active" data-page="home"><span class="nav-icon" data-icon="home"></span><small>Home</small><i></i></button>
       <button class="bottom-item" data-page="betting"><span class="nav-icon" data-icon="ball"></span><small>Betting</small></button>
       <button class="bottom-item" data-page="leaderboard"><span class="nav-icon" data-icon="medal"></span><small>Toppliste</small></button>
       <button class="bottom-item" data-page="forum"><span class="nav-icon" data-icon="users"></span><small>Forum</small></button>
-      <button class="bottom-item" data-page="chat"><span class="nav-icon" data-icon="chat"></span><i></i><small>Chat</small></button>
       <button class="bottom-item" data-page="profile"><span class="nav-icon" data-icon="profile"></span><small>Profil</small></button>
+      <button class="bottom-item" data-page="chat"><span class="nav-icon" data-icon="chat"></span><small>Chat</small></button>
       <button class="bottom-item" data-page="chess"><span class="nav-icon" data-icon="knight"></span><small>Sjakk</small></button>
     </nav>
   </div>
+
   <div id="toast" class="toast" hidden></div>
   <script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-analytics-compat.js"></script>
-  <script src="js/firebase-config.js?v=3"></script>
+  <script src="js/firebase-config.js?v=4"></script>
   <script src="js/app.js?v=2"></script>
 </body>
 </html>
