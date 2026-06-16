@@ -211,3 +211,108 @@ body:has(.auth-screen:not([hidden])) .main{
     font-size:14px!important;
   }
 }
+
+/* Ekstremt kompakt: nesten tabell-linjer i stedet for store kort */
+#homeLeaderboard,
+#leaderboardPageList{
+  gap:4px!important;
+}
+
+#homeLeaderboard .leaderboard-row,
+#leaderboardPageList .leaderboard-row{
+  min-height:36px!important;
+  height:36px!important;
+  padding:3px 6px!important;
+  border-radius:10px!important;
+  grid-template-columns:26px 26px minmax(0,1fr) auto!important;
+  gap:6px!important;
+}
+
+#homeLeaderboard .leaderboard-row > b:first-child,
+#leaderboardPageList .leaderboard-row > b:first-child{
+  width:24px!important;
+  min-width:24px!important;
+  font-size:13px!important;
+}
+
+#homeLeaderboard .leaderboard-row > .avatar.small,
+#leaderboardPageList .leaderboard-row > .avatar.small{
+  width:25px!important;
+  height:25px!important;
+  min-width:25px!important;
+  font-size:14px!important;
+  border-width:1px!important;
+  box-shadow:none!important;
+}
+
+#homeLeaderboard .leaderboard-row > div:not(.avatar),
+#leaderboardPageList .leaderboard-row > div:not(.avatar){
+  display:flex!important;
+  align-items:baseline!important;
+  gap:3px!important;
+  min-width:0!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+}
+
+#homeLeaderboard .leaderboard-row > div:not(.avatar) > b,
+#leaderboardPageList .leaderboard-row > div:not(.avatar) > b{
+  display:inline!important;
+  flex:0 1 auto!important;
+  min-width:0!important;
+  max-width:52%!important;
+  font-size:13px!important;
+  line-height:1!important;
+}
+
+#homeLeaderboard .leaderboard-row > div:not(.avatar) > small,
+#leaderboardPageList .leaderboard-row > div:not(.avatar) > small{
+  display:inline!important;
+  flex:1 1 auto!important;
+  min-width:0!important;
+  margin:0!important;
+  font-size:10px!important;
+  line-height:1!important;
+}
+
+#homeLeaderboard .leaderboard-row > b:last-child,
+#leaderboardPageList .leaderboard-row > b:last-child{
+  font-size:13px!important;
+}
+
+@media (max-width:430px){
+  #homeLeaderboard,
+  #leaderboardPageList{
+    gap:3px!important;
+  }
+
+  #homeLeaderboard .leaderboard-row,
+  #leaderboardPageList .leaderboard-row{
+    min-height:32px!important;
+    height:32px!important;
+    padding:2px 5px!important;
+    grid-template-columns:24px 23px minmax(0,1fr) auto!important;
+    gap:5px!important;
+    border-radius:9px!important;
+  }
+
+  #homeLeaderboard .leaderboard-row > .avatar.small,
+  #leaderboardPageList .leaderboard-row > .avatar.small{
+    width:22px!important;
+    height:22px!important;
+    min-width:22px!important;
+    font-size:12px!important;
+  }
+
+  #homeLeaderboard .leaderboard-row > div:not(.avatar) > b,
+  #leaderboardPageList .leaderboard-row > div:not(.avatar) > b,
+  #homeLeaderboard .leaderboard-row > b:last-child,
+  #leaderboardPageList .leaderboard-row > b:last-child{
+    font-size:12px!important;
+  }
+
+  #homeLeaderboard .leaderboard-row > div:not(.avatar) > small,
+  #leaderboardPageList .leaderboard-row > div:not(.avatar) > small{
+    font-size:9px!important;
+  }
+}
