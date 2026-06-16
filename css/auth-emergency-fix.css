@@ -27,6 +27,7 @@ body:has(.auth-screen:not([hidden])) .main{
   pointer-events:none!important;
 }
 
+/* Betting-regel: enkel linje i stedet for stort regelkort */
 #page-betting .rules-card{
   margin:0 0 16px!important;
   padding:11px 14px!important;
@@ -36,9 +37,7 @@ body:has(.auth-screen:not([hidden])) .main{
   border:1px solid rgba(228,184,78,.24)!important;
   box-shadow:none!important;
 }
-#page-betting .rules-card .rules-grid{
-  display:none!important;
-}
+#page-betting .rules-card .rules-grid{display:none!important;}
 #page-betting .rules-card::before{
   content:"Maks BET pr kamp= 500,-";
   display:block;
@@ -49,66 +48,10 @@ body:has(.auth-screen:not([hidden])) .main{
   text-align:center;
 }
 
-#page-home #homeLeaderboard,
-#page-home #homeLeaderboard .leaderboard-list{
-  display:grid!important;
-  gap:6px!important;
-}
-#page-home #homeLeaderboard .leaderboard-row,
-#page-home #homeLeaderboard .leader-row{
-  min-height:0!important;
-  padding:7px 9px!important;
-  border-radius:13px!important;
-  gap:8px!important;
-  grid-template-columns:30px minmax(0,1fr) auto!important;
-}
-#page-home #homeLeaderboard .leaderboard-rank,
-#page-home #homeLeaderboard .leader-rank{
-  width:26px!important;
-  height:26px!important;
-  border-radius:9px!important;
-  font-size:12px!important;
-}
-#page-home #homeLeaderboard .leaderboard-user strong,
-#page-home #homeLeaderboard .leader-person strong{
-  font-size:13px!important;
-  line-height:1.05!important;
-}
-#page-home #homeLeaderboard .leaderboard-user small,
-#page-home #homeLeaderboard .leader-person small{
-  display:none!important;
-}
-#page-home #homeLeaderboard .leaderboard-stat,
-#page-home #homeLeaderboard .leader-score{
-  min-width:0!important;
-  text-align:right!important;
-}
-#page-home #homeLeaderboard .leaderboard-stat:not(.coins):not(:first-of-type),
-#page-home #homeLeaderboard .leaderboard-stat.win,
-#page-home #homeLeaderboard .leaderboard-stat.bets{
-  display:none!important;
-}
-#page-home #homeLeaderboard .leaderboard-stat span,
-#page-home #homeLeaderboard .leader-score small{
-  display:none!important;
-}
-#page-home #homeLeaderboard .leaderboard-stat b,
-#page-home #homeLeaderboard .leader-score strong{
-  font-size:13px!important;
-  margin:0!important;
-  color:var(--gold)!important;
-}
-#page-home .home-grid .card:has(#homeLeaderboard){
-  padding:14px!important;
-}
-#page-home .home-grid .card:has(#homeLeaderboard) .card-title{
-  margin-bottom:8px!important;
-}
-#page-home .home-grid .card:has(#homeLeaderboard) .card-title h2{
-  font-size:15px!important;
-}
+/* Home: skjul statistikk-kortene */
+#page-home>.stats-grid{display:none!important;}
 
-/* Final premium leaderboard polish */
+/* Leaderboard: avatar | navn + stats | rank | coins */
 #homeLeaderboard,
 #leaderboardPageList{
   display:grid!important;
@@ -118,94 +61,143 @@ body:has(.auth-screen:not([hidden])) .main{
 #homeLeaderboard .leaderboard-row,
 #leaderboardPageList .leaderboard-row{
   display:grid!important;
-  grid-template-columns:42px minmax(0,1fr) auto!important;
+  grid-template-columns:38px minmax(0,1fr) 38px auto!important;
   align-items:center!important;
   gap:10px!important;
   min-height:54px!important;
   padding:8px 10px!important;
-  border-radius:15px!important;
+  border-radius:16px!important;
   background:rgba(20,30,50,.58)!important;
-  border:1px solid rgba(255,255,255,.06)!important;
+  border:1px solid rgba(255,255,255,.065)!important;
+  backdrop-filter:blur(6px)!important;
+  position:relative!important;
   overflow:hidden!important;
+  transition:all .25s ease!important;
+}
+
+#homeLeaderboard .leaderboard-row:hover,
+#leaderboardPageList .leaderboard-row:hover{
+  transform:translateY(-2px) scale(1.01)!important;
+  box-shadow:0 0 12px rgba(255,200,100,.15)!important;
+}
+
+#homeLeaderboard .leaderboard-row::before,
+#leaderboardPageList .leaderboard-row::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:-75%;
+  width:50%;
+  height:100%;
+  background:linear-gradient(120deg,transparent,rgba(255,215,150,.20),transparent);
+  transform:skewX(-20deg);
+  pointer-events:none;
+}
+
+#homeLeaderboard .leaderboard-row:hover::before,
+#leaderboardPageList .leaderboard-row:hover::before{
+  animation:leaderShine .8s ease;
+}
+
+@keyframes leaderShine{
+  0%{left:-75%;}
+  100%{left:125%;}
 }
 
 #homeLeaderboard .leaderboard-row.me,
 #leaderboardPageList .leaderboard-row.me{
-  border:1px solid rgba(255,200,100,.38)!important;
-  box-shadow:0 0 10px rgba(255,200,100,.14)!important;
+  border:1px solid rgba(255,200,100,.40)!important;
+  box-shadow:0 0 10px rgba(255,200,100,.18)!important;
+  background:rgba(228,184,78,.09)!important;
 }
 
-#homeLeaderboard .leaderboard-rank,
-#leaderboardPageList .leaderboard-rank{
-  width:34px!important;
-  min-width:34px!important;
-  height:34px!important;
-  border-radius:11px!important;
+/* 1: Avatar først, selv om HTML-en har rank først */
+#homeLeaderboard .leaderboard-row>.avatar.small,
+#leaderboardPageList .leaderboard-row>.avatar.small{
+  grid-column:1!important;
+  grid-row:1!important;
+  width:36px!important;
+  height:36px!important;
+  min-width:36px!important;
+  border-radius:50%!important;
   display:grid!important;
   place-items:center!important;
-  font-size:13px!important;
-  font-weight:800!important;
-  color:#f0e7d3!important;
-  background:rgba(255,255,255,.045)!important;
-  border:1px solid rgba(255,255,255,.07)!important;
+  padding:0!important;
+  background:linear-gradient(145deg,#f5d07a,#caa94f)!important;
+  border:1px solid rgba(245,208,122,.65)!important;
+  color:#111!important;
+  font-size:17px!important;
+  font-weight:950!important;
+  box-shadow:0 0 16px rgba(228,184,78,.14)!important;
 }
 
-#homeLeaderboard .leaderboard-user,
-#leaderboardPageList .leaderboard-user{
+/* 2: Navn + stats */
+#homeLeaderboard .leaderboard-row>div:not(.avatar),
+#leaderboardPageList .leaderboard-row>div:not(.avatar){
+  grid-column:2!important;
+  grid-row:1!important;
   min-width:0!important;
+  display:block!important;
 }
 
-#homeLeaderboard .leaderboard-user strong,
-#leaderboardPageList .leaderboard-user strong{
+#homeLeaderboard .leaderboard-row>div:not(.avatar)>b,
+#leaderboardPageList .leaderboard-row>div:not(.avatar)>b{
   display:block!important;
-  font-size:16px!important;
+  color:#fff!important;
+  font-size:17px!important;
+  font-weight:800!important;
   line-height:1.05!important;
   white-space:nowrap!important;
   overflow:hidden!important;
   text-overflow:ellipsis!important;
 }
 
-#homeLeaderboard .leaderboard-user small,
-#leaderboardPageList .leaderboard-user small{
+#homeLeaderboard .leaderboard-row>div:not(.avatar)>small,
+#leaderboardPageList .leaderboard-row>div:not(.avatar)>small{
   display:block!important;
   margin-top:3px!important;
-  font-size:12px!important;
   color:var(--muted)!important;
+  font-size:12px!important;
+  font-weight:750!important;
+  line-height:1.1!important;
   white-space:nowrap!important;
   overflow:hidden!important;
   text-overflow:ellipsis!important;
 }
 
-#homeLeaderboard .leaderboard-stat.win,
-#homeLeaderboard .leaderboard-stat.bets{
-  display:none!important;
+/* 3: Rank */
+#homeLeaderboard .leaderboard-row>b:first-child,
+#leaderboardPageList .leaderboard-row>b:first-child{
+  grid-column:3!important;
+  grid-row:1!important;
+  justify-self:end!important;
+  width:34px!important;
+  min-width:34px!important;
+  text-align:center!important;
+  color:#f0e7d3!important;
+  font-size:14px!important;
+  font-weight:850!important;
+  opacity:.88!important;
+  line-height:1!important;
 }
 
-#homeLeaderboard .leaderboard-stat.coins,
-#leaderboardPageList .leaderboard-stat.coins{
+/* 4: Coins */
+#homeLeaderboard .leaderboard-row>b:last-child,
+#leaderboardPageList .leaderboard-row>b:last-child{
+  grid-column:4!important;
+  grid-row:1!important;
   justify-self:end!important;
-  min-width:auto!important;
-  text-align:right!important;
+  margin-left:0!important;
   padding:6px 10px!important;
   border-radius:999px!important;
   background:linear-gradient(145deg,rgba(245,208,122,.16),rgba(202,169,79,.08))!important;
-  border:1px solid rgba(245,208,122,.24)!important;
+  border:1px solid rgba(245,208,122,.25)!important;
   box-shadow:0 0 10px rgba(255,200,100,.08)!important;
-}
-
-#homeLeaderboard .leaderboard-stat.coins span,
-#leaderboardPageList .leaderboard-stat.coins span{
-  display:none!important;
-}
-
-#homeLeaderboard .leaderboard-stat.coins b,
-#leaderboardPageList .leaderboard-stat.coins b{
-  display:block!important;
-  margin:0!important;
-  font-size:14px!important;
-  font-weight:800!important;
   color:#f5d07a!important;
+  font-size:14px!important;
+  font-weight:900!important;
   white-space:nowrap!important;
+  line-height:1!important;
 }
 
 #homeLeaderboard .you-badge,
@@ -224,41 +216,54 @@ body:has(.auth-screen:not([hidden])) .main{
   vertical-align:middle!important;
 }
 
-@media (max-width:430px){
+#page-home .home-grid .card:has(#homeLeaderboard){
+  padding:14px!important;
+}
+#page-home .home-grid .card:has(#homeLeaderboard) .card-title{
+  margin-bottom:8px!important;
+}
+#page-home .home-grid .card:has(#homeLeaderboard) .card-title h2{
+  font-size:15px!important;
+}
+
+@media(max-width:430px){
   #homeLeaderboard .leaderboard-row,
   #leaderboardPageList .leaderboard-row{
-    grid-template-columns:36px minmax(0,1fr) auto!important;
-    gap:8px!important;
+    grid-template-columns:34px minmax(0,1fr) 32px auto!important;
+    gap:7px!important;
     min-height:48px!important;
     padding:6px 8px!important;
     border-radius:13px!important;
   }
 
-  #homeLeaderboard .leaderboard-rank,
-  #leaderboardPageList .leaderboard-rank{
-    width:30px!important;
-    min-width:30px!important;
-    height:30px!important;
-    font-size:12px!important;
+  #homeLeaderboard .leaderboard-row>.avatar.small,
+  #leaderboardPageList .leaderboard-row>.avatar.small{
+    width:32px!important;
+    height:32px!important;
+    min-width:32px!important;
+    font-size:15px!important;
   }
 
-  #homeLeaderboard .leaderboard-user strong,
-  #leaderboardPageList .leaderboard-user strong{
-    font-size:14px!important;
+  #homeLeaderboard .leaderboard-row>div:not(.avatar)>b,
+  #leaderboardPageList .leaderboard-row>div:not(.avatar)>b{
+    font-size:15px!important;
   }
 
-  #homeLeaderboard .leaderboard-user small,
-  #leaderboardPageList .leaderboard-user small{
+  #homeLeaderboard .leaderboard-row>div:not(.avatar)>small,
+  #leaderboardPageList .leaderboard-row>div:not(.avatar)>small{
     font-size:11px!important;
   }
 
-  #homeLeaderboard .leaderboard-stat.coins,
-  #leaderboardPageList .leaderboard-stat.coins{
-    padding:5px 8px!important;
+  #homeLeaderboard .leaderboard-row>b:first-child,
+  #leaderboardPageList .leaderboard-row>b:first-child{
+    width:30px!important;
+    min-width:30px!important;
+    font-size:12px!important;
   }
 
-  #homeLeaderboard .leaderboard-stat.coins b,
-  #leaderboardPageList .leaderboard-stat.coins b{
-    font-size:13px!important;
+  #homeLeaderboard .leaderboard-row>b:last-child,
+  #leaderboardPageList .leaderboard-row>b:last-child{
+    padding:5px 8px!important;
+    font-size:12px!important;
   }
 }
