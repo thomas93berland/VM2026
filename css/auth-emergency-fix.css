@@ -107,3 +107,107 @@ body:has(.auth-screen:not([hidden])) .main{
 #page-home .home-grid .card:has(#homeLeaderboard) .card-title h2{
   font-size:15px!important;
 }
+
+/* Ultra-kompakt leaderboard/toppliste: lavere brukerruter på Home og Leaderboard */
+#homeLeaderboard,
+#leaderboardPageList{
+  display:grid!important;
+  gap:7px!important;
+}
+
+#homeLeaderboard .leaderboard-row,
+#leaderboardPageList .leaderboard-row{
+  min-height:56px!important;
+  padding:6px 9px!important;
+  border-radius:15px!important;
+  display:grid!important;
+  grid-template-columns:34px 40px minmax(0,1fr) auto!important;
+  align-items:center!important;
+  gap:8px!important;
+  overflow:hidden!important;
+}
+
+#homeLeaderboard .leaderboard-row > b:first-child,
+#leaderboardPageList .leaderboard-row > b:first-child{
+  width:30px!important;
+  min-width:30px!important;
+  font-size:15px!important;
+  line-height:1!important;
+  color:var(--text)!important;
+}
+
+#homeLeaderboard .leaderboard-row > .avatar.small,
+#leaderboardPageList .leaderboard-row > .avatar.small{
+  width:38px!important;
+  height:38px!important;
+  min-width:38px!important;
+  border-radius:50%!important;
+  padding:0!important;
+  font-size:20px!important;
+  line-height:1!important;
+  border-width:1px!important;
+  box-shadow:0 0 16px rgba(228,184,78,.14)!important;
+}
+
+#homeLeaderboard .leaderboard-row > div:not(.avatar),
+#leaderboardPageList .leaderboard-row > div:not(.avatar){
+  min-width:0!important;
+  display:block!important;
+}
+
+#homeLeaderboard .leaderboard-row > div:not(.avatar) > b,
+#leaderboardPageList .leaderboard-row > div:not(.avatar) > b{
+  display:block!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  font-size:15px!important;
+  line-height:1.05!important;
+}
+
+#homeLeaderboard .leaderboard-row > div:not(.avatar) > small,
+#leaderboardPageList .leaderboard-row > div:not(.avatar) > small{
+  display:block!important;
+  margin-top:2px!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  color:var(--muted)!important;
+  font-size:11px!important;
+  line-height:1.1!important;
+}
+
+#homeLeaderboard .leaderboard-row > b:last-child,
+#leaderboardPageList .leaderboard-row > b:last-child{
+  justify-self:end!important;
+  color:var(--gold)!important;
+  font-size:15px!important;
+  line-height:1!important;
+  white-space:nowrap!important;
+}
+
+@media (max-width:430px){
+  #homeLeaderboard .leaderboard-row,
+  #leaderboardPageList .leaderboard-row{
+    min-height:52px!important;
+    grid-template-columns:30px 36px minmax(0,1fr) auto!important;
+    gap:7px!important;
+    padding:5px 8px!important;
+  }
+
+  #homeLeaderboard .leaderboard-row > .avatar.small,
+  #leaderboardPageList .leaderboard-row > .avatar.small{
+    width:34px!important;
+    height:34px!important;
+    min-width:34px!important;
+    font-size:18px!important;
+  }
+
+  #homeLeaderboard .leaderboard-row > div:not(.avatar) > b,
+  #leaderboardPageList .leaderboard-row > div:not(.avatar) > b,
+  #homeLeaderboard .leaderboard-row > b:last-child,
+  #leaderboardPageList .leaderboard-row > b:last-child{
+    font-size:14px!important;
+  }
+}
