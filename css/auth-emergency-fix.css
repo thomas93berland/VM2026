@@ -48,3 +48,62 @@ body:has(.auth-screen:not([hidden])) .main{
   letter-spacing:.02em;
   text-align:center;
 }
+
+#page-home #homeLeaderboard,
+#page-home #homeLeaderboard .leaderboard-list{
+  display:grid!important;
+  gap:6px!important;
+}
+#page-home #homeLeaderboard .leaderboard-row,
+#page-home #homeLeaderboard .leader-row{
+  min-height:0!important;
+  padding:7px 9px!important;
+  border-radius:13px!important;
+  gap:8px!important;
+  grid-template-columns:30px minmax(0,1fr) auto!important;
+}
+#page-home #homeLeaderboard .leaderboard-rank,
+#page-home #homeLeaderboard .leader-rank{
+  width:26px!important;
+  height:26px!important;
+  border-radius:9px!important;
+  font-size:12px!important;
+}
+#page-home #homeLeaderboard .leaderboard-user strong,
+#page-home #homeLeaderboard .leader-person strong{
+  font-size:13px!important;
+  line-height:1.05!important;
+}
+#page-home #homeLeaderboard .leaderboard-user small,
+#page-home #homeLeaderboard .leader-person small{
+  display:none!important;
+}
+#page-home #homeLeaderboard .leaderboard-stat,
+#page-home #homeLeaderboard .leader-score{
+  min-width:0!important;
+  text-align:right!important;
+}
+#page-home #homeLeaderboard .leaderboard-stat:not(.coins):not(:first-of-type),
+#page-home #homeLeaderboard .leaderboard-stat.win,
+#page-home #homeLeaderboard .leaderboard-stat.bets{
+  display:none!important;
+}
+#page-home #homeLeaderboard .leaderboard-stat span,
+#page-home #homeLeaderboard .leader-score small{
+  display:none!important;
+}
+#page-home #homeLeaderboard .leaderboard-stat b,
+#page-home #homeLeaderboard .leader-score strong{
+  font-size:13px!important;
+  margin:0!important;
+  color:var(--gold)!important;
+}
+#page-home .home-grid .card:has(#homeLeaderboard){
+  padding:14px!important;
+}
+#page-home .home-grid .card:has(#homeLeaderboard) .card-title{
+  margin-bottom:8px!important;
+}
+#page-home .home-grid .card:has(#homeLeaderboard) .card-title h2{
+  font-size:15px!important;
+}
