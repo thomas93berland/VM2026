@@ -108,7 +108,7 @@ body:has(.auth-screen:not([hidden])) .main{
   font-size:15px!important;
 }
 
-/* Ultra-kompakt leaderboard/toppliste: lavere brukerruter på Home og Leaderboard */
+/* Final premium leaderboard polish */
 #homeLeaderboard,
 #leaderboardPageList{
   display:grid!important;
@@ -117,202 +117,148 @@ body:has(.auth-screen:not([hidden])) .main{
 
 #homeLeaderboard .leaderboard-row,
 #leaderboardPageList .leaderboard-row{
-  min-height:56px!important;
-  padding:6px 9px!important;
-  border-radius:15px!important;
   display:grid!important;
-  grid-template-columns:34px 40px minmax(0,1fr) auto!important;
+  grid-template-columns:42px minmax(0,1fr) auto!important;
   align-items:center!important;
-  gap:8px!important;
+  gap:10px!important;
+  min-height:54px!important;
+  padding:8px 10px!important;
+  border-radius:15px!important;
+  background:rgba(20,30,50,.58)!important;
+  border:1px solid rgba(255,255,255,.06)!important;
   overflow:hidden!important;
 }
 
-#homeLeaderboard .leaderboard-row > b:first-child,
-#leaderboardPageList .leaderboard-row > b:first-child{
-  width:30px!important;
-  min-width:30px!important;
-  font-size:15px!important;
-  line-height:1!important;
-  color:var(--text)!important;
+#homeLeaderboard .leaderboard-row.me,
+#leaderboardPageList .leaderboard-row.me{
+  border:1px solid rgba(255,200,100,.38)!important;
+  box-shadow:0 0 10px rgba(255,200,100,.14)!important;
 }
 
-#homeLeaderboard .leaderboard-row > .avatar.small,
-#leaderboardPageList .leaderboard-row > .avatar.small{
-  width:38px!important;
-  height:38px!important;
-  min-width:38px!important;
-  border-radius:50%!important;
-  padding:0!important;
-  font-size:20px!important;
-  line-height:1!important;
-  border-width:1px!important;
-  box-shadow:0 0 16px rgba(228,184,78,.14)!important;
+#homeLeaderboard .leaderboard-rank,
+#leaderboardPageList .leaderboard-rank{
+  width:34px!important;
+  min-width:34px!important;
+  height:34px!important;
+  border-radius:11px!important;
+  display:grid!important;
+  place-items:center!important;
+  font-size:13px!important;
+  font-weight:800!important;
+  color:#f0e7d3!important;
+  background:rgba(255,255,255,.045)!important;
+  border:1px solid rgba(255,255,255,.07)!important;
 }
 
-#homeLeaderboard .leaderboard-row > div:not(.avatar),
-#leaderboardPageList .leaderboard-row > div:not(.avatar){
+#homeLeaderboard .leaderboard-user,
+#leaderboardPageList .leaderboard-user{
   min-width:0!important;
-  display:block!important;
 }
 
-#homeLeaderboard .leaderboard-row > div:not(.avatar) > b,
-#leaderboardPageList .leaderboard-row > div:not(.avatar) > b{
+#homeLeaderboard .leaderboard-user strong,
+#leaderboardPageList .leaderboard-user strong{
   display:block!important;
-  max-width:100%!important;
-  overflow:hidden!important;
-  text-overflow:ellipsis!important;
-  white-space:nowrap!important;
-  font-size:15px!important;
+  font-size:16px!important;
   line-height:1.05!important;
-}
-
-#homeLeaderboard .leaderboard-row > div:not(.avatar) > small,
-#leaderboardPageList .leaderboard-row > div:not(.avatar) > small{
-  display:block!important;
-  margin-top:2px!important;
+  white-space:nowrap!important;
   overflow:hidden!important;
   text-overflow:ellipsis!important;
-  white-space:nowrap!important;
-  color:var(--muted)!important;
-  font-size:11px!important;
-  line-height:1.1!important;
 }
 
-#homeLeaderboard .leaderboard-row > b:last-child,
-#leaderboardPageList .leaderboard-row > b:last-child{
-  justify-self:end!important;
-  color:var(--gold)!important;
-  font-size:15px!important;
-  line-height:1!important;
+#homeLeaderboard .leaderboard-user small,
+#leaderboardPageList .leaderboard-user small{
+  display:block!important;
+  margin-top:3px!important;
+  font-size:12px!important;
+  color:var(--muted)!important;
   white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+
+#homeLeaderboard .leaderboard-stat.win,
+#homeLeaderboard .leaderboard-stat.bets{
+  display:none!important;
+}
+
+#homeLeaderboard .leaderboard-stat.coins,
+#leaderboardPageList .leaderboard-stat.coins{
+  justify-self:end!important;
+  min-width:auto!important;
+  text-align:right!important;
+  padding:6px 10px!important;
+  border-radius:999px!important;
+  background:linear-gradient(145deg,rgba(245,208,122,.16),rgba(202,169,79,.08))!important;
+  border:1px solid rgba(245,208,122,.24)!important;
+  box-shadow:0 0 10px rgba(255,200,100,.08)!important;
+}
+
+#homeLeaderboard .leaderboard-stat.coins span,
+#leaderboardPageList .leaderboard-stat.coins span{
+  display:none!important;
+}
+
+#homeLeaderboard .leaderboard-stat.coins b,
+#leaderboardPageList .leaderboard-stat.coins b{
+  display:block!important;
+  margin:0!important;
+  font-size:14px!important;
+  font-weight:800!important;
+  color:#f5d07a!important;
+  white-space:nowrap!important;
+}
+
+#homeLeaderboard .you-badge,
+#leaderboardPageList .you-badge{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  margin-left:6px!important;
+  padding:2px 7px!important;
+  border-radius:999px!important;
+  background:rgba(255,200,100,.12)!important;
+  border:1px solid rgba(255,200,100,.22)!important;
+  color:var(--gold)!important;
+  font-size:10px!important;
+  font-weight:900!important;
+  vertical-align:middle!important;
 }
 
 @media (max-width:430px){
   #homeLeaderboard .leaderboard-row,
   #leaderboardPageList .leaderboard-row{
-    min-height:52px!important;
-    grid-template-columns:30px 36px minmax(0,1fr) auto!important;
-    gap:7px!important;
+    grid-template-columns:36px minmax(0,1fr) auto!important;
+    gap:8px!important;
+    min-height:48px!important;
+    padding:6px 8px!important;
+    border-radius:13px!important;
+  }
+
+  #homeLeaderboard .leaderboard-rank,
+  #leaderboardPageList .leaderboard-rank{
+    width:30px!important;
+    min-width:30px!important;
+    height:30px!important;
+    font-size:12px!important;
+  }
+
+  #homeLeaderboard .leaderboard-user strong,
+  #leaderboardPageList .leaderboard-user strong{
+    font-size:14px!important;
+  }
+
+  #homeLeaderboard .leaderboard-user small,
+  #leaderboardPageList .leaderboard-user small{
+    font-size:11px!important;
+  }
+
+  #homeLeaderboard .leaderboard-stat.coins,
+  #leaderboardPageList .leaderboard-stat.coins{
     padding:5px 8px!important;
   }
 
-  #homeLeaderboard .leaderboard-row > .avatar.small,
-  #leaderboardPageList .leaderboard-row > .avatar.small{
-    width:34px!important;
-    height:34px!important;
-    min-width:34px!important;
-    font-size:18px!important;
-  }
-
-  #homeLeaderboard .leaderboard-row > div:not(.avatar) > b,
-  #leaderboardPageList .leaderboard-row > div:not(.avatar) > b,
-  #homeLeaderboard .leaderboard-row > b:last-child,
-  #leaderboardPageList .leaderboard-row > b:last-child{
-    font-size:14px!important;
-  }
-}
-
-/* Ekstremt kompakt: nesten tabell-linjer i stedet for store kort */
-#homeLeaderboard,
-#leaderboardPageList{
-  gap:4px!important;
-}
-
-#homeLeaderboard .leaderboard-row,
-#leaderboardPageList .leaderboard-row{
-  min-height:36px!important;
-  height:36px!important;
-  padding:3px 6px!important;
-  border-radius:10px!important;
-  grid-template-columns:26px 26px minmax(0,1fr) auto!important;
-  gap:6px!important;
-}
-
-#homeLeaderboard .leaderboard-row > b:first-child,
-#leaderboardPageList .leaderboard-row > b:first-child{
-  width:24px!important;
-  min-width:24px!important;
-  font-size:13px!important;
-}
-
-#homeLeaderboard .leaderboard-row > .avatar.small,
-#leaderboardPageList .leaderboard-row > .avatar.small{
-  width:25px!important;
-  height:25px!important;
-  min-width:25px!important;
-  font-size:14px!important;
-  border-width:1px!important;
-  box-shadow:none!important;
-}
-
-#homeLeaderboard .leaderboard-row > div:not(.avatar),
-#leaderboardPageList .leaderboard-row > div:not(.avatar){
-  display:flex!important;
-  align-items:baseline!important;
-  gap:3px!important;
-  min-width:0!important;
-  white-space:nowrap!important;
-  overflow:hidden!important;
-}
-
-#homeLeaderboard .leaderboard-row > div:not(.avatar) > b,
-#leaderboardPageList .leaderboard-row > div:not(.avatar) > b{
-  display:inline!important;
-  flex:0 1 auto!important;
-  min-width:0!important;
-  max-width:52%!important;
-  font-size:13px!important;
-  line-height:1!important;
-}
-
-#homeLeaderboard .leaderboard-row > div:not(.avatar) > small,
-#leaderboardPageList .leaderboard-row > div:not(.avatar) > small{
-  display:inline!important;
-  flex:1 1 auto!important;
-  min-width:0!important;
-  margin:0!important;
-  font-size:10px!important;
-  line-height:1!important;
-}
-
-#homeLeaderboard .leaderboard-row > b:last-child,
-#leaderboardPageList .leaderboard-row > b:last-child{
-  font-size:13px!important;
-}
-
-@media (max-width:430px){
-  #homeLeaderboard,
-  #leaderboardPageList{
-    gap:3px!important;
-  }
-
-  #homeLeaderboard .leaderboard-row,
-  #leaderboardPageList .leaderboard-row{
-    min-height:32px!important;
-    height:32px!important;
-    padding:2px 5px!important;
-    grid-template-columns:24px 23px minmax(0,1fr) auto!important;
-    gap:5px!important;
-    border-radius:9px!important;
-  }
-
-  #homeLeaderboard .leaderboard-row > .avatar.small,
-  #leaderboardPageList .leaderboard-row > .avatar.small{
-    width:22px!important;
-    height:22px!important;
-    min-width:22px!important;
-    font-size:12px!important;
-  }
-
-  #homeLeaderboard .leaderboard-row > div:not(.avatar) > b,
-  #leaderboardPageList .leaderboard-row > div:not(.avatar) > b,
-  #homeLeaderboard .leaderboard-row > b:last-child,
-  #leaderboardPageList .leaderboard-row > b:last-child{
-    font-size:12px!important;
-  }
-
-  #homeLeaderboard .leaderboard-row > div:not(.avatar) > small,
-  #leaderboardPageList .leaderboard-row > div:not(.avatar) > small{
-    font-size:9px!important;
+  #homeLeaderboard .leaderboard-stat.coins b,
+  #leaderboardPageList .leaderboard-stat.coins b{
+    font-size:13px!important;
   }
 }
