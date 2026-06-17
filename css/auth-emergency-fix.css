@@ -38,45 +38,118 @@ body #page-profile .avatar.large img{
   object-fit:cover!important;
 }
 
-/* Scoreboard/toppliste: lavere og tynnere profilfliser */
+/* Toppliste/scoreboard: ryddige, profesjonelle spillerfliser */
+#homeLeaderboard,
+#leaderboardPageList{
+  display:grid!important;
+  gap:8px!important;
+}
+
 #homeLeaderboard .leaderboard-row,
 #leaderboardPageList .leaderboard-row{
-  min-height:42px!important;
-  padding:5px 8px!important;
-  border-radius:12px!important;
-  gap:7px!important;
-  grid-template-columns:32px minmax(0,1fr) 30px auto!important;
-  border-width:1px!important;
+  display:grid!important;
+  grid-template-columns:34px minmax(0,1fr) 42px 82px!important;
+  align-items:center!important;
+  column-gap:10px!important;
+  min-height:52px!important;
+  padding:8px 10px!important;
+  border-radius:15px!important;
+  background:linear-gradient(145deg,rgba(15,25,43,.72),rgba(7,14,28,.82))!important;
+  border:1px solid rgba(255,255,255,.075)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035)!important;
+  overflow:hidden!important;
 }
-#homeLeaderboard .leaderboard-row .avatar.small,
-#leaderboardPageList .leaderboard-row .avatar.small{
-  width:30px!important;
-  height:30px!important;
-  min-width:30px!important;
-  font-size:14px!important;
+
+#homeLeaderboard .leaderboard-row.me,
+#leaderboardPageList .leaderboard-row.me{
+  border-color:rgba(228,184,78,.36)!important;
+  background:linear-gradient(145deg,rgba(228,184,78,.10),rgba(7,14,28,.86))!important;
 }
+
+#homeLeaderboard .leaderboard-row>.avatar.small,
+#leaderboardPageList .leaderboard-row>.avatar.small{
+  grid-column:1!important;
+  grid-row:1!important;
+  width:34px!important;
+  height:34px!important;
+  min-width:34px!important;
+  border-radius:50%!important;
+  display:grid!important;
+  place-items:center!important;
+  padding:0!important;
+  background:linear-gradient(145deg,#f5d07a,#b98525)!important;
+  border:1px solid rgba(245,208,122,.58)!important;
+  color:#101827!important;
+  font-size:15px!important;
+  font-weight:950!important;
+}
+
+#homeLeaderboard .leaderboard-row>div:not(.avatar),
+#leaderboardPageList .leaderboard-row>div:not(.avatar){
+  grid-column:2!important;
+  grid-row:1!important;
+  min-width:0!important;
+  display:block!important;
+}
+
 #homeLeaderboard .leaderboard-row>div:not(.avatar)>b,
 #leaderboardPageList .leaderboard-row>div:not(.avatar)>b{
-  font-size:14px!important;
-  line-height:1!important;
+  display:block!important;
+  color:#fff!important;
+  font-size:15px!important;
+  font-weight:850!important;
+  line-height:1.12!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
 }
+
 #homeLeaderboard .leaderboard-row>div:not(.avatar)>small,
 #leaderboardPageList .leaderboard-row>div:not(.avatar)>small{
-  margin-top:2px!important;
-  font-size:10.5px!important;
-  line-height:1!important;
+  display:block!important;
+  margin-top:4px!important;
+  color:rgba(215,219,228,.72)!important;
+  font-size:11px!important;
+  font-weight:700!important;
+  line-height:1.1!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
 }
+
 #homeLeaderboard .leaderboard-row>b:first-child,
 #leaderboardPageList .leaderboard-row>b:first-child{
-  width:28px!important;
-  min-width:28px!important;
-  font-size:11.5px!important;
+  grid-column:3!important;
+  grid-row:1!important;
+  justify-self:center!important;
+  width:auto!important;
+  min-width:0!important;
+  padding:0!important;
+  background:transparent!important;
+  border:0!important;
+  color:rgba(246,241,230,.78)!important;
+  font-size:13px!important;
+  font-weight:850!important;
+  line-height:1!important;
+  text-align:center!important;
 }
+
 #homeLeaderboard .leaderboard-row>b:last-child,
 #leaderboardPageList .leaderboard-row>b:last-child{
-  padding:4px 7px!important;
-  font-size:12px!important;
+  grid-column:4!important;
+  grid-row:1!important;
+  justify-self:end!important;
+  min-width:72px!important;
+  text-align:right!important;
+  padding:6px 9px!important;
   border-radius:999px!important;
+  background:rgba(228,184,78,.105)!important;
+  border:1px solid rgba(228,184,78,.20)!important;
+  color:#f5d07a!important;
+  font-size:13px!important;
+  font-weight:900!important;
+  line-height:1!important;
+  white-space:nowrap!important;
 }
 
 @media(max-width:430px){
@@ -93,15 +166,35 @@ body #page-profile .avatar.large img{
   }
   #homeLeaderboard .leaderboard-row,
   #leaderboardPageList .leaderboard-row{
-    min-height:38px!important;
-    padding:4px 7px!important;
-    grid-template-columns:29px minmax(0,1fr) 27px auto!important;
+    grid-template-columns:31px minmax(0,1fr) 34px 70px!important;
+    min-height:48px!important;
+    padding:7px 8px!important;
+    column-gap:8px!important;
+    border-radius:13px!important;
   }
-  #homeLeaderboard .leaderboard-row .avatar.small,
-  #leaderboardPageList .leaderboard-row .avatar.small{
-    width:27px!important;
-    height:27px!important;
-    min-width:27px!important;
-    font-size:13px!important;
+  #homeLeaderboard .leaderboard-row>.avatar.small,
+  #leaderboardPageList .leaderboard-row>.avatar.small{
+    width:31px!important;
+    height:31px!important;
+    min-width:31px!important;
+    font-size:14px!important;
+  }
+  #homeLeaderboard .leaderboard-row>div:not(.avatar)>b,
+  #leaderboardPageList .leaderboard-row>div:not(.avatar)>b{
+    font-size:14px!important;
+  }
+  #homeLeaderboard .leaderboard-row>div:not(.avatar)>small,
+  #leaderboardPageList .leaderboard-row>div:not(.avatar)>small{
+    font-size:10px!important;
+  }
+  #homeLeaderboard .leaderboard-row>b:first-child,
+  #leaderboardPageList .leaderboard-row>b:first-child{
+    font-size:12px!important;
+  }
+  #homeLeaderboard .leaderboard-row>b:last-child,
+  #leaderboardPageList .leaderboard-row>b:last-child{
+    min-width:64px!important;
+    padding:5px 7px!important;
+    font-size:12px!important;
   }
 }
