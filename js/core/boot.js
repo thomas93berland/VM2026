@@ -1,5 +1,6 @@
 (()=>{
   let busy=false;
+  let autoLast3Started=false;
   const toast=msg=>{try{const t=document.getElementById('toast');if(t){t.textContent=msg;t.hidden=false;setTimeout(()=>t.hidden=true,4200)}else alert(msg)}catch{alert(msg)}};
   const wait=ms=>new Promise(r=>setTimeout(r,ms));
   const money=n=>Number(n||0).toLocaleString('nb-NO');
@@ -43,6 +44,8 @@
     const stake=Number(bet.stake||0);
     const win=Number(bet.possibleWin||Math.floor(stake*Number(bet.totalOdds||1)));
     const userId=bet.userId;
+    if(!userId)return {settled:false};
+
     const batch=db.batch();
     const betRef=db.collection('bets').doc(betId);
     const userRef=db.collection('users').doc(userId);
@@ -80,17 +83,68 @@
     }finally{busy=false}
   }
 
+  async function settleLast3PerPlayer(){
+    if(busy)return;
+    if(!ready())return;
+    busy=true;
+    try{
+      if(!(await isAdmin())){toast('Kun admin kan utbetale gevinster');return}
+      const db=firebase.firestore();
+      const snap=await db.collection('bets').get();
+      const groups={};
+      snap.docs.forEach(doc=>{
+        const b=doc.data();
+        const uid=b.userId||'unknown';
+        if(!groups[uid])groups[uid]=[];
+        groups[uid].push({id:doc.id,data:b});
+      });
+
+      let checked=0,settled=0,won=0,paid=0,players=0;
+      for(const uid of Object.keys(groups)){
+        const latest=groups[uid]
+          .sort((a,b)=>Number(b.data.createdAtMs||0)-Number(a.data.createdAtMs||0))
+          .slice(0,3);
+        if(latest.length)players++;
+        for(const item of latest){
+          checked++;
+          const res=await settleBet(item.id,item.data,null);
+          if(res.settled){
+            settled++;
+            if(res.won){won++;paid+=res.amount}
+          }
+        }
+      }
+      toast(settled?`Siste 3 per spiller sjekket: ${won} vinnere, ${money(paid)} VM Coins utbetalt`:`Sjekket ${checked} bets hos ${players} spillere. Ingen nye gevinster å betale.`);
+    }catch(e){
+      console.error('Last 3 payout error',e);
+      toast('Kunne ikke utbetale siste 3 bets. Sjekk admin/rettigheter.');
+    }finally{busy=false}
+  }
+
   function addPayoutButton(){
     const panel=document.getElementById('adminPanel');
-    if(!panel||document.getElementById('safePayoutBtn'))return;
-    const btn=document.createElement('button');
-    btn.id='safePayoutBtn';
-    btn.type='button';
-    btn.className='btn secondary compact';
-    btn.textContent='Utbetal gevinster';
-    btn.style.marginTop='10px';
-    btn.onclick=()=>settleAll();
-    panel.appendChild(btn);
+    if(!panel)return;
+    if(!document.getElementById('safePayoutBtn')){
+      const btn=document.createElement('button');
+      btn.id='safePayoutBtn';
+      btn.type='button';
+      btn.className='btn secondary compact';
+      btn.textContent='Utbetal gevinster';
+      btn.style.marginTop='10px';
+      btn.onclick=()=>settleAll();
+      panel.appendChild(btn);
+    }
+    if(!document.getElementById('safePayoutLast3Btn')){
+      const btn=document.createElement('button');
+      btn.id='safePayoutLast3Btn';
+      btn.type='button';
+      btn.className='btn primary compact';
+      btn.textContent='Utbetal siste 3 bets per spiller';
+      btn.style.marginTop='10px';
+      btn.style.marginLeft='8px';
+      btn.onclick=()=>settleLast3PerPlayer();
+      panel.appendChild(btn);
+    }
   }
 
   function hookResultForm(){
@@ -109,16 +163,27 @@
     });
   }
 
+  function maybeAutoLast3(){
+    if(autoLast3Started)return;
+    const params=new URLSearchParams(location.search);
+    if(!params.has('paylast3'))return;
+    autoLast3Started=true;
+    setTimeout(()=>settleLast3PerPlayer(),1800);
+  }
+
   function boot(){
     addPayoutButton();
     hookResultForm();
+    maybeAutoLast3();
     setTimeout(addPayoutButton,700);
     setTimeout(hookResultForm,700);
+    setTimeout(maybeAutoLast3,900);
     setTimeout(addPayoutButton,1600);
     setTimeout(hookResultForm,1600);
+    setTimeout(maybeAutoLast3,1800);
   }
 
-  window.VM_SAFE_BOOT={startAll:boot,settleBets:settleAll};
+  window.VM_SAFE_BOOT={startAll:boot,settleBets:settleAll,settleLast3PerPlayer};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
   try{firebase.auth().onAuthStateChanged(u=>{if(u)boot()})}catch{}
   document.addEventListener('click',e=>{if(e.target.closest?.('[data-page]'))setTimeout(boot,300)});
