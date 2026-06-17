@@ -1,6 +1,8 @@
 (()=>{
   let busy=false;
   let autoLast3Started=false;
+  let autoStatusStarted=false;
+  const OPEN=['Aktiv','Venter resultat'];
   const toast=msg=>{try{const t=document.getElementById('toast');if(t){t.textContent=msg;t.hidden=false;setTimeout(()=>t.hidden=true,4200)}else alert(msg)}catch{alert(msg)}};
   const wait=ms=>new Promise(r=>setTimeout(r,ms));
   const money=n=>Number(n||0).toLocaleString('nb-NO');
@@ -8,6 +10,15 @@
   function ready(){
     try{return window.firebase&&firebase.auth&&firebase.firestore&&firebase.auth().currentUser}
     catch{return false}
+  }
+
+  function isOpenStatus(status){
+    return OPEN.includes(String(status||'Aktiv'));
+  }
+
+  function isPastTime(v){
+    const ms=Date.parse(v||'');
+    return Number.isFinite(ms)&&ms<Date.now();
   }
 
   async function isAdmin(){
@@ -19,48 +30,68 @@
     }catch{return false}
   }
 
-  async function getMatchResult(id,fallback){
-    if(fallback&&id===fallback.id)return fallback.result;
+  async function getMatchInfo(id,fallback){
+    if(fallback&&id===fallback.id)return {id,result:fallback.result,time:fallback.time||null};
     const s=await firebase.firestore().collection('matches').doc(id).get();
-    return s.exists?s.data()?.result:null;
+    if(!s.exists)return {id,result:null,time:null};
+    const d=s.data()||{};
+    return {id,result:d.result||null,time:d.time||null};
   }
 
   async function settleBet(betId,bet,forcedMatch){
     const db=firebase.firestore();
     const selections=Array.isArray(bet.selections)?bet.selections:[];
-    if(!selections.length||bet.status!=='Aktiv')return {settled:false};
+    if(!selections.length||!isOpenStatus(bet.status))return {settled:false,waiting:false};
 
     let lost=false;
-    let pending=false;
+    let pendingFuture=false;
+    let pendingPast=false;
 
     for(const sel of selections){
-      const res=await getMatchResult(sel.matchId,forcedMatch);
-      if(!res){pending=true;continue}
-      if(res!==sel.pick)lost=true;
+      const info=await getMatchInfo(sel.matchId,forcedMatch);
+      if(!info.result){
+        if(isPastTime(info.time))pendingPast=true;
+        else pendingFuture=true;
+        continue;
+      }
+      if(info.result!==sel.pick)lost=true;
     }
 
-    if(pending&&!lost)return {settled:false};
+    const betRef=db.collection('bets').doc(betId);
+
+    if(pendingFuture&&!lost)return {settled:false,waiting:false};
+
+    if(pendingPast&&!lost){
+      if(bet.status!=='Venter resultat'){
+        await betRef.update({status:'Venter resultat',waitingResultAtMs:Date.now(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+      }
+      return {settled:false,waiting:true};
+    }
 
     const stake=Number(bet.stake||0);
     const win=Number(bet.possibleWin||Math.floor(stake*Number(bet.totalOdds||1)));
     const userId=bet.userId;
-    if(!userId)return {settled:false};
+    if(!userId)return {settled:false,waiting:false};
 
     const batch=db.batch();
-    const betRef=db.collection('bets').doc(betId);
     const userRef=db.collection('users').doc(userId);
 
     if(lost){
       batch.update(betRef,{status:'Tapt',settledAtMs:Date.now(),settledAt:firebase.firestore.FieldValue.serverTimestamp()});
       batch.update(userRef,{completedBets:firebase.firestore.FieldValue.increment(1),netProfit:firebase.firestore.FieldValue.increment(-stake),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
       await batch.commit();
-      return {settled:true,won:false,amount:0};
+      return {settled:true,won:false,amount:0,waiting:false};
     }
 
     batch.update(betRef,{status:'Vunnet',payout:win,settledAtMs:Date.now(),settledAt:firebase.firestore.FieldValue.serverTimestamp()});
     batch.update(userRef,{coins:firebase.firestore.FieldValue.increment(win),wonBets:firebase.firestore.FieldValue.increment(1),completedBets:firebase.firestore.FieldValue.increment(1),netProfit:firebase.firestore.FieldValue.increment(win-stake),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
     await batch.commit();
-    return {settled:true,won:true,amount:win};
+    return {settled:true,won:true,amount:win,waiting:false};
+  }
+
+  async function activeBetDocs(){
+    const snap=await firebase.firestore().collection('bets').get();
+    return snap.docs.filter(doc=>isOpenStatus(doc.data()?.status));
   }
 
   async function settleAll(forcedMatch=null){
@@ -69,17 +100,17 @@
     busy=true;
     try{
       if(!(await isAdmin())){toast('Kun admin kan utbetale gevinster');return}
-      const db=firebase.firestore();
-      const snap=await db.collection('bets').where('status','==','Aktiv').get();
-      let settled=0,won=0,paid=0;
-      for(const doc of snap.docs){
+      const docs=await activeBetDocs();
+      let settled=0,waiting=0,won=0,paid=0;
+      for(const doc of docs){
         const res=await settleBet(doc.id,doc.data(),forcedMatch);
+        if(res.waiting)waiting++;
         if(res.settled){settled++;if(res.won){won++;paid+=res.amount}}
       }
-      toast(settled?`Utbetaling ferdig: ${won} vunnet, ${money(paid)} VM Coins betalt`:'Ingen ferdige bets å utbetale ennå');
+      toast(settled||waiting?`Oppdatert: ${won} vinnere, ${waiting} venter resultat, ${money(paid)} VM Coins betalt`:'Ingen ferdige bets å oppdatere ennå');
     }catch(e){
       console.error('Payout error',e);
-      toast('Kunne ikke utbetale gevinster. Sjekk admin/rettigheter.');
+      toast('Kunne ikke oppdatere bets. Sjekk admin/rettigheter.');
     }finally{busy=false}
   }
 
@@ -99,7 +130,7 @@
         groups[uid].push({id:doc.id,data:b});
       });
 
-      let checked=0,settled=0,won=0,paid=0,players=0;
+      let checked=0,settled=0,waiting=0,won=0,paid=0,players=0;
       for(const uid of Object.keys(groups)){
         const latest=groups[uid]
           .sort((a,b)=>Number(b.data.createdAtMs||0)-Number(a.data.createdAtMs||0))
@@ -108,16 +139,17 @@
         for(const item of latest){
           checked++;
           const res=await settleBet(item.id,item.data,null);
+          if(res.waiting)waiting++;
           if(res.settled){
             settled++;
             if(res.won){won++;paid+=res.amount}
           }
         }
       }
-      toast(settled?`Siste 3 per spiller sjekket: ${won} vinnere, ${money(paid)} VM Coins utbetalt`:`Sjekket ${checked} bets hos ${players} spillere. Ingen nye gevinster å betale.`);
+      toast(settled||waiting?`Siste 3 per spiller: ${won} vinnere, ${waiting} venter resultat, ${money(paid)} VM Coins utbetalt`:`Sjekket ${checked} bets hos ${players} spillere. Ingen nye gevinster å betale.`);
     }catch(e){
       console.error('Last 3 payout error',e);
-      toast('Kunne ikke utbetale siste 3 bets. Sjekk admin/rettigheter.');
+      toast('Kunne ikke oppdatere siste 3 bets. Sjekk admin/rettigheter.');
     }finally{busy=false}
   }
 
@@ -129,7 +161,7 @@
       btn.id='safePayoutBtn';
       btn.type='button';
       btn.className='btn secondary compact';
-      btn.textContent='Utbetal gevinster';
+      btn.textContent='Oppdater/utbetal bets';
       btn.style.marginTop='10px';
       btn.onclick=()=>settleAll();
       panel.appendChild(btn);
@@ -171,16 +203,27 @@
     setTimeout(()=>settleLast3PerPlayer(),1800);
   }
 
+  function maybeAutoStatus(){
+    if(autoStatusStarted)return;
+    const params=new URLSearchParams(location.search);
+    if(!params.has('checkstatus'))return;
+    autoStatusStarted=true;
+    setTimeout(()=>settleAll(),1800);
+  }
+
   function boot(){
     addPayoutButton();
     hookResultForm();
     maybeAutoLast3();
+    maybeAutoStatus();
     setTimeout(addPayoutButton,700);
     setTimeout(hookResultForm,700);
     setTimeout(maybeAutoLast3,900);
+    setTimeout(maybeAutoStatus,900);
     setTimeout(addPayoutButton,1600);
     setTimeout(hookResultForm,1600);
     setTimeout(maybeAutoLast3,1800);
+    setTimeout(maybeAutoStatus,1800);
   }
 
   window.VM_SAFE_BOOT={startAll:boot,settleBets:settleAll,settleLast3PerPlayer};
