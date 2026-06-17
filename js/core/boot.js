@@ -2,6 +2,7 @@
   let busy=false;
   let autoLast3Started=false;
   let autoStatusStarted=false;
+  let matchObserver=null;
   const OPEN=['Aktiv','Venter resultat'];
   const toast=msg=>{try{const t=document.getElementById('toast');if(t){t.textContent=msg;t.hidden=false;setTimeout(()=>t.hidden=true,4200)}else alert(msg)}catch{alert(msg)}};
   const wait=ms=>new Promise(r=>setTimeout(r,ms));
@@ -21,6 +22,26 @@
     return Number.isFinite(ms)&&ms<Date.now();
   }
 
+  function addStatusCss(){
+    if(document.getElementById('safeMatchStatusCss'))return;
+    const css=document.createElement('style');
+    css.id='safeMatchStatusCss';
+    css.textContent=`
+      #matchList .match-card{position:relative!important;}
+      #matchList .safe-match-status{
+        display:inline-flex!important;align-items:center!important;justify-content:center!important;
+        width:max-content!important;margin:8px auto 2px!important;padding:4px 9px!important;
+        border-radius:999px!important;font-size:11px!important;font-weight:900!important;letter-spacing:.02em!important;
+        border:1px solid rgba(255,255,255,.12)!important;background:rgba(255,255,255,.06)!important;color:rgba(245,247,251,.82)!important;
+      }
+      #matchList .safe-match-status.waiting{background:rgba(255,191,73,.13)!important;border-color:rgba(255,191,73,.32)!important;color:#ffd27a!important;}
+      #matchList .safe-match-status.done{background:rgba(79,225,159,.12)!important;border-color:rgba(79,225,159,.28)!important;color:#7ff0bd!important;}
+      #matchList .match-card.safe-waiting-result .odd,
+      #matchList .match-card.safe-finished .odd{opacity:.48!important;filter:saturate(.7)!important;cursor:not-allowed!important;}
+    `;
+    document.head.appendChild(css);
+  }
+
   async function isAdmin(){
     try{
       const u=firebase.auth().currentUser;
@@ -36,6 +57,61 @@
     if(!s.exists)return {id,result:null,time:null};
     const d=s.data()||{};
     return {id,result:d.result||null,time:d.time||null};
+  }
+
+  function statusNode(card,text,kind){
+    let node=card.querySelector('.safe-match-status');
+    if(!node){
+      node=document.createElement('div');
+      node.className='safe-match-status';
+      const teams=card.querySelector('.teams');
+      if(teams)teams.insertAdjacentElement('afterend',node);
+      else card.prepend(node);
+    }
+    node.textContent=text;
+    node.className='safe-match-status '+(kind||'');
+  }
+
+  async function updateMatchCard(card){
+    try{
+      const btn=card.querySelector('.odd[data-m]');
+      if(!btn)return;
+      const id=btn.dataset.m;
+      const info=await getMatchInfo(id,null);
+      const odds=[...card.querySelectorAll('.odd[data-m]')];
+
+      card.classList.remove('safe-waiting-result','safe-finished','safe-open');
+
+      if(info.result){
+        card.classList.add('safe-finished');
+        odds.forEach(b=>b.disabled=true);
+        statusNode(card,'Ferdig','done');
+        return;
+      }
+
+      if(isPastTime(info.time)){
+        card.classList.add('safe-waiting-result');
+        odds.forEach(b=>b.disabled=true);
+        statusNode(card,'Venter resultat','waiting');
+        return;
+      }
+
+      card.classList.add('safe-open');
+      const existing=card.querySelector('.safe-match-status');
+      if(existing)existing.remove();
+    }catch(e){console.warn('Match status update skipped',e)}
+  }
+
+  function refreshMatchCards(){
+    addStatusCss();
+    document.querySelectorAll('#matchList .match-card').forEach(card=>updateMatchCard(card));
+  }
+
+  function watchMatchList(){
+    const list=document.getElementById('matchList');
+    if(!list||matchObserver)return;
+    matchObserver=new MutationObserver(()=>setTimeout(refreshMatchCards,80));
+    matchObserver.observe(list,{childList:true,subtree:true});
   }
 
   async function settleBet(betId,bet,forcedMatch){
@@ -108,6 +184,7 @@
         if(res.settled){settled++;if(res.won){won++;paid+=res.amount}}
       }
       toast(settled||waiting?`Oppdatert: ${won} vinnere, ${waiting} venter resultat, ${money(paid)} VM Coins betalt`:'Ingen ferdige bets å oppdatere ennå');
+      refreshMatchCards();
     }catch(e){
       console.error('Payout error',e);
       toast('Kunne ikke oppdatere bets. Sjekk admin/rettigheter.');
@@ -147,6 +224,7 @@
         }
       }
       toast(settled||waiting?`Siste 3 per spiller: ${won} vinnere, ${waiting} venter resultat, ${money(paid)} VM Coins utbetalt`:`Sjekket ${checked} bets hos ${players} spillere. Ingen nye gevinster å betale.`);
+      refreshMatchCards();
     }catch(e){
       console.error('Last 3 payout error',e);
       toast('Kunne ikke oppdatere siste 3 bets. Sjekk admin/rettigheter.');
@@ -214,20 +292,27 @@
   function boot(){
     addPayoutButton();
     hookResultForm();
+    watchMatchList();
+    refreshMatchCards();
     maybeAutoLast3();
     maybeAutoStatus();
     setTimeout(addPayoutButton,700);
     setTimeout(hookResultForm,700);
+    setTimeout(watchMatchList,700);
+    setTimeout(refreshMatchCards,900);
     setTimeout(maybeAutoLast3,900);
     setTimeout(maybeAutoStatus,900);
     setTimeout(addPayoutButton,1600);
     setTimeout(hookResultForm,1600);
+    setTimeout(watchMatchList,1600);
+    setTimeout(refreshMatchCards,1900);
     setTimeout(maybeAutoLast3,1800);
     setTimeout(maybeAutoStatus,1800);
   }
 
-  window.VM_SAFE_BOOT={startAll:boot,settleBets:settleAll,settleLast3PerPlayer};
+  window.VM_SAFE_BOOT={startAll:boot,settleBets:settleAll,settleLast3PerPlayer,refreshMatchCards};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
   try{firebase.auth().onAuthStateChanged(u=>{if(u)boot()})}catch{}
   document.addEventListener('click',e=>{if(e.target.closest?.('[data-page]'))setTimeout(boot,300)});
+  setInterval(refreshMatchCards,8000);
 })();
