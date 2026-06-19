@@ -357,3 +357,125 @@
   document.addEventListener('click',e=>{if(e.target.closest?.('[data-page]'))setTimeout(boot,300)});
   setInterval(refreshMatchCards,8000);
 })();
+
+(()=>{
+  let unsub=null;
+  let built=false;
+  const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+  const toast=msg=>{try{const t=document.getElementById('toast');if(t){t.textContent=msg;t.hidden=false;setTimeout(()=>t.hidden=true,3600)}else alert(msg)}catch{alert(msg)}};
+
+  function ready(){
+    try{return window.firebase&&firebase.auth&&firebase.firestore&&firebase.auth().currentUser}
+    catch{return false}
+  }
+
+  async function isAdmin(){
+    try{
+      const u=firebase.auth().currentUser;
+      if(!u)return false;
+      const s=await firebase.firestore().collection('users').doc(u.uid).get();
+      return s.exists&&s.data()?.isAdmin===true;
+    }catch{return false}
+  }
+
+  function addCss(){
+    if(document.getElementById('dailyTipsCss'))return;
+    const css=document.createElement('style');
+    css.id='dailyTipsCss';
+    css.textContent=`
+      #page-betting .rules-card.daily-tips-card{padding:16px!important;border-radius:20px!important;background:linear-gradient(145deg,rgba(12,23,42,.86),rgba(6,12,26,.94))!important;border:1px solid rgba(228,184,78,.22)!important;box-shadow:0 14px 34px rgba(0,0,0,.20),inset 0 1px 0 rgba(255,255,255,.04)!important;}
+      .daily-tips-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;}
+      .daily-tips-head small{display:block;color:rgba(228,184,78,.86);font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.09em;}
+      .daily-tips-head h2{margin:3px 0 0;font-size:18px;line-height:1.1;color:#fff;}
+      #dailyTipsUpdated{font-size:11px;color:rgba(215,219,228,.66);white-space:nowrap;}
+      #dailyTipsView{min-height:54px;margin:0;padding:12px 13px;border-radius:15px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.07);color:rgba(245,247,251,.90);font-size:14px;line-height:1.45;white-space:pre-wrap;}
+      #dailyTipsView.empty{color:rgba(215,219,228,.60);font-style:italic;}
+      #dailyTipsForm{margin-top:12px;display:grid;gap:9px;}
+      #dailyTipsInput{min-height:92px;resize:vertical;}
+      .daily-tips-actions{display:flex;justify-content:flex-end;gap:8px;}
+      @media(max-width:520px){.daily-tips-head{display:block}.daily-tips-head h2{font-size:17px}#dailyTipsUpdated{display:block;margin-top:6px}.daily-tips-actions .btn{width:100%}}
+    `;
+    document.head.appendChild(css);
+  }
+
+  async function build(){
+    const card=document.querySelector('#page-betting .rules-card');
+    if(!card||built)return;
+    built=true;
+    addCss();
+    card.classList.add('daily-tips-card');
+    card.innerHTML=`
+      <div class="daily-tips-head">
+        <div><small>Thomas sitt tips</small><h2>Dagens tippetips</h2></div>
+        <span id="dailyTipsUpdated">Ikke oppdatert</span>
+      </div>
+      <p id="dailyTipsView" class="empty">Ingen tips lagt inn ennå.</p>
+      <form id="dailyTipsForm" hidden>
+        <textarea id="dailyTipsInput" class="input" rows="4" placeholder="Skriv dagens tips her, f.eks. Norge vinner, Brazil over 2.5 mål, trygg dobbel osv."></textarea>
+        <div class="daily-tips-actions"><button class="btn primary compact" type="submit">Lagre dagens tips</button></div>
+      </form>
+    `;
+    bind();
+    await load();
+  }
+
+  function setText(data){
+    const view=document.getElementById('dailyTipsView');
+    const input=document.getElementById('dailyTipsInput');
+    const updated=document.getElementById('dailyTipsUpdated');
+    const text=String(data?.text||'').trim();
+    if(view){
+      view.textContent=text||'Ingen tips lagt inn ennå.';
+      view.classList.toggle('empty',!text);
+    }
+    if(input)input.value=text;
+    if(updated){
+      const ms=Number(data?.updatedAtMs||0);
+      updated.textContent=ms?new Date(ms).toLocaleString('nb-NO',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'Ikke oppdatert';
+    }
+  }
+
+  async function load(){
+    if(!ready())return;
+    const form=document.getElementById('dailyTipsForm');
+    const admin=await isAdmin();
+    if(form)form.hidden=!admin;
+    if(unsub)try{unsub()}catch{}
+    const ref=firebase.firestore().collection('siteSettings').doc('dailyTips');
+    unsub=ref.onSnapshot(s=>setText(s.exists?s.data():{}),e=>console.warn('Daily tips load failed',e));
+  }
+
+  function bind(){
+    const form=document.getElementById('dailyTipsForm');
+    if(!form||form.dataset.bound==='1')return;
+    form.dataset.bound='1';
+    form.addEventListener('submit',async e=>{
+      e.preventDefault();
+      try{
+        if(!(await isAdmin()))return toast('Kun admin kan lagre tips');
+        const text=document.getElementById('dailyTipsInput')?.value?.trim()||'';
+        await firebase.firestore().collection('siteSettings').doc('dailyTips').set({
+          text,
+          updatedAtMs:Date.now(),
+          updatedBy:firebase.auth().currentUser?.uid||'',
+          updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+        },{merge:true});
+        toast('Dagens tippetips lagret');
+      }catch(err){
+        console.error('Daily tips save failed',err);
+        toast('Kunne ikke lagre tips. Sjekk admin/rettigheter.');
+      }
+    });
+  }
+
+  function boot(){
+    build();
+    setTimeout(build,600);
+    setTimeout(build,1500);
+  }
+
+  window.VM_DAILY_TIPS={boot,load};
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+  try{firebase.auth().onAuthStateChanged(u=>{if(u){built=false;boot()}})}catch{}
+  document.addEventListener('click',e=>{if(e.target.closest?.('[data-page="betting"]'))setTimeout(()=>{built=false;boot()},300)});
+})();
