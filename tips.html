@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#06101d" />
+  <title>Dagens H/U/B Tips · VM Lounge 2026</title>
+  <style>
+    :root{--bg:#06101d;--panel:#0b1729;--panel2:#101f36;--gold:#e4b84e;--gold2:#ffd77a;--text:#f6f7fb;--muted:#9da8ba;--line:rgba(255,255,255,.10);--green:#64e6a2;--red:#ff7b7b}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at top,#112642 0,#06101d 48%,#030815 100%);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;padding:18px 14px 28px}.wrap{max-width:880px;margin:0 auto}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}.brand small{display:block;color:var(--gold);font-weight:900;letter-spacing:.12em;text-transform:uppercase}.brand h1{margin:3px 0 0;font-size:28px;line-height:1.05}.brand p{margin:7px 0 0;color:var(--muted);font-size:14px}.btn{border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--text);border-radius:999px;padding:10px 13px;text-decoration:none;font-weight:850;font-size:13px}.btn.primary{background:linear-gradient(135deg,#f3cf74,#b88424);color:#08111f;border-color:rgba(255,215,122,.5)}.card{background:linear-gradient(145deg,rgba(16,31,54,.88),rgba(7,15,30,.94));border:1px solid var(--line);border-radius:20px;box-shadow:0 16px 38px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.04);padding:15px;margin:10px 0}.toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:7px 10px;background:rgba(228,184,78,.10);border:1px solid rgba(228,184,78,.22);color:var(--gold2);font-size:12px;font-weight:850}.muted{color:var(--muted)}.empty{text-align:center;color:var(--muted);padding:28px 12px}.match{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center}.match-title small{display:block;color:var(--muted);font-size:12px;font-weight:750}.teams{display:flex;align-items:center;gap:7px;margin-top:5px;min-width:0}.teams strong{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.teams span{color:var(--muted);font-weight:800}.pick{display:flex;gap:7px;align-items:center}.pick button{width:44px;height:38px;border-radius:13px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.06);color:var(--text);font-weight:950;font-size:15px}.pick button.active{background:linear-gradient(135deg,#f4d37b,#b98629);color:#07101e;border-color:rgba(255,215,122,.66);box-shadow:0 0 0 2px rgba(228,184,78,.16)}.pick button:disabled{opacity:.5}.admin-note{margin-top:8px;color:var(--muted);font-size:12px}.status{margin-top:8px;font-size:12px;color:var(--muted)}.status b{color:var(--gold2)}.login-box{margin-top:18px}.danger{color:var(--red)}@media(max-width:620px){body{padding:15px 10px 90px}.top{align-items:flex-start}.brand h1{font-size:24px}.match{grid-template-columns:1fr}.pick{justify-content:stretch}.pick button{flex:1}.teams strong{font-size:15px}.card{border-radius:17px;padding:13px}.btn{white-space:nowrap}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header class="top">
+      <div class="brand">
+        <small>VM Lounge 2026</small>
+        <h1>Dagens H/U/B Tips</h1>
+        <p>Thomas sitt enkle tips på dagens VM-kamper: Hjemme, Uavgjort eller Borte.</p>
+      </div>
+      <a class="btn" href="index.html">Tilbake</a>
+    </header>
+
+    <section class="card login-box" id="loginBox">
+      <strong>Logg inn først</strong>
+      <p class="muted">Åpne hovedsiden og logg inn, så kan du komme tilbake hit.</p>
+      <a class="btn primary" href="index.html">Gå til login</a>
+    </section>
+
+    <section id="app" hidden>
+      <div class="toolbar">
+        <span class="pill" id="datePill">I dag</span>
+        <span class="muted" id="roleText">Laster...</span>
+      </div>
+      <div id="tipsList"></div>
+      <p class="admin-note" id="adminNote" hidden>Som admin trykker du H, U eller B på hver kamp. Valget lagres live for alle.</p>
+    </section>
+  </main>
+
+  <script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js?v=5"></script>
+  <script>
+    const PICK_LABELS={home:'H',draw:'U',away:'B'};
+    const PICK_NAMES={home:'Hjemmeseier',draw:'Uavgjort',away:'Borteseier'};
+    let auth,db,user=null,isAdmin=false,matches=[],tips={};
+    const $=id=>document.getElementById(id);
+    const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+    const localDate=()=>{const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)};
+    const fmtTime=v=>{const d=new Date(v);return v&&!isNaN(d)?d.toLocaleTimeString('nb-NO',{hour:'2-digit',minute:'2-digit'}):'Tid ukjent'};
+    const title=m=>`${m.home||'Hjemme'} – ${m.away||'Borte'}`;
+
+    function init(){
+      firebase.initializeApp(window.VM_FIREBASE_CONFIG);
+      auth=firebase.auth();db=firebase.firestore();
+      $('datePill').textContent='I dag · '+new Date().toLocaleDateString('nb-NO',{weekday:'long',day:'2-digit',month:'short'});
+    }
+
+    async function checkRole(u){
+      const s=await db.collection('users').doc(u.uid).get();
+      isAdmin=!!(s.exists&&s.data().isAdmin===true);
+      $('roleText').textContent=isAdmin?'Admin: kan lagre tips':'Lesemodus';
+      $('adminNote').hidden=!isAdmin;
+    }
+
+    function todayMatches(){
+      const d=localDate();
+      return matches.filter(m=>String(m.time||'').slice(0,10)===d).sort((a,b)=>String(a.time||'').localeCompare(String(b.time||'')));
+    }
+
+    function render(){
+      const list=$('tipsList');
+      const todays=todayMatches();
+      if(!todays.length){
+        list.innerHTML='<article class="card empty">Ingen VM-kamper lagt inn for i dag ennå.</article>';
+        return;
+      }
+      list.innerHTML=todays.map(m=>{
+        const current=tips[m.id]?.pick||'';
+        const updated=Number(tips[m.id]?.updatedAtMs||0);
+        const updatedText=updated?new Date(updated).toLocaleString('nb-NO',{hour:'2-digit',minute:'2-digit'}):'Ikke tippet';
+        return `<article class="card match">
+          <div class="match-title">
+            <small>${esc(fmtTime(m.time))} · ${esc(m.group||'VM 2026')}</small>
+            <div class="teams"><strong>${esc(m.home)}</strong><span>vs</span><strong>${esc(m.away)}</strong></div>
+            <div class="status">Tips: <b>${current?PICK_LABELS[current]+' · '+PICK_NAMES[current]:'Ikke lagt inn'}</b> <span class="muted">(${esc(updatedText)})</span></div>
+          </div>
+          <div class="pick" data-id="${esc(m.id)}">
+            ${['home','draw','away'].map(p=>`<button type="button" data-pick="${p}" class="${current===p?'active':''}" ${isAdmin?'':'disabled'}>${PICK_LABELS[p]}</button>`).join('')}
+          </div>
+        </article>`;
+      }).join('');
+      list.querySelectorAll('button[data-pick]').forEach(btn=>btn.onclick=()=>savePick(btn.closest('.pick').dataset.id,btn.dataset.pick));
+    }
+
+    async function savePick(matchId,pick){
+      if(!isAdmin)return;
+      const ref=db.collection('siteSettings').doc('dailyHubTips');
+      const snap=await ref.get();
+      const data=snap.exists?snap.data():{};
+      const next={...(data.tips||{})};
+      next[matchId]={pick,updatedAtMs:Date.now(),updatedBy:user.uid};
+      await ref.set({tips:next,updatedAtMs:Date.now(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+    }
+
+    function subscribe(){
+      db.collection('matches').onSnapshot(s=>{matches=s.docs.map(d=>({id:d.id,...d.data()}));render();});
+      db.collection('siteSettings').doc('dailyHubTips').onSnapshot(s=>{tips=s.exists?(s.data().tips||{}):{};render();});
+    }
+
+    init();
+    auth.onAuthStateChanged(async u=>{
+      user=u;
+      $('loginBox').hidden=!!u;
+      $('app').hidden=!u;
+      if(!u)return;
+      await checkRole(u);
+      subscribe();
+    });
+  </script>
+</body>
+</html>
