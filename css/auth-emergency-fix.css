@@ -38,6 +38,11 @@ body #page-profile .avatar.large img{
   object-fit:cover!important;
 }
 
+/* Betting-side: skjul ferdige/passerte kamper fra kamp-listen */
+#page-betting #matchList .match-card:has(.odd[disabled]){
+  display:none!important;
+}
+
 /* Toppliste/scoreboard: ryddige, profesjonelle spillerfliser */
 #homeLeaderboard,
 #leaderboardPageList{
