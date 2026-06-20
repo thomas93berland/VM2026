@@ -206,9 +206,18 @@
     observer.observe(document.body, { childList:true, subtree:true });
   }
 
+  function loadUpcomingSeeder(){
+    if (document.querySelector('script[src*="upcoming-match-seed.js"]')) return;
+    const script = document.createElement('script');
+    script.src = 'js/core/upcoming-match-seed.js?v=1';
+    script.defer = true;
+    document.body.appendChild(script);
+  }
+
   function boot(){
     addCss();
     watch();
+    loadUpcomingSeeder();
     if (ready()) listen();
     render();
   }
@@ -223,7 +232,7 @@
     });
   } catch {}
   document.addEventListener('click', e => {
-    if (e.target.closest?.('[data-page="leaderboard"],[data-page="profile"],[data-page="home"]')) setTimeout(boot, 250);
+    if (e.target.closest?.('[data-page="leaderboard"],[data-page="profile"],[data-page="home"],[data-page="betting"]')) setTimeout(boot, 250);
   });
   setInterval(render, 4000);
 })();
