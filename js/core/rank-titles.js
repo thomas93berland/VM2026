@@ -13,13 +13,13 @@
 
   function rankTitle(coins){
     coins = Number(coins || 0);
-    if (coins >= 7000) return { title:'VM Kongen', icon:'👑', level:7 };
-    if (coins >= 6500) return { title:'Legenden', icon:'⭐', level:6 };
-    if (coins >= 6000) return { title:'Kongen', icon:'♛', level:5 };
-    if (coins >= 5000) return { title:'Profesjonell', icon:'💎', level:4 };
-    if (coins >= 4000) return { title:'Normal', icon:'⚜️', level:3 };
-    if (coins >= 3000) return { title:'Begynner', icon:'✨', level:2 };
-    return { title:'Nybegynner', icon:'🌱', level:1 };
+    if (coins >= 7000) return { title:'VM KONGEN', icon:'👑', level:7 };
+    if (coins >= 6000) return { title:'Legende', icon:'💎', level:6 };
+    if (coins >= 5000) return { title:'Profesjonell', icon:'🏆', level:5 };
+    if (coins >= 3500) return { title:'God Gambler', icon:'💰', level:4 };
+    if (coins >= 2500) return { title:'Erfaren', icon:'🥈', level:3 };
+    if (coins >= 1000) return { title:'Begynner', icon:'🥉', level:2 };
+    return { title:'Nybegynner', icon:'‼️', level:1 };
   }
 
   function addCss(){
