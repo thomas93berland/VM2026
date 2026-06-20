@@ -158,6 +158,38 @@ body #page-profile .avatar.large img{
   display:none!important;
 }
 
+/* Mobil bunnmeny: større og tydeligere tekst */
+.bottom-nav .bottom-item,
+.bottom-nav a.bottom-item{
+  min-height:58px!important;
+  padding-top:7px!important;
+  padding-bottom:8px!important;
+}
+.bottom-nav .bottom-item small,
+.bottom-nav a.bottom-item small{
+  font-size:12.5px!important;
+  line-height:1.05!important;
+  font-weight:950!important;
+  letter-spacing:.01em!important;
+  color:rgba(246,247,251,.86)!important;
+  text-shadow:0 1px 8px rgba(0,0,0,.35)!important;
+}
+.bottom-nav .bottom-item .nav-icon,
+.bottom-nav a.bottom-item .nav-icon{
+  width:22px!important;
+  height:22px!important;
+  margin-bottom:3px!important;
+  opacity:.95!important;
+}
+.bottom-nav .bottom-item.active small,
+.bottom-nav a.bottom-item.active small{
+  color:#f5d07a!important;
+}
+.bottom-nav .bottom-item.active .nav-icon,
+.bottom-nav a.bottom-item.active .nav-icon{
+  filter:drop-shadow(0 0 8px rgba(228,184,78,.45))!important;
+}
+
 @media(max-width:430px){
   body #page-profile .profile-detail .avatar.large,
   body #page-profile .safe-premium-profile .avatar.large{
@@ -201,6 +233,10 @@ body #page-profile .avatar.large img{
   #leaderboardPageList .leaderboard-row>b:last-child{
     min-width:64px!important;
     padding:5px 7px!important;
+    font-size:12px!important;
+  }
+  .bottom-nav .bottom-item small,
+  .bottom-nav a.bottom-item small{
     font-size:12px!important;
   }
 }
