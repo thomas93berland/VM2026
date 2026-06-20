@@ -238,3 +238,158 @@
   document.addEventListener('click',e=>{if(e.target.closest?.('[data-page="home"]'))setTimeout(boot,250)});
   setInterval(()=>{if(booted)render();},30000);
 })();
+
+(()=>{
+  let comments=[];
+  let unsub=null;
+  let userDoc=null;
+  let observer=null;
+  const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+  const ready=()=>{try{return window.firebase&&firebase.auth&&firebase.firestore&&firebase.auth().currentUser}catch{return false}};
+  const toast=msg=>{try{const t=document.getElementById('toast');if(t){t.textContent=msg;t.hidden=false;clearTimeout(toast.x);toast.x=setTimeout(()=>t.hidden=true,3800)}else alert(msg)}catch{alert(msg)}};
+  const sample=['Brasil banker dette.','Marokko undervurdert.','Thomas jinxer alltid favorittene.','Her lukter det U.','Denne ryker på overtid.'];
+
+  function addCss(){
+    if(document.getElementById('trashTalkCss'))return;
+    const style=document.createElement('style');
+    style.id='trashTalkCss';
+    style.textContent=`
+      .trash-talk{margin-top:12px!important;padding:10px!important;border-radius:15px!important;background:rgba(2,8,18,.38)!important;border:1px solid rgba(255,255,255,.08)!important;}
+      .trash-title{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;margin-bottom:8px!important;color:#f5d07a!important;font-size:12px!important;font-weight:950!important;text-transform:uppercase!important;letter-spacing:.04em!important;}
+      .trash-title span:last-child{color:rgba(235,238,247,.62)!important;font-size:11px!important;text-transform:none!important;letter-spacing:0!important;}
+      .trash-list{display:grid!important;gap:6px!important;margin-bottom:8px!important;}
+      .trash-comment{display:grid!important;grid-template-columns:26px minmax(0,1fr)!important;gap:7px!important;align-items:start!important;padding:7px 8px!important;border-radius:12px!important;background:rgba(255,255,255,.045)!important;border:1px solid rgba(255,255,255,.055)!important;}
+      .trash-avatar{width:26px!important;height:26px!important;border-radius:50%!important;display:grid!important;place-items:center!important;background:linear-gradient(145deg,#f5d07a,#b98525)!important;color:#101827!important;font-size:12px!important;font-weight:1000!important;}
+      .trash-comment b{display:block!important;color:#fff!important;font-size:12px!important;line-height:1.1!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
+      .trash-comment p{margin:2px 0 0!important;color:rgba(235,238,247,.82)!important;font-size:12px!important;line-height:1.25!important;word-break:break-word!important;}
+      .trash-empty{font-size:12px!important;color:rgba(235,238,247,.62)!important;font-weight:750!important;padding:2px 0 8px!important;}
+      .trash-form{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:8px!important;align-items:center!important;}
+      .trash-form input{width:100%!important;min-height:34px!important;border-radius:12px!important;padding:8px 10px!important;background:rgba(255,255,255,.07)!important;border:1px solid rgba(255,255,255,.10)!important;color:#fff!important;font-size:13px!important;outline:none!important;}
+      .trash-form button{min-height:34px!important;border-radius:12px!important;padding:0 12px!important;border:1px solid rgba(245,208,122,.36)!important;background:rgba(228,184,78,.12)!important;color:#f5d07a!important;font-size:12px!important;font-weight:950!important;}
+    `;
+    document.head.appendChild(style);
+  }
+
+  function byMatch(matchId){
+    return comments.filter(c=>c.matchId===matchId).sort((a,b)=>(b.createdAtMs||0)-(a.createdAtMs||0)).slice(0,3);
+  }
+
+  function renderBox(card,matchId){
+    let box=card.querySelector('.trash-talk');
+    if(!box){
+      box=document.createElement('section');
+      box.className='trash-talk';
+      box.dataset.matchId=matchId;
+      card.appendChild(box);
+    }
+    const rows=byMatch(matchId);
+    const ph=sample[Math.abs([...String(matchId)].reduce((a,ch)=>a+ch.charCodeAt(0),0))%sample.length];
+    box.innerHTML=`
+      <div class="trash-title"><span>💬 Trash talk</span><span>${rows.length}/3 siste</span></div>
+      <div class="trash-list">${rows.length?rows.map(c=>`<div class="trash-comment"><span class="trash-avatar">${esc((c.author||'S')[0]).toUpperCase()}</span><div><b>${esc(c.author||'Spiller')}</b><p>${esc(c.text)}</p></div></div>`).join(''):`<div class="trash-empty">Ingen kommentarer ennå. Start showet 👀</div>`}</div>
+      <form class="trash-form" data-trash-match="${esc(matchId)}">
+        <input maxlength="140" placeholder="${esc(ph)}" autocomplete="off" />
+        <button type="submit">Send</button>
+      </form>
+    `;
+  }
+
+  function inject(){
+    addCss();
+    const cards=[...document.querySelectorAll('#matchList .match-card')];
+    cards.forEach(card=>{
+      const btn=card.querySelector('.odd[data-m]');
+      const id=btn?.dataset?.m;
+      if(id)renderBox(card,id);
+    });
+    hideTrashFromForum();
+  }
+
+  async function loadUserDoc(){
+    try{
+      const u=firebase.auth().currentUser;
+      if(!u)return null;
+      const s=await firebase.firestore().collection('users').doc(u.uid).get();
+      userDoc=s.exists?{id:s.id,...s.data()}:null;
+      return userDoc;
+    }catch(e){console.warn('Trash user failed',e);return null}
+  }
+
+  function listen(){
+    if(!ready()||unsub)return;
+    const db=firebase.firestore();
+    unsub=db.collection('forumPosts').where('kind','==','matchTrash').onSnapshot(s=>{
+      comments=s.docs.map(d=>({id:d.id,...d.data()}));
+      inject();
+    },e=>console.warn('Trash listen failed',e));
+  }
+
+  async function send(matchId,text){
+    if(!ready())return toast('Logg inn først');
+    const clean=String(text||'').trim().slice(0,140);
+    if(!clean)return;
+    const u=firebase.auth().currentUser;
+    const profile=userDoc||await loadUserDoc();
+    const author=profile?.name||u.displayName||u.email?.split('@')[0]||'Spiller';
+    await firebase.firestore().collection('forumPosts').add({
+      kind:'matchTrash',
+      matchId,
+      title:'matchTrash:'+matchId,
+      text:clean,
+      author,
+      userId:u.uid,
+      createdAtMs:Date.now(),
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
+
+  function bindSubmit(){
+    document.addEventListener('submit',async e=>{
+      const form=e.target.closest?.('.trash-form');
+      if(!form)return;
+      e.preventDefault();
+      e.stopPropagation();
+      const input=form.querySelector('input');
+      const matchId=form.dataset.trashMatch;
+      try{
+        await send(matchId,input.value);
+        input.value='';
+        toast('Trash talk sendt');
+      }catch(err){
+        console.error('Trash send failed',err);
+        toast((err?.code?err.code+': ':'')+(err?.message||'Kunne ikke sende kommentar'));
+      }
+    },true);
+  }
+
+  function watchMatches(){
+    const box=document.getElementById('matchList');
+    if(!box||observer)return;
+    observer=new MutationObserver(()=>setTimeout(inject,60));
+    observer.observe(box,{childList:true,subtree:true});
+  }
+
+  function hideTrashFromForum(){
+    document.querySelectorAll('#posts .post').forEach(post=>{
+      const h=post.querySelector('h3')?.textContent||'';
+      if(h.startsWith('matchTrash:'))post.style.display='none';
+    });
+  }
+
+  function boot(){
+    addCss();
+    watchMatches();
+    inject();
+    if(ready()){
+      loadUserDoc();
+      listen();
+    }
+  }
+
+  window.VM_TRASH_TALK={boot,inject};
+  bindSubmit();
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+  try{firebase.auth().onAuthStateChanged(u=>{if(u){loadUserDoc();listen();setTimeout(boot,400)}})}catch{}
+  document.addEventListener('click',e=>{if(e.target.closest?.('[data-page="betting"]'))setTimeout(boot,300);if(e.target.closest?.('[data-page="forum"]'))setTimeout(hideTrashFromForum,300)});
+  setInterval(()=>{inject();hideTrashFromForum();},5000);
+})();
