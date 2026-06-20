@@ -4,10 +4,184 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#06101d" />
-  <title>Dagens H/U/B Tips · VM Lounge 2026</title>
+  <title>Tippe Tips · VM Lounge 2026</title>
   <style>
-    :root{--bg:#06101d;--panel:#0b1729;--panel2:#101f36;--gold:#e4b84e;--gold2:#ffd77a;--text:#f6f7fb;--muted:#9da8ba;--line:rgba(255,255,255,.10);--green:#64e6a2;--red:#ff7b7b}
-    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at top,#112642 0,#06101d 48%,#030815 100%);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;padding:18px 14px 28px}.wrap{max-width:880px;margin:0 auto}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}.brand small{display:block;color:var(--gold);font-weight:900;letter-spacing:.12em;text-transform:uppercase}.brand h1{margin:3px 0 0;font-size:28px;line-height:1.05}.brand p{margin:7px 0 0;color:var(--muted);font-size:14px}.btn{border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--text);border-radius:999px;padding:10px 13px;text-decoration:none;font-weight:850;font-size:13px}.btn.primary{background:linear-gradient(135deg,#f3cf74,#b88424);color:#08111f;border-color:rgba(255,215,122,.5)}.card{background:linear-gradient(145deg,rgba(16,31,54,.88),rgba(7,15,30,.94));border:1px solid var(--line);border-radius:20px;box-shadow:0 16px 38px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.04);padding:15px;margin:10px 0}.toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:7px 10px;background:rgba(228,184,78,.10);border:1px solid rgba(228,184,78,.22);color:var(--gold2);font-size:12px;font-weight:850}.muted{color:var(--muted)}.empty{text-align:center;color:var(--muted);padding:28px 12px}.match{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center}.match-title small{display:block;color:var(--muted);font-size:12px;font-weight:750}.teams{display:flex;align-items:center;gap:7px;margin-top:5px;min-width:0}.teams strong{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.teams span{color:var(--muted);font-weight:800}.pick{display:flex;gap:7px;align-items:center}.pick button{width:44px;height:38px;border-radius:13px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.06);color:var(--text);font-weight:950;font-size:15px}.pick button.active{background:linear-gradient(135deg,#f4d37b,#b98629);color:#07101e;border-color:rgba(255,215,122,.66);box-shadow:0 0 0 2px rgba(228,184,78,.16)}.pick button:disabled{opacity:.5}.admin-note{margin-top:8px;color:var(--muted);font-size:12px}.status{margin-top:8px;font-size:12px;color:var(--muted)}.status b{color:var(--gold2)}.login-box{margin-top:18px}.danger{color:var(--red)}@media(max-width:620px){body{padding:15px 10px 90px}.top{align-items:flex-start}.brand h1{font-size:24px}.match{grid-template-columns:1fr}.pick{justify-content:stretch}.pick button{flex:1}.teams strong{font-size:15px}.card{border-radius:17px;padding:13px}.btn{white-space:nowrap}}
+    :root{
+      --bg:#06101d;
+      --panel:#0b1729;
+      --panel2:#101f36;
+      --gold:#e4b84e;
+      --gold2:#ffd77a;
+      --gold3:#fff0b7;
+      --text:#f6f7fb;
+      --muted:#9da8ba;
+      --line:rgba(255,255,255,.10);
+      --danger:#ff7b7b;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      background:
+        radial-gradient(circle at 18% 0%,rgba(228,184,78,.14) 0,transparent 28%),
+        radial-gradient(circle at 82% 12%,rgba(52,106,190,.18) 0,transparent 32%),
+        radial-gradient(circle at top,#112642 0,#06101d 48%,#030815 100%);
+      color:var(--text);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      padding:18px 14px 28px;
+    }
+    .wrap{max-width:900px;margin:0 auto;}
+    .top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px;}
+    .brand small{display:block;color:var(--gold);font-weight:1000;letter-spacing:.13em;text-transform:uppercase;}
+    .brand h1{margin:4px 0 0;font-size:31px;line-height:1.05;letter-spacing:-.04em;}
+    .brand h1 span{
+      background:linear-gradient(90deg,var(--gold3),var(--gold2),#b98525);
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+      text-shadow:0 0 24px rgba(228,184,78,.20);
+    }
+    .brand p{margin:8px 0 0;color:var(--muted);font-size:14px;line-height:1.35;max-width:620px;}
+    .btn{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      border-radius:999px;
+      padding:10px 13px;
+      text-decoration:none;
+      font-weight:900;
+      font-size:13px;
+      cursor:pointer;
+      touch-action:manipulation;
+    }
+    .btn.primary{
+      background:linear-gradient(135deg,#f3cf74,#b88424);
+      color:#08111f;
+      border-color:rgba(255,215,122,.55);
+      box-shadow:0 10px 26px rgba(184,132,36,.20);
+    }
+    .board{
+      position:relative;
+      overflow:hidden;
+      min-height:68vh;
+      border-radius:26px;
+      padding:18px;
+      background:
+        linear-gradient(145deg,rgba(16,31,54,.88),rgba(7,15,30,.95)),
+        radial-gradient(circle at 12% 0,rgba(228,184,78,.14),transparent 34%);
+      border:1px solid rgba(255,216,122,.18);
+      box-shadow:0 18px 48px rgba(0,0,0,.30),inset 0 1px 0 rgba(255,255,255,.055);
+    }
+    .board::before{
+      content:"";
+      position:absolute;
+      inset:-120px -90px auto auto;
+      width:260px;
+      height:260px;
+      border-radius:50%;
+      background:rgba(228,184,78,.10);
+      filter:blur(8px);
+      pointer-events:none;
+    }
+    .board-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;position:relative;z-index:1;}
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:7px;
+      border-radius:999px;
+      padding:8px 11px;
+      background:rgba(228,184,78,.10);
+      border:1px solid rgba(228,184,78,.24);
+      color:var(--gold2);
+      font-size:12px;
+      font-weight:950;
+      white-space:nowrap;
+    }
+    .muted{color:var(--muted);font-size:12px;font-weight:800;}
+    .gold-text{
+      position:relative;
+      z-index:1;
+      min-height:48vh;
+      white-space:pre-wrap;
+      word-break:break-word;
+      padding:22px;
+      border-radius:22px;
+      background:linear-gradient(145deg,rgba(2,8,18,.42),rgba(255,255,255,.025));
+      border:1px solid rgba(255,216,122,.16);
+      color:#ffdf8a;
+      font-size:18px;
+      line-height:1.65;
+      font-weight:850;
+      letter-spacing:.005em;
+      text-shadow:0 0 16px rgba(228,184,78,.20),0 2px 8px rgba(0,0,0,.42);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.045);
+    }
+    .gold-text.empty{color:rgba(255,223,138,.62);font-style:italic;}
+    .admin-panel{
+      position:relative;
+      z-index:1;
+      display:grid;
+      gap:10px;
+      margin-top:14px;
+      padding:14px;
+      border-radius:20px;
+      background:rgba(255,255,255,.045);
+      border:1px solid rgba(255,255,255,.09);
+    }
+    .admin-panel label{color:var(--gold2);font-size:13px;font-weight:1000;text-transform:uppercase;letter-spacing:.055em;}
+    textarea{
+      width:100%;
+      min-height:340px;
+      resize:vertical;
+      border-radius:18px;
+      border:1px solid rgba(255,216,122,.22);
+      background:rgba(3,10,22,.74);
+      color:#ffe6a3;
+      padding:16px;
+      outline:none;
+      font:850 16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+    }
+    textarea:focus{border-color:rgba(255,216,122,.48);box-shadow:0 0 0 3px rgba(228,184,78,.12),inset 0 1px 0 rgba(255,255,255,.06);}
+    .actions{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+    .save-status{color:var(--muted);font-size:12px;font-weight:800;}
+    .login-box{
+      border-radius:22px;
+      padding:18px;
+      background:linear-gradient(145deg,rgba(16,31,54,.88),rgba(7,15,30,.95));
+      border:1px solid var(--line);
+      box-shadow:0 16px 38px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.04);
+      margin-top:18px;
+    }
+    .login-box p{color:var(--muted);line-height:1.45;}
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:18px;
+      transform:translateX(-50%);
+      max-width:calc(100vw - 30px);
+      border-radius:999px;
+      padding:11px 15px;
+      background:rgba(5,12,24,.94);
+      color:var(--gold2);
+      border:1px solid rgba(228,184,78,.28);
+      box-shadow:0 14px 34px rgba(0,0,0,.35);
+      font-size:13px;
+      font-weight:900;
+      z-index:50;
+    }
+    .toast[hidden]{display:none;}
+    @media(max-width:620px){
+      body{padding:15px 10px 90px;}
+      .top{align-items:flex-start;}
+      .brand h1{font-size:25px;}
+      .brand p{font-size:13px;}
+      .board{border-radius:21px;padding:13px;min-height:70vh;}
+      .board-head{align-items:flex-start;flex-direction:column;}
+      .gold-text{font-size:16px;line-height:1.6;padding:16px;border-radius:17px;min-height:46vh;}
+      textarea{min-height:320px;font-size:15px;border-radius:16px;}
+      .btn{white-space:nowrap;}
+    }
   </style>
 </head>
 <body>
@@ -15,106 +189,124 @@
     <header class="top">
       <div class="brand">
         <small>VM Lounge 2026</small>
-        <h1>Dagens H/U/B Tips</h1>
-        <p>Thomas sitt enkle tips på dagens VM-kamper: Hjemme, Uavgjort eller Borte.</p>
+        <h1><span>Tippe Tips</span></h1>
+        <p>Thomas sin store tips-tavle. Her kan det legges inn analyser, banker-tips, risky spill, korte tanker og VM-notater.</p>
       </div>
       <a class="btn" href="index.html">Tilbake</a>
     </header>
 
-    <section class="card login-box" id="loginBox">
+    <section class="login-box" id="loginBox">
       <strong>Logg inn først</strong>
-      <p class="muted">Åpne hovedsiden og logg inn, så kan du komme tilbake hit.</p>
+      <p>Åpne hovedsiden og logg inn, så kan du komme tilbake hit og lese tipsene.</p>
       <a class="btn primary" href="index.html">Gå til login</a>
     </section>
 
-    <section id="app" hidden>
-      <div class="toolbar">
-        <span class="pill" id="datePill">I dag</span>
+    <section class="board" id="app" hidden>
+      <div class="board-head">
+        <span class="pill">💰 Dagens tippe tips</span>
         <span class="muted" id="roleText">Laster...</span>
       </div>
-      <div id="tipsList"></div>
-      <p class="admin-note" id="adminNote" hidden>Som admin trykker du H, U eller B på hver kamp. Valget lagres live for alle.</p>
+
+      <article class="gold-text empty" id="tipsText">Ingen tips lagt inn ennå.</article>
+
+      <section class="admin-panel" id="adminPanel" hidden>
+        <label for="tipsEditor">Admin tekstfelt</label>
+        <textarea id="tipsEditor" placeholder="Skriv masse tippe tips her...\n\nEksempel:\nBrasil - Haiti: Brasil vinner komfortabelt.\nSkottland - Marokko: Marokko undervurdert.\nUSA - Australia: USA ser sterkest ut.\n\nDu kan skrive så langt du vil."></textarea>
+        <div class="actions">
+          <span class="save-status" id="saveStatus">Endringer lagres når du trykker Lagre.</span>
+          <button class="btn primary" id="saveTipsBtn" type="button">Lagre tips</button>
+        </div>
+      </section>
     </section>
   </main>
+
+  <div id="toast" class="toast" hidden></div>
 
   <script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore-compat.js"></script>
   <script src="js/firebase-config.js?v=5"></script>
   <script>
-    const PICK_LABELS={home:'H',draw:'U',away:'B'};
-    const PICK_NAMES={home:'Hjemmeseier',draw:'Uavgjort',away:'Borteseier'};
-    let auth,db,user=null,isAdmin=false,matches=[],tips={};
-    const $=id=>document.getElementById(id);
-    const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
-    const localDate=()=>{const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)};
-    const fmtTime=v=>{const d=new Date(v);return v&&!isNaN(d)?d.toLocaleTimeString('nb-NO',{hour:'2-digit',minute:'2-digit'}):'Tid ukjent'};
-    const title=m=>`${m.home||'Hjemme'} – ${m.away||'Borte'}`;
+    let auth, db, user = null, isAdmin = false, currentText = '';
+    const $ = id => document.getElementById(id);
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+    const toast = msg => {
+      const t = $('toast');
+      if (!t) return alert(msg);
+      t.textContent = msg;
+      t.hidden = false;
+      clearTimeout(toast.x);
+      toast.x = setTimeout(() => t.hidden = true, 3500);
+    };
 
     function init(){
-      firebase.initializeApp(window.VM_FIREBASE_CONFIG);
-      auth=firebase.auth();db=firebase.firestore();
-      $('datePill').textContent='I dag · '+new Date().toLocaleDateString('nb-NO',{weekday:'long',day:'2-digit',month:'short'});
+      if (!firebase.apps.length) firebase.initializeApp(window.VM_FIREBASE_CONFIG);
+      auth = firebase.auth();
+      db = firebase.firestore();
     }
 
     async function checkRole(u){
-      const s=await db.collection('users').doc(u.uid).get();
-      isAdmin=!!(s.exists&&s.data().isAdmin===true);
-      $('roleText').textContent=isAdmin?'Admin: kan lagre tips':'Lesemodus';
-      $('adminNote').hidden=!isAdmin;
-    }
-
-    function todayMatches(){
-      const d=localDate();
-      return matches.filter(m=>String(m.time||'').slice(0,10)===d).sort((a,b)=>String(a.time||'').localeCompare(String(b.time||'')));
-    }
-
-    function render(){
-      const list=$('tipsList');
-      const todays=todayMatches();
-      if(!todays.length){
-        list.innerHTML='<article class="card empty">Ingen VM-kamper lagt inn for i dag ennå.</article>';
-        return;
+      try{
+        const s = await db.collection('users').doc(u.uid).get();
+        isAdmin = !!(s.exists && s.data().isAdmin === true);
+      }catch(e){
+        console.warn('Admin check failed', e);
+        isAdmin = false;
       }
-      list.innerHTML=todays.map(m=>{
-        const current=tips[m.id]?.pick||'';
-        const updated=Number(tips[m.id]?.updatedAtMs||0);
-        const updatedText=updated?new Date(updated).toLocaleString('nb-NO',{hour:'2-digit',minute:'2-digit'}):'Ikke tippet';
-        return `<article class="card match">
-          <div class="match-title">
-            <small>${esc(fmtTime(m.time))} · ${esc(m.group||'VM 2026')}</small>
-            <div class="teams"><strong>${esc(m.home)}</strong><span>vs</span><strong>${esc(m.away)}</strong></div>
-            <div class="status">Tips: <b>${current?PICK_LABELS[current]+' · '+PICK_NAMES[current]:'Ikke lagt inn'}</b> <span class="muted">(${esc(updatedText)})</span></div>
-          </div>
-          <div class="pick" data-id="${esc(m.id)}">
-            ${['home','draw','away'].map(p=>`<button type="button" data-pick="${p}" class="${current===p?'active':''}" ${isAdmin?'':'disabled'}>${PICK_LABELS[p]}</button>`).join('')}
-          </div>
-        </article>`;
-      }).join('');
-      list.querySelectorAll('button[data-pick]').forEach(btn=>btn.onclick=()=>savePick(btn.closest('.pick').dataset.id,btn.dataset.pick));
+      $('roleText').textContent = isAdmin ? 'Admin: kan redigere tips-tavlen' : 'Lesemodus';
+      $('adminPanel').hidden = !isAdmin;
     }
 
-    async function savePick(matchId,pick){
-      if(!isAdmin)return;
-      const ref=db.collection('siteSettings').doc('dailyHubTips');
-      const snap=await ref.get();
-      const data=snap.exists?snap.data():{};
-      const next={...(data.tips||{})};
-      next[matchId]={pick,updatedAtMs:Date.now(),updatedBy:user.uid};
-      await ref.set({tips:next,updatedAtMs:Date.now(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+    function renderText(text){
+      const box = $('tipsText');
+      const clean = String(text || '').trim();
+      currentText = String(text || '');
+      if (!clean){
+        box.classList.add('empty');
+        box.textContent = 'Ingen tips lagt inn ennå.';
+      }else{
+        box.classList.remove('empty');
+        box.textContent = clean;
+      }
+      if (isAdmin && document.activeElement !== $('tipsEditor')) $('tipsEditor').value = currentText;
     }
 
     function subscribe(){
-      db.collection('matches').onSnapshot(s=>{matches=s.docs.map(d=>({id:d.id,...d.data()}));render();});
-      db.collection('siteSettings').doc('dailyHubTips').onSnapshot(s=>{tips=s.exists?(s.data().tips||{}):{};render();});
+      db.collection('siteSettings').doc('tipsBoard').onSnapshot(s => {
+        const data = s.exists ? s.data() : {};
+        renderText(data.text || '');
+        const ms = Number(data.updatedAtMs || 0);
+        if (ms && $('saveStatus')) $('saveStatus').textContent = 'Sist lagret: ' + new Date(ms).toLocaleString('nb-NO', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+      }, e => {
+        console.error(e);
+        toast('Kunne ikke laste tips-tavlen');
+      });
+    }
+
+    async function saveTips(){
+      if (!isAdmin) return toast('Kun admin kan lagre tips');
+      const text = $('tipsEditor').value || '';
+      try{
+        await db.collection('siteSettings').doc('tipsBoard').set({
+          text,
+          updatedBy: user.uid,
+          updatedAtMs: Date.now(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge:true });
+        toast('Tips lagret');
+      }catch(e){
+        console.error(e);
+        toast((e?.code ? e.code + ': ' : '') + (e?.message || 'Kunne ikke lagre tips'));
+      }
     }
 
     init();
-    auth.onAuthStateChanged(async u=>{
-      user=u;
-      $('loginBox').hidden=!!u;
-      $('app').hidden=!u;
-      if(!u)return;
+    $('saveTipsBtn').addEventListener('click', saveTips);
+    auth.onAuthStateChanged(async u => {
+      user = u;
+      $('loginBox').hidden = !!u;
+      $('app').hidden = !u;
+      if (!u) return;
       await checkRole(u);
       subscribe();
     });
