@@ -22,3 +22,21 @@ window.VM_LIVE_SCORE_FUNCTION_URL = "https://us-central1-the-club-17c87.cloudfun
 // Ekstra funksjoner styres nå bare av js/core/boot.js.
 // Boot-loaderen starter kun godkjente scripts etter innlogging.
 window.VM_EXTRA_SCRIPTS_DISABLED = false;
+
+// Rank/tittel-modul: lastes etter hovedappen så den kan dekorere profil og leaderboard trygt.
+(function loadVmRankTitles(){
+  if (window.VM_RANK_TITLES_LOADER) return;
+  window.VM_RANK_TITLES_LOADER = true;
+  function load(){
+    if (document.querySelector('script[src*="rank-titles.js"]')) return;
+    var s = document.createElement('script');
+    s.src = 'js/core/rank-titles.js?v=1';
+    s.defer = true;
+    document.body.appendChild(s);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function(){ setTimeout(load, 1400); });
+  } else {
+    setTimeout(load, 1400);
+  }
+})();
