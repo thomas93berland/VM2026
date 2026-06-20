@@ -152,6 +152,12 @@ body #page-profile .avatar.large img{
   white-space:nowrap!important;
 }
 
+/* Mobil bunnmeny: skjul Chat og Sjakk */
+.bottom-nav .bottom-item[data-page="chat"],
+.bottom-nav .bottom-item[data-page="chess"]{
+  display:none!important;
+}
+
 @media(max-width:430px){
   body #page-profile .profile-detail .avatar.large,
   body #page-profile .safe-premium-profile .avatar.large{
