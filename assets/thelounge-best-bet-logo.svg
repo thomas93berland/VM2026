@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1200" role="img" aria-label="TheLounge The Best Bet logo">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="38%" r="70%">
+      <stop offset="0" stop-color="#13243e"/>
+      <stop offset="0.55" stop-color="#06111f"/>
+      <stop offset="1" stop-color="#01050c"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#fff3b8"/>
+      <stop offset="0.22" stop-color="#ffd66a"/>
+      <stop offset="0.50" stop-color="#b77818"/>
+      <stop offset="0.72" stop-color="#ffe28b"/>
+      <stop offset="1" stop-color="#8d5410"/>
+    </linearGradient>
+    <linearGradient id="darkGold" x1="0" x2="1">
+      <stop offset="0" stop-color="#3b2208"/>
+      <stop offset="0.5" stop-color="#e2ad39"/>
+      <stop offset="1" stop-color="#3b2208"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="8" result="b"/>
+      <feColorMatrix in="b" type="matrix" values="1 0 0 0 1 0 0.75 0 0 0.55 0 0 0.25 0 0 0 0 0.75 0"/>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <pattern id="hex" width="88" height="76" patternUnits="userSpaceOnUse">
+      <path d="M22 1h44l22 38-22 38H22L0 39Z" fill="none" stroke="rgba(255,255,255,.055)" stroke-width="2"/>
+    </pattern>
+  </defs>
+  <rect x="28" y="28" width="1144" height="1144" rx="66" fill="url(#bg)" stroke="url(#gold)" stroke-width="8"/>
+  <rect x="52" y="52" width="1096" height="1096" rx="48" fill="url(#hex)" opacity="0.55"/>
+  <circle cx="600" cy="570" r="430" fill="none" stroke="url(#darkGold)" stroke-width="40" filter="url(#glow)"/>
+  <circle cx="600" cy="570" r="365" fill="none" stroke="url(#gold)" stroke-width="12" opacity=".95"/>
+  <circle cx="600" cy="570" r="300" fill="none" stroke="#121f33" stroke-width="20"/>
+  <circle cx="600" cy="112" r="74" fill="#07111f" stroke="url(#gold)" stroke-width="9" filter="url(#glow)"/>
+  <text x="600" y="139" text-anchor="middle" font-family="Georgia,serif" font-size="58" font-weight="900" fill="url(#gold)">VM</text>
+  <path d="M486 322l72 74 42-126 42 126 72-74-20 130H506Z" fill="url(#gold)" stroke="#5d3308" stroke-width="6" filter="url(#glow)"/>
+  <path d="M510 455h180" stroke="url(#gold)" stroke-width="18" stroke-linecap="round"/>
+  <text x="600" y="735" text-anchor="middle" font-family="Georgia,serif" font-size="410" font-weight="900" fill="url(#gold)" stroke="#3a1c02" stroke-width="9" filter="url(#glow)">TL</text>
+  <path d="M256 754Q600 858 944 754l48 118Q600 996 208 872Z" fill="#081221" stroke="url(#gold)" stroke-width="8"/>
+  <text x="600" y="887" text-anchor="middle" font-family="Georgia,serif" font-size="78" font-weight="900" fill="url(#gold)" transform="rotate(0 600 860)">TheLounge</text>
+  <path d="M245 955Q600 1064 955 955l42 96Q600 1160 203 1051Z" fill="#07101d" stroke="url(#gold)" stroke-width="8"/>
+  <text x="600" y="1058" text-anchor="middle" font-family="Georgia,serif" font-size="58" font-weight="900" letter-spacing="9" fill="url(#gold)">- THE BEST BET -</text>
+  <text x="440" y="330" font-size="58" fill="url(#gold)" text-anchor="middle">★</text>
+  <text x="760" y="330" font-size="58" fill="url(#gold)" text-anchor="middle">★</text>
+</svg>
