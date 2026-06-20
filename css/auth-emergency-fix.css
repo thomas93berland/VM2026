@@ -43,6 +43,26 @@ body #page-profile .avatar.large img{
   display:none!important;
 }
 
+/* Betting-side: bytt regelkort med TheLounge-logo */
+#page-betting .rules-card{
+  display:block!important;
+  width:min(100%,560px)!important;
+  aspect-ratio:1/1!important;
+  min-height:0!important;
+  margin:14px auto 18px!important;
+  padding:0!important;
+  border-radius:24px!important;
+  overflow:hidden!important;
+  background:
+    linear-gradient(145deg,rgba(4,10,20,.20),rgba(4,10,20,.60)),
+    url('../assets/thelounge-best-bet-logo.svg') center/cover no-repeat!important;
+  border:1px solid rgba(255,216,122,.48)!important;
+  box-shadow:0 18px 44px rgba(0,0,0,.35),0 0 34px rgba(228,184,78,.17),inset 0 1px 0 rgba(255,255,255,.09)!important;
+}
+#page-betting .rules-card .rules-grid{
+  display:none!important;
+}
+
 /* Toppliste/scoreboard: ryddige, profesjonelle spillerfliser */
 #homeLeaderboard,
 #leaderboardPageList{
@@ -228,6 +248,12 @@ body #page-profile .avatar.large img{
   body #page-profile .profile-detail{
     grid-template-columns:94px minmax(0,1fr)!important;
     column-gap:14px!important;
+  }
+  #page-betting .rules-card{
+    width:100%!important;
+    max-width:390px!important;
+    border-radius:20px!important;
+    margin:12px auto 16px!important;
   }
   #homeLeaderboard .leaderboard-row,
   #leaderboardPageList .leaderboard-row{
