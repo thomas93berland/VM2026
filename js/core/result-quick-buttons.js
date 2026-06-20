@@ -2,22 +2,26 @@
   let admin=false;
   let matches=[];
   let unsub=null;
-  const ADMIN_EMAIL='thomas93berland@gmail.com';
+  let saving=false;
   const ready=()=>{try{return window.firebase&&firebase.auth&&firebase.firestore&&firebase.auth().currentUser}catch{return false}};
   const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
   const toast=msg=>{try{const t=document.getElementById('toast');if(t){t.textContent=msg;t.hidden=false;clearTimeout(toast.x);toast.x=setTimeout(()=>t.hidden=true,4200)}else alert(msg)}catch{alert(msg)}};
   const title=m=>(m.home||'Hjemme')+' – '+(m.away||'Borte');
   const label=(m,r)=>r==='home'?(m.home||'Hjemme'):r==='away'?(m.away||'Borte'):'Uavgjort';
+  const resultLabel=r=>r==='home'?'Hjemmeseier':r==='away'?'Borteseier':'Uavgjort';
   const when=v=>{const d=new Date(v);return v&&!isNaN(d)?d.toLocaleString('nb-NO',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'Ukjent tid'};
   const hasResult=m=>!!String(m?.result||'').trim();
 
   async function checkAdmin(){
-    if(!ready())return false;
+    if(!ready()){admin=false;return false}
     const u=firebase.auth().currentUser;
     try{
       const s=await firebase.firestore().collection('users').doc(u.uid).get();
-      admin=(u.email||'').toLowerCase()===ADMIN_EMAIL || !!(s.exists&&s.data()?.isAdmin===true);
-    }catch{admin=(u.email||'').toLowerCase()===ADMIN_EMAIL;}
+      admin=!!(s.exists&&s.data()?.isAdmin===true);
+    }catch(e){
+      console.warn('Quick result admin check failed',e);
+      admin=false;
+    }
     return admin;
   }
 
@@ -36,6 +40,7 @@
       .quick-result-buttons{display:grid!important;grid-template-columns:1fr!important;gap:7px!important;}
       .quick-result-buttons button{min-height:44px!important;border-radius:13px!important;border:1px solid rgba(228,184,78,.34)!important;background:rgba(228,184,78,.13)!important;color:#ffd77a!important;font-weight:1000!important;font-size:13px!important;line-height:1.1!important;touch-action:manipulation!important;}
       .quick-result-buttons button:active{transform:scale(.98)!important;background:rgba(228,184,78,.24)!important;}
+      .quick-result-buttons button[disabled]{opacity:.45!important;filter:saturate(.7)!important;}
     `;
     document.head.appendChild(style);
   }
@@ -83,20 +88,41 @@
   }
 
   async function saveResult(id,result){
+    if(saving)return;
     if(!id||!result)return toast('Velg kamp og resultat');
-    if(!(await checkAdmin()))return toast('Kun admin kan legge inn resultat');
+    if(!(await checkAdmin()))return toast('Du mangler admin-tilgang i Firestore: users/{uid}.isAdmin må være true');
     const m=matches.find(x=>x.id===id)||{};
-    if(!confirm(`Legge inn ${label(m,result)} som resultat for ${title(m)}?`))return;
-    await firebase.firestore().collection('matches').doc(id).set({
-      result,
-      updatedAtMs:Date.now(),
-      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-    },{merge:true});
-    toast('Resultat lagt inn');
-    setTimeout(()=>window.VM_SAFE_BOOT?.settleBets?.({id,result}),900);
+    const ok=confirm(`Legge inn ${resultLabel(result)} (${label(m,result)}) som resultat for ${title(m)}?`);
+    if(!ok)return;
+    saving=true;
+    document.querySelectorAll('[data-quick-result]').forEach(b=>b.disabled=true);
+    try{
+      await firebase.firestore().collection('matches').doc(id).set({
+        result,
+        updatedAtMs:Date.now(),
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+      },{merge:true});
+      matches=matches.map(x=>x.id===id?{...x,result}:x);
+      render();
+      window.VM_RESULT_FIX?.refreshSelect?.();
+      toast('Resultat lagt inn');
+      setTimeout(()=>window.VM_SAFE_BOOT?.settleBets?.({id,result}),900);
+      setTimeout(()=>window.VM_UPCOMING_MATCH_SEED?.boot?.(),1400);
+    }catch(err){
+      console.error('Quick result save failed',err);
+      const msg=(err?.code==='permission-denied')
+        ? 'Permission denied: brukeren din må ha isAdmin: true i Firestore.'
+        : ((err?.code?err.code+': ':'')+(err?.message||'Kunne ikke legge inn resultat'));
+      toast(msg);
+    }finally{
+      saving=false;
+      document.querySelectorAll('[data-quick-result]').forEach(b=>b.disabled=false);
+    }
   }
 
   function bind(){
+    if(window.VM_QUICK_RESULT_BOUND)return;
+    window.VM_QUICK_RESULT_BOUND=true;
     document.addEventListener('click',async e=>{
       const btn=e.target.closest?.('[data-quick-result][data-match-id]');
       if(!btn)return;
