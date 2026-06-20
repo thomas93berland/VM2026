@@ -13,11 +13,11 @@
 
   function rankTitle(coins){
     coins = Number(coins || 0);
-    if (coins >= 14000) return { title:'VM Kongen', icon:'👑', level:7 };
-    if (coins >= 11500) return { title:'Legenden', icon:'⭐', level:6 };
-    if (coins >= 9500) return { title:'Kongen', icon:'♛', level:5 };
-    if (coins >= 7500) return { title:'Profesjonell', icon:'💎', level:4 };
-    if (coins >= 5000) return { title:'Normal', icon:'⚜️', level:3 };
+    if (coins >= 7000) return { title:'VM Kongen', icon:'👑', level:7 };
+    if (coins >= 6500) return { title:'Legenden', icon:'⭐', level:6 };
+    if (coins >= 6000) return { title:'Kongen', icon:'♛', level:5 };
+    if (coins >= 5000) return { title:'Profesjonell', icon:'💎', level:4 };
+    if (coins >= 4000) return { title:'Normal', icon:'⚜️', level:3 };
     if (coins >= 3000) return { title:'Begynner', icon:'✨', level:2 };
     return { title:'Nybegynner', icon:'🌱', level:1 };
   }
@@ -49,6 +49,12 @@
         text-shadow:0 0 9px rgba(228,184,78,.34)!important;
         white-space:nowrap!important;
       }
+      .vm-rank-badge.top-rank{
+        background:linear-gradient(135deg,rgba(255,226,142,.36),rgba(191,134,34,.30))!important;
+        border-color:rgba(255,226,142,.72)!important;
+        color:#ffe28e!important;
+        box-shadow:0 0 28px rgba(228,184,78,.34),inset 0 1px 0 rgba(255,255,255,.18)!important;
+      }
       .vm-rank-badge.big{
         font-size:14px!important;
         padding:7px 12px!important;
@@ -56,6 +62,11 @@
         background:linear-gradient(135deg,rgba(255,216,122,.30),rgba(139,91,20,.22))!important;
         border-color:rgba(255,216,122,.58)!important;
         box-shadow:0 0 24px rgba(228,184,78,.25),inset 0 1px 0 rgba(255,255,255,.14)!important;
+      }
+      .vm-rank-badge.big.top-rank{
+        background:linear-gradient(135deg,rgba(255,226,142,.40),rgba(191,134,34,.34))!important;
+        border-color:rgba(255,226,142,.78)!important;
+        box-shadow:0 0 32px rgba(228,184,78,.38),inset 0 1px 0 rgba(255,255,255,.20)!important;
       }
       .vm-rank-badge.side{
         margin:7px 0 0!important;
@@ -96,6 +107,10 @@
     return [...users].sort((a,b) => (Number(b.coins||0) - Number(a.coins||0)) || String(a.name||'').localeCompare(String(b.name||'')));
   }
 
+  function badgeClass(rank, extra=''){
+    return `vm-rank-badge${extra}${rank.level===7?' top-rank':''}`;
+  }
+
   function injectLeaderboard(){
     const sorted = sortedUsers();
     ['homeLeaderboard','leaderboardPageList'].forEach(id => {
@@ -110,9 +125,9 @@
         let badge = holder.querySelector('.vm-rank-badge');
         if (!badge) {
           badge = document.createElement('span');
-          badge.className = 'vm-rank-badge';
           holder.appendChild(badge);
         }
+        badge.className = badgeClass(r);
         badge.innerHTML = `${r.icon} ${esc(r.title)} <span class="vm-rank-coins">${Number(u.coins||0).toLocaleString('nb-NO')}</span>`;
       });
     });
@@ -129,10 +144,10 @@
       if (!badge) {
         badge = document.createElement('div');
         badge.id = 'vmProfileRank';
-        badge.className = 'vm-rank-badge big';
         const target = detail.querySelector('p') || detail.querySelector('h1') || detail;
         target.insertAdjacentElement('afterend', badge);
       }
+      badge.className = badgeClass(r,' big');
       badge.innerHTML = `${r.icon} Rank: ${esc(r.title)} <span class="vm-rank-coins">${Number(u.coins||0).toLocaleString('nb-NO')} coins</span>`;
     }
 
@@ -142,9 +157,9 @@
       if (!sideBadge) {
         sideBadge = document.createElement('div');
         sideBadge.id = 'vmSideRank';
-        sideBadge.className = 'vm-rank-badge side';
         side.appendChild(sideBadge);
       }
+      sideBadge.className = badgeClass(r,' side');
       sideBadge.innerHTML = `${r.icon} ${esc(r.title)}`;
     }
 
