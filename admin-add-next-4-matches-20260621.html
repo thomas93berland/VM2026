@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Legg inn 4 neste VM-kamper</title>
+  <style>
+    :root{color-scheme:dark;--bg:#06101d;--card:#101b2e;--gold:#ffd77a;--text:#f7f2df;--muted:#aab3c5;--ok:#69e6a3;--bad:#ff7a7a}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at top,#182a47 0,#06101d 55%,#020712 100%);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);display:grid;place-items:center;padding:18px}.box{width:min(760px,100%);background:linear-gradient(145deg,rgba(16,27,46,.96),rgba(6,16,29,.96));border:1px solid rgba(255,215,122,.22);border-radius:24px;padding:20px;box-shadow:0 24px 80px rgba(0,0,0,.35)}h1{margin:0 0 8px;font-size:26px}.lead{color:var(--muted);margin:0 0 18px;line-height:1.45}.matches{display:grid;gap:10px;margin:16px 0}.match{padding:13px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}.match b{display:block}.match small{color:var(--muted)}button,input{width:100%;border:0;border-radius:14px;padding:14px 16px;font-weight:900;font-size:15px}button{background:linear-gradient(135deg,#ffd77a,#c99632);color:#10110b;cursor:pointer;margin-top:10px}button:disabled{opacity:.55;cursor:not-allowed}.login{display:grid;gap:8px;margin:14px 0}.login input{background:rgba(255,255,255,.08);color:var(--text);border:1px solid rgba(255,255,255,.12)}#status{white-space:pre-wrap;background:rgba(0,0,0,.26);border-radius:16px;padding:14px;min-height:72px;color:var(--muted);line-height:1.45}.ok{color:var(--ok)}.bad{color:var(--bad)}a{color:var(--gold)}
+  </style>
+</head>
+<body>
+  <main class="box">
+    <h1>Legg inn de 4 neste kampene</h1>
+    <p class="lead">Denne siden legger inn/oppdaterer de neste fire VM-kampene i Firestore. Den sjekker først om kampen allerede finnes, så du skal slippe duplikater.</p>
+
+    <section class="matches" id="matchPreview"></section>
+
+    <section id="loginBox" class="login" hidden>
+      <input id="email" type="email" placeholder="E-post" autocomplete="email" />
+      <input id="password" type="password" placeholder="Passord" autocomplete="current-password" />
+      <button id="loginBtn" type="button">Logg inn</button>
+    </section>
+
+    <button id="addBtn" type="button" disabled>Legg inn/oppdater kampene</button>
+    <p id="status">Laster Firebase...</p>
+    <p class="lead"><a href="index.html?v=1001">Tilbake til VM Lounge</a></p>
+  </main>
+
+  <script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js?v=5"></script>
+  <script>
+    const ADMIN_EMAIL='thomas93berland@gmail.com';
+    const matches=[
+      {home:'Spania',away:'Saudi-Arabia',time:'2026-06-21T18:00',group:'VM 2026 · Gruppe H',odds:{home:1.42,draw:4.40,away:8.00}},
+      {home:'Belgia',away:'Iran',time:'2026-06-21T21:00',group:'VM 2026 · Gruppe G',odds:{home:1.65,draw:3.80,away:5.50}},
+      {home:'Uruguay',away:'Kapp Verde',time:'2026-06-22T00:00',group:'VM 2026 · Gruppe H',odds:{home:1.70,draw:3.65,away:5.20}},
+      {home:'New Zealand',away:'Egypt',time:'2026-06-22T03:00',group:'VM 2026 · Gruppe G',odds:{home:4.10,draw:3.40,away:1.95}}
+    ];
+    const $=id=>document.getElementById(id);
+    const status=msg=>{$('status').textContent=msg};
+    const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+    const fmt=t=>new Date(t).toLocaleString('nb-NO',{weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+    $('matchPreview').innerHTML=matches.map(m=>`<div class="match"><b>${esc(m.home)} – ${esc(m.away)}</b><small>${esc(m.group)} · ${fmt(m.time)} · H ${m.odds.home.toFixed(2)} / U ${m.odds.draw.toFixed(2)} / B ${m.odds.away.toFixed(2)}</small></div>`).join('');
+
+    let auth,db,currentUser=null;
+    function init(){
+      if(!window.VM_FIREBASE_CONFIG)throw new Error('Fant ikke js/firebase-config.js');
+      if(!firebase.apps.length)firebase.initializeApp(window.VM_FIREBASE_CONFIG);
+      auth=firebase.auth();
+      db=firebase.firestore();
+      auth.onAuthStateChanged(async user=>{
+        currentUser=user;
+        $('loginBox').hidden=!!user;
+        $('addBtn').disabled=true;
+        if(!user){status('Logg inn som Thomas/admin først.');return;}
+        try{
+          const snap=await db.collection('users').doc(user.uid).get();
+          const admin=(user.email||'').toLowerCase()===ADMIN_EMAIL || !!(snap.exists&&snap.data().isAdmin===true);
+          if(!admin){status('Du er innlogget, men brukeren er ikke admin.');return;}
+          $('addBtn').disabled=false;
+          status('Klar. Trykk knappen for å legge inn kampene.');
+        }catch(e){status('Admin-sjekk feilet: '+(e.message||e));}
+      });
+    }
+
+    $('loginBtn').onclick=async()=>{
+      try{await auth.signInWithEmailAndPassword($('email').value.trim(),$('password').value)}
+      catch(e){status('Innlogging feilet: '+(e.message||e));}
+    };
+
+    async function findExisting(match){
+      const snap=await db.collection('matches').get();
+      return snap.docs.find(d=>{
+        const x=d.data();
+        return String(x.home||'').toLowerCase()===match.home.toLowerCase() && String(x.away||'').toLowerCase()===match.away.toLowerCase();
+      });
+    }
+
+    $('addBtn').onclick=async()=>{
+      if(!currentUser)return status('Du må logge inn først.');
+      $('addBtn').disabled=true;
+      let lines=[];
+      try{
+        for(const m of matches){
+          const existing=await findExisting(m);
+          const payload={...m,result:null,createdBy:currentUser.uid,updatedBy:currentUser.uid,updatedAtMs:Date.now(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+          if(existing){
+            await db.collection('matches').doc(existing.id).set(payload,{merge:true});
+            lines.push('Oppdatert: '+m.home+' – '+m.away);
+          }else{
+            const id=m.time.slice(0,10)+'-'+m.home+'-'+m.away;
+            const safeId=id.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+            await db.collection('matches').doc(safeId).set({...payload,createdAtMs:Date.now(),createdAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+            lines.push('Lagt inn: '+m.home+' – '+m.away);
+          }
+          status(lines.join('\n'));
+        }
+        status(lines.join('\n')+'\n\nFerdig ✅ Gå tilbake til Betting-siden og oppdater med ?v=1001');
+      }catch(e){
+        status(lines.join('\n')+'\n\nFeil: '+(e.code?e.code+': ':'')+(e.message||e));
+      }finally{
+        $('addBtn').disabled=false;
+      }
+    };
+
+    try{init()}catch(e){status('Feil ved oppstart: '+(e.message||e));}
+  </script>
+</body>
+</html>
