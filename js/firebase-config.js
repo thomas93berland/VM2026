@@ -19,6 +19,21 @@ window.VM_RULES = {
 
 window.VM_LIVE_SCORE_FUNCTION_URL = "https://us-central1-the-club-17c87.cloudfunctions.net/liveScores";
 
+// Home: fjern hero-kortet slik toppen kan brukes til live match update.
+(function removeHomeHeroCard(){
+  function remove(){
+    var hero = document.querySelector('#page-home > .hero');
+    if (hero) hero.remove();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', remove);
+  } else {
+    remove();
+  }
+  setTimeout(remove, 300);
+  setTimeout(remove, 1200);
+})();
+
 // Ekstra funksjoner styres nå bare av js/core/boot.js.
 // Boot-loaderen starter kun godkjente scripts etter innlogging.
 window.VM_EXTRA_SCRIPTS_DISABLED = false;
