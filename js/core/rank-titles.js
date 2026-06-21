@@ -50,7 +50,11 @@
       .vm-lounge-bars span{width:4px!important;border-radius:999px 999px 2px 2px!important;background:linear-gradient(180deg,#fff0b7,#c8922c)!important;box-shadow:0 0 8px rgba(228,184,78,.28)!important;}
       .vm-lounge-bars span:nth-child(1){height:7px!important;}.vm-lounge-bars span:nth-child(2){height:11px!important;}.vm-lounge-bars span:nth-child(3){height:15px!important;}
       .vm-lounge-bars::after{content:""!important;position:absolute!important;right:-2px!important;top:0!important;width:7px!important;height:7px!important;border-top:2px solid #ffe28e!important;border-right:2px solid #ffe28e!important;transform:rotate(0deg)!important;}
+
+      #vmBettingNightPoster.vm-betting-poster-card{margin:0 0 16px!important;padding:10px!important;border-radius:26px!important;border:1px solid rgba(255,216,122,.26)!important;background:linear-gradient(180deg,rgba(12,26,45,.78),rgba(5,13,24,.92))!important;box-shadow:0 20px 70px rgba(0,0,0,.35),0 0 26px rgba(228,184,78,.10)!important;overflow:hidden!important;}
+      #vmBettingNightPoster img{display:block!important;width:100%!important;height:auto!important;max-height:620px!important;object-fit:cover!important;object-position:top center!important;border-radius:20px!important;border:1px solid rgba(255,216,122,.18)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)!important;}
       @keyframes vmLogoShine{0%,62%{transform:translateX(-85%) skewX(-18deg);opacity:0;}74%{opacity:.9;}100%{transform:translateX(110%) skewX(-18deg);opacity:0;}}
+      @media(max-width:620px){#vmBettingNightPoster.vm-betting-poster-card{padding:7px!important;border-radius:22px!important;}#vmBettingNightPoster img{max-height:none!important;border-radius:17px!important;}}
       @media(max-width:430px){.vm-rank-badge{font-size:10px!important;padding:3px 7px!important;}.vm-rank-badge.big{font-size:13px!important;padding:6px 10px!important;}.leaderboard-row .vm-rank-badge{font-size:9.8px!important;}#vmLoungeHeaderLogo.vm-lounge-strip{height:58px!important;padding:0 12px!important;gap:10px!important;}.vm-lounge-mark{width:42px!important;height:42px!important;flex-basis:42px!important;}.vm-lounge-title strong{font-size:25px!important;}.vm-lounge-bet-tag{min-width:82px!important;height:34px!important;font-size:9px!important;padding:0 8px!important;}.vm-lounge-bars{display:none!important;}}
       @media(max-width:355px){.vm-lounge-bet-tag{display:none!important;}.vm-lounge-title strong{font-size:27px!important;}}
     `;
@@ -86,6 +90,26 @@
       if (topbar) topbar.insertAdjacentElement('afterend', strip);
       else main.prepend(strip);
     }
+  }
+
+  function installBettingPoster(){
+    const page = document.getElementById('page-betting');
+    if (!page) return;
+    page.querySelectorAll('.betting-poster,.betting-hero-image,.vm-betting-night-poster').forEach(el => {
+      if (el.id !== 'vmBettingNightPoster') el.remove();
+    });
+
+    let poster = document.getElementById('vmBettingNightPoster');
+    if (!poster) {
+      poster = document.createElement('article');
+      poster.id = 'vmBettingNightPoster';
+      poster.className = 'vm-betting-poster-card vm-betting-night-poster';
+      poster.innerHTML = '<img src="assets/vm-kamper-ikveld.svg?v=1" alt="VM-kamper i kveld – fire kamper, full spenning" loading="eager" />';
+    }
+
+    const head = page.querySelector('.page-head');
+    if (head && head.nextElementSibling !== poster) head.insertAdjacentElement('afterend', poster);
+    else if (!poster.isConnected) page.prepend(poster);
   }
 
   function sortedUsers(){
@@ -148,7 +172,7 @@
     }
   }
 
-  function render(){ addCss(); installHeaderLogo(); injectLeaderboard(); injectProfile(); }
+  function render(){ addCss(); installHeaderLogo(); installBettingPoster(); injectLeaderboard(); injectProfile(); }
 
   function listen(){
     if (!ready()) return;
@@ -176,7 +200,7 @@
     document.body.appendChild(script);
   }
 
-  function boot(){ addCss(); installHeaderLogo(); watch(); loadUpcomingSeeder(); if (ready()) listen(); render(); }
+  function boot(){ addCss(); installHeaderLogo(); installBettingPoster(); watch(); loadUpcomingSeeder(); if (ready()) listen(); render(); }
 
   window.VM_RANK_TITLES = { boot, render, rankTitle };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
