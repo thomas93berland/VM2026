@@ -35,9 +35,57 @@
       .vm-rank-coins{opacity:.80!important;font-size:10px!important;font-weight:900!important;text-transform:none!important;letter-spacing:0!important;}
       .leaderboard-row .vm-rank-badge{display:inline-flex!important;margin-top:5px!important;font-size:10.5px!important;padding:3px 7px!important;}
       .safe-rank-card strong,.rank-title-gold{background:linear-gradient(90deg,#fff0b7,#f5d07a,#b98525)!important;-webkit-background-clip:text!important;background-clip:text!important;color:transparent!important;text-shadow:0 0 18px rgba(228,184,78,.22)!important;}
-      @media(max-width:430px){.vm-rank-badge{font-size:10px!important;padding:3px 7px!important;}.vm-rank-badge.big{font-size:13px!important;padding:6px 10px!important;}.leaderboard-row .vm-rank-badge{font-size:9.8px!important;}}
+
+      #vmLoungeHeaderLogo.vm-lounge-strip{height:58px!important;width:100%!important;margin:0 0 18px!important;padding:0 14px!important;border-radius:22px!important;border:1px solid rgba(255,216,122,.24)!important;background:radial-gradient(circle at 12% 18%,rgba(255,216,122,.22),transparent 28%),linear-gradient(135deg,rgba(14,35,64,.96),rgba(5,13,26,.98) 52%,rgba(9,22,40,.96))!important;box-shadow:0 16px 44px rgba(0,0,0,.26),inset 0 1px 0 rgba(255,255,255,.08),0 0 0 1px rgba(255,216,122,.035)!important;display:grid!important;grid-template-columns:auto minmax(0,1fr) auto!important;align-items:center!important;gap:12px!important;position:relative!important;overflow:hidden!important;isolation:isolate!important;}
+      #vmLoungeHeaderLogo.vm-lounge-strip::before{content:""!important;position:absolute!important;inset:0!important;background:linear-gradient(90deg,transparent,rgba(255,216,122,.13),transparent)!important;transform:translateX(-80%) skewX(-18deg)!important;animation:vmLogoShine 5.8s ease-in-out infinite!important;z-index:-1!important;}
+      #vmLoungeHeaderLogo.vm-lounge-strip::after{content:""!important;position:absolute!important;inset:0!important;background:repeating-linear-gradient(135deg,rgba(255,255,255,.035) 0 1px,transparent 1px 12px)!important;opacity:.20!important;z-index:-2!important;}
+      .vm-lounge-mark{width:44px!important;height:44px!important;border-radius:15px!important;display:grid!important;place-items:center!important;position:relative!important;flex:0 0 44px!important;background:radial-gradient(circle at 35% 18%,#fff1ba 0,#f2c768 30%,#b88425 62%,#1d1203 100%)!important;border:1px solid rgba(255,234,162,.62)!important;box-shadow:0 0 24px rgba(228,184,78,.26),inset 0 1px 0 rgba(255,255,255,.35)!important;color:#07111f!important;}
+      .vm-lounge-mark b{font-family:Georgia,'Times New Roman',serif!important;font-size:20px!important;line-height:1!important;font-weight:1000!important;letter-spacing:-.12em!important;text-shadow:0 1px 0 rgba(255,255,255,.25)!important;transform:translateX(-1px)!important;}
+      .vm-lounge-mark i{position:absolute!important;right:5px!important;top:5px!important;width:8px!important;height:8px!important;border-radius:50%!important;background:#ffe28e!important;box-shadow:0 0 12px rgba(255,216,122,.95)!important;}
+      .vm-lounge-title{min-width:0!important;display:grid!important;gap:1px!important;}
+      .vm-lounge-title small{display:block!important;color:rgba(255,216,122,.82)!important;font-size:9px!important;font-weight:1000!important;letter-spacing:.22em!important;text-transform:uppercase!important;line-height:1!important;}
+      .vm-lounge-title strong{display:block!important;width:max-content!important;max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;font-family:Georgia,'Times New Roman',serif!important;font-size:clamp(22px,5vw,32px)!important;line-height:.98!important;font-weight:1000!important;letter-spacing:-.055em!important;background:linear-gradient(90deg,#fff4bf,#f0c35c 55%,#b88425)!important;-webkit-background-clip:text!important;background-clip:text!important;color:transparent!important;text-shadow:0 0 24px rgba(228,184,78,.18)!important;}
+      .vm-lounge-bet-tag{height:36px!important;min-width:92px!important;border-radius:14px!important;border:1px solid rgba(255,216,122,.24)!important;background:linear-gradient(135deg,rgba(255,216,122,.12),rgba(255,255,255,.035))!important;color:#f8d36f!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;padding:0 10px!important;font-size:10px!important;font-weight:1000!important;letter-spacing:.075em!important;text-transform:uppercase!important;white-space:nowrap!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)!important;}
+      .vm-lounge-bars{width:18px!important;height:18px!important;display:flex!important;align-items:flex-end!important;gap:2px!important;position:relative!important;flex:0 0 18px!important;}
+      .vm-lounge-bars span{width:4px!important;border-radius:999px 999px 2px 2px!important;background:linear-gradient(180deg,#fff0b7,#c8922c)!important;box-shadow:0 0 8px rgba(228,184,78,.28)!important;}
+      .vm-lounge-bars span:nth-child(1){height:7px!important;}.vm-lounge-bars span:nth-child(2){height:11px!important;}.vm-lounge-bars span:nth-child(3){height:15px!important;}
+      .vm-lounge-bars::after{content:""!important;position:absolute!important;right:-2px!important;top:0!important;width:7px!important;height:7px!important;border-top:2px solid #ffe28e!important;border-right:2px solid #ffe28e!important;transform:rotate(0deg)!important;}
+      @keyframes vmLogoShine{0%,62%{transform:translateX(-85%) skewX(-18deg);opacity:0;}74%{opacity:.9;}100%{transform:translateX(110%) skewX(-18deg);opacity:0;}}
+      @media(max-width:430px){.vm-rank-badge{font-size:10px!important;padding:3px 7px!important;}.vm-rank-badge.big{font-size:13px!important;padding:6px 10px!important;}.leaderboard-row .vm-rank-badge{font-size:9.8px!important;}#vmLoungeHeaderLogo.vm-lounge-strip{height:58px!important;padding:0 12px!important;gap:10px!important;}.vm-lounge-mark{width:42px!important;height:42px!important;flex-basis:42px!important;}.vm-lounge-title strong{font-size:25px!important;}.vm-lounge-bet-tag{min-width:82px!important;height:34px!important;font-size:9px!important;padding:0 8px!important;}.vm-lounge-bars{display:none!important;}}
+      @media(max-width:355px){.vm-lounge-bet-tag{display:none!important;}.vm-lounge-title strong{font-size:27px!important;}}
     `;
     document.head.appendChild(style);
+  }
+
+  function installHeaderLogo(){
+    const main = document.querySelector('.main');
+    if (!main) return;
+    const search = main.querySelector(':scope > .search') || document.querySelector('.search');
+    let strip = document.getElementById('vmLoungeHeaderLogo');
+
+    if (!strip) {
+      strip = document.createElement('div');
+      strip.id = 'vmLoungeHeaderLogo';
+      strip.className = 'vm-lounge-strip';
+      strip.setAttribute('role', 'img');
+      strip.setAttribute('aria-label', 'TheLounge VM 2026 The Best Bet');
+      strip.innerHTML = `
+        <div class="vm-lounge-mark" aria-hidden="true"><b>TL</b><i></i></div>
+        <div class="vm-lounge-title"><small>VM 2026</small><strong>TheLounge</strong></div>
+        <div class="vm-lounge-bet-tag" aria-hidden="true"><span class="vm-lounge-bars"><span></span><span></span><span></span></span><b>The Best Bet</b></div>
+      `;
+    }
+
+    if (search) {
+      search.replaceWith(strip);
+      return;
+    }
+
+    if (!strip.isConnected) {
+      const topbar = main.querySelector('.topbar');
+      if (topbar) topbar.insertAdjacentElement('afterend', strip);
+      else main.prepend(strip);
+    }
   }
 
   function sortedUsers(){
@@ -100,7 +148,7 @@
     }
   }
 
-  function render(){ addCss(); injectLeaderboard(); injectProfile(); }
+  function render(){ addCss(); installHeaderLogo(); injectLeaderboard(); injectProfile(); }
 
   function listen(){
     if (!ready()) return;
@@ -128,7 +176,7 @@
     document.body.appendChild(script);
   }
 
-  function boot(){ addCss(); watch(); loadUpcomingSeeder(); if (ready()) listen(); render(); }
+  function boot(){ addCss(); installHeaderLogo(); watch(); loadUpcomingSeeder(); if (ready()) listen(); render(); }
 
   window.VM_RANK_TITLES = { boot, render, rankTitle };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
