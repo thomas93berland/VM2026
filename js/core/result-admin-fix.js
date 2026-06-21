@@ -1,5 +1,9 @@
 (()=>{
+  return;
+
   let admin=false;
+  ...
+})();
   let bound=false;
   let lastHtml='';
   const toast=msg=>{try{const t=document.getElementById('toast');if(t){t.textContent=msg;t.hidden=false;setTimeout(()=>t.hidden=true,4200)}else alert(msg)}catch{alert(msg)}};
