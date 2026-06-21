@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VM Lounge – legg inn neste 4 kamper</title>
+  <style>
+    :root{color-scheme:dark;--bg:#06101d;--card:#101b2e;--gold:#ffd77a;--muted:#aab3c5;--ok:#6cf0a4;--bad:#ff7b7b}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% 0,#1f3760 0,#06101d 48%,#020712 100%);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#fff;display:grid;place-items:center;padding:18px}.card{width:min(760px,100%);background:linear-gradient(145deg,rgba(14,26,47,.97),rgba(5,13,26,.98));border:1px solid rgba(255,215,122,.22);border-radius:26px;padding:20px;box-shadow:0 26px 90px rgba(0,0,0,.45)}h1{font-size:25px;margin:0 0 8px}.muted{color:var(--muted);line-height:1.45}.list{display:grid;gap:10px;margin:16px 0}.item{padding:13px;border-radius:17px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.09)}.item b{display:block}.item small{color:var(--muted)}button,input{width:100%;min-height:48px;border-radius:14px;border:1px solid rgba(255,255,255,.12);padding:12px 14px;font:inherit;font-weight:850}input{background:rgba(255,255,255,.08);color:#fff;margin-top:8px}button{margin-top:10px;background:linear-gradient(135deg,#ffe18a,#c6932f);color:#171203;border:0;cursor:pointer}button:disabled{opacity:.55}pre{white-space:pre-wrap;background:rgba(0,0,0,.32);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:14px;color:var(--muted);min-height:90px}.ok{color:var(--ok)}.bad{color:var(--bad)}a{color:var(--gold);font-weight:850}.mini{font-size:13px}
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>Legg inn de 4 neste kampene</h1>
+    <p class="muted">Dette er en trygg engangsside som skriver kampene rett til Firestore når du er logget inn som admin. Den bruker faste dokument-ID-er, så den lager ikke duplikater.</p>
+    <div class="list" id="preview"></div>
+
+    <div id="login" hidden>
+      <p class="muted mini">Du er ikke logget inn på denne siden. Logg inn med admin-brukeren din:</p>
+      <input id="email" type="email" placeholder="E-post" autocomplete="email" />
+      <input id="password" type="password" placeholder="Passord" autocomplete="current-password" />
+      <button id="loginBtn" type="button">Logg inn</button>
+    </div>
+
+    <button id="seedBtn" type="button" disabled>Legg inn de 4 kampene nå</button>
+    <pre id="log">Starter...</pre>
+    <p class="muted mini">Etterpå: <a href="index.html?v=1002">åpne VM Lounge med ny cache</a></p>
+  </main>
+
+  <script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js?v=5"></script>
+  <script>
+    const ADMIN_EMAIL='thomas93berland@gmail.com';
+    const KAMPER=[
+      {id:'vm2026-2026-06-21-spania-saudi-arabia',home:'Spania',away:'Saudi-Arabia',time:'2026-06-21T18:00',group:'VM 2026 · Gruppe H',result:null,odds:{home:1.42,draw:4.40,away:8.00}},
+      {id:'vm2026-2026-06-21-belgia-iran',home:'Belgia',away:'Iran',time:'2026-06-21T21:00',group:'VM 2026 · Gruppe G',result:null,odds:{home:1.65,draw:3.80,away:5.50}},
+      {id:'vm2026-2026-06-22-uruguay-kapp-verde',home:'Uruguay',away:'Kapp Verde',time:'2026-06-22T00:00',group:'VM 2026 · Gruppe H',result:null,odds:{home:1.70,draw:3.65,away:5.20}},
+      {id:'vm2026-2026-06-22-new-zealand-egypt',home:'New Zealand',away:'Egypt',time:'2026-06-22T03:00',group:'VM 2026 · Gruppe G',result:null,odds:{home:4.10,draw:3.40,away:1.95}}
+    ];
+    const $=id=>document.getElementById(id);
+    const out=m=>{$('log').textContent=m};
+    const add=m=>{$('log').textContent += '\n'+m};
+    const fmt=t=>new Date(t).toLocaleString('nb-NO',{weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+    $('preview').innerHTML=KAMPER.map(k=>`<div class="item"><b>${k.home} – ${k.away}</b><small>${k.group} · ${fmt(k.time)} · H ${k.odds.home.toFixed(2)} / U ${k.odds.draw.toFixed(2)} / B ${k.odds.away.toFixed(2)}</small></div>`).join('');
+
+    if(!window.VM_FIREBASE_CONFIG){out('FEIL: Fant ikke firebase-config.js');throw new Error('Mangler Firebase config');}
+    if(!firebase.apps.length)firebase.initializeApp(window.VM_FIREBASE_CONFIG);
+    const auth=firebase.auth();
+    const db=firebase.firestore();
+    let me=null;
+
+    async function adminOK(user){
+      if(!user)return false;
+      if((user.email||'').toLowerCase()===ADMIN_EMAIL)return true;
+      const snap=await db.collection('users').doc(user.uid).get();
+      return !!(snap.exists && snap.data().isAdmin===true);
+    }
+
+    auth.onAuthStateChanged(async user=>{
+      me=user;
+      $('login').hidden=!!user;
+      $('seedBtn').disabled=true;
+      if(!user){out('Logg inn først.');return;}
+      try{
+        const ok=await adminOK(user);
+        if(!ok){out('Du er logget inn, men er ikke admin i Firestore.');return;}
+        $('seedBtn').disabled=false;
+        out('Admin OK ✅ Klar til å legge inn kampene.');
+      }catch(e){out('Admin-sjekk feilet: '+(e.code?e.code+': ':'')+(e.message||e));}
+    });
+
+    $('loginBtn').onclick=async()=>{
+      out('Logger inn...');
+      try{await auth.signInWithEmailAndPassword($('email').value.trim(),$('password').value)}
+      catch(e){out('Innlogging feilet: '+(e.code?e.code+': ':'')+(e.message||e));}
+    };
+
+    $('seedBtn').onclick=async()=>{
+      if(!me){out('Ikke logget inn.');return;}
+      $('seedBtn').disabled=true;
+      out('Legger inn kamper...');
+      try{
+        for(const k of KAMPER){
+          const ref=db.collection('matches').doc(k.id);
+          const snap=await ref.get();
+          const base={home:k.home,away:k.away,time:k.time,group:k.group,odds:k.odds,result:null,updatedBy:me.uid,updatedAtMs:Date.now(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+          if(snap.exists){
+            await ref.set(base,{merge:true});
+            add('Oppdatert: '+k.home+' – '+k.away);
+          }else{
+            await ref.set({...base,createdBy:me.uid,createdAtMs:Date.now(),createdAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+            add('Lagt inn: '+k.home+' – '+k.away);
+          }
+        }
+        add('\nFerdig ✅ Gå til Betting-siden.');
+      }catch(e){
+        add('\nFEIL: '+(e.code?e.code+': ':'')+(e.message||e));
+      }finally{
+        $('seedBtn').disabled=false;
+      }
+    };
+  </script>
+</body>
+</html>
