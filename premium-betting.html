@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>VM Lounge – Premium Betting</title>
+  <style>
+    html,body{margin:0;height:100%;background:#06101d;overflow:hidden}iframe{width:100%;height:100%;border:0;display:block;background:#06101d}.loader{position:fixed;inset:0;display:grid;place-items:center;color:#ffd77a;font:900 16px system-ui;background:#06101d;z-index:2}
+  </style>
+</head>
+<body>
+  <div class="loader" id="loader">Laster premium betting...</div>
+  <iframe id="app" src="index.html?v=1008" title="VM Lounge"></iframe>
+  <script>
+    const frame=document.getElementById('app');
+    const loader=document.getElementById('loader');
+    function inject(){
+      try{
+        const w=frame.contentWindow;
+        const d=frame.contentDocument;
+        if(!d||!d.head||!d.body)return;
+        if(!d.querySelector('link[href*="betting-polish.css"]')){
+          const link=d.createElement('link');
+          link.rel='stylesheet';
+          link.href='css/betting-polish.css?v=1008';
+          d.head.appendChild(link);
+        }
+        if(!d.querySelector('script[src*="vm-match-cards.js"]')){
+          const script=d.createElement('script');
+          script.src='js/vm-match-cards.js?v=1008';
+          d.body.appendChild(script);
+        }
+        if(w&&w.document){
+          setTimeout(()=>{
+            const btn=[...d.querySelectorAll('[data-page="betting"]')][0];
+            if(btn)btn.click();
+          },700);
+        }
+        loader.style.display='none';
+      }catch(e){console.warn(e);loader.textContent='Kunne ikke laste premium-visning. Åpne index.html direkte.';}
+    }
+    frame.addEventListener('load',()=>{inject();setTimeout(inject,800);setTimeout(inject,1800);});
+  </script>
+</body>
+</html>
