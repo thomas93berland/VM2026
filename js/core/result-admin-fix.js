@@ -64,12 +64,22 @@
       const id=fd.get('matchId');
       const result=fd.get('result');
       if(!id||!result)return toast('Velg kamp og resultat');
-      await firebase.firestore().collection('matches').doc(id).set({
-        result,
-        updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
+      const db=firebase.firestore();
+      const ref=db.collection('matches').doc(id);
+      const match=(await ref.get()).data()||{};
+      const payload={
+        result:String(result),
+        resultLabel:label(match,result),
+        status:'Ferdig',
+        updatedBy:firebase.auth().currentUser.uid,
         updatedAtMs:Date.now()
-      },{merge:true});
-      toast('Resultat lagt inn');
+      };
+      try{await ref.update(payload)}catch(e){await ref.set(payload,{merge:true})}
+      const verify=await ref.get();
+      if(String(verify.data()?.result)!==String(result)){
+        throw new Error('Resultatet ble ikke lagret. Sjekk Firestore-regler eller innlogging.');
+      }
+      toast('Resultat lagt inn ✅');
       form.reset();
       lastHtml='';
       setTimeout(refreshSelect,300);
