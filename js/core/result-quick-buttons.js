@@ -12,7 +12,7 @@
   const label=(m,r)=>r==='home'?(m.home||'Hjemme'):r==='away'?(m.away||'Borte'):'Uavgjort';
   const when=v=>{const d=new Date(v);return v&&!isNaN(d)?d.toLocaleString('nb-NO',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'Ukjent tid'};
   const hasResult=m=>!!String(m?.result||'').trim();
-  const isPast=m=>{const ms=Date.parse(m?.time||'');return Number.isFinite(ms)&&ms<Date.now()};
+  const isPast=m=>{const ms=Date.parse(m?.time||'');return Number.isFinite(ms)&&ms<=Date.now()};
 
   async function checkAdmin(){
     if(!ready()){admin=false;return false}
@@ -64,20 +64,16 @@
 
   function unresolved(ms){
     return (ms||[])
-      .filter(m=>!hasResult(m))
-      .sort((a,b)=>{
-        const ap=isPast(a)?0:1;
-        const bp=isPast(b)?0:1;
-        return (ap-bp)||String(a.time||'').localeCompare(String(b.time||''));
-      });
+      .filter(m=>!hasResult(m)&&isPast(m))
+      .sort((a,b)=>Date.parse(a.time||'')-Date.parse(b.time||''));
   }
 
   function syncNativeSelect(){
     const select=document.getElementById('resultMatchSelect');
     if(!select)return;
     const list=unresolved(matches);
-    select.innerHTML='<option value="">Velg kamp uten resultat</option>'+(
-      list.length?list.map(m=>`<option value="${esc(m.id)}">${esc(when(m.time))} · ${esc(title(m))}${isPast(m)?' · slutt/mangler resultat':''}</option>`).join(''):'<option value="" disabled>Ingen kamper uten resultat</option>'
+    select.innerHTML='<option value="">Velg ferdig kamp uten resultat</option>'+(
+      list.length?list.map(m=>`<option value="${esc(m.id)}">${esc(when(m.time))} · ${esc(title(m))} · slutt / mangler resultat</option>`).join(''):'<option value="" disabled>Ingen ferdige kamper uten resultat</option>'
     );
   }
 
@@ -96,13 +92,13 @@
     }
     const list=unresolved(matches);
     if(!list.length){
-      panel.innerHTML='<div class="quick-result-title">Rask resultatvelger</div><div class="quick-result-empty">Ingen kamper uten resultat akkurat nå.</div>';
+      panel.innerHTML='<div class="quick-result-title">Rask resultatvelger</div><div class="quick-result-empty">Ingen ferdige kamper mangler resultat akkurat nå.</div>';
       return;
     }
-    panel.innerHTML='<div class="quick-result-title">Rask resultatvelger</div>'+list.map(m=>`
+    panel.innerHTML='<div class="quick-result-title">Rask resultatvelger · kun sluttede kamper</div>'+list.map(m=>`
       <div class="quick-result-row">
         <b>${esc(title(m))}</b>
-        <small>${esc(when(m.time))}${isPast(m)?' · slutt / mangler resultat':' · ikke spilt ennå'}</small>
+        <small>${esc(when(m.time))} · slutt / mangler resultat</small>
         <div class="quick-result-buttons">
           <button type="button" data-quick-result="home" data-match-id="${esc(m.id)}">H: ${esc(m.home||'Hjemme')}</button>
           <button type="button" data-quick-result="draw" data-match-id="${esc(m.id)}">U: Uavgjort</button>
@@ -184,5 +180,5 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else setTimeout(boot,300);
   try{firebase.auth().onAuthStateChanged(u=>{if(u)setTimeout(boot,500)})}catch{}
   document.addEventListener('click',e=>{if(e.target.closest?.('[data-page="betting"]'))setTimeout(boot,250)});
-  setInterval(()=>{if(admin)render()},5000);
+  setInterval(()=>{if(admin)render()},3000);
 })();
