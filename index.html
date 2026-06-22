@@ -170,189 +170,35 @@
       </section>
 
       <section class="page" id="page-leaderboard">
-        <div class="page-head">
-          <div>
-            <small>Venneliga</small>
-            <h1>Leaderboard</h1>
-          </div>
-        </div>
-        <article class="card">
-          <div id="leaderboardPageList" class="leaderboard big"></div>
-        </article>
+        <div class="page-head"><div><small>Venneliga</small><h1>Leaderboard</h1></div></div>
+        <article class="card"><div id="leaderboardPageList" class="leaderboard big"></div></article>
       </section>
 
       <section class="page" id="page-betting">
-        <div class="page-head">
-          <div>
-            <small>VM-kamper</small>
-            <h1>VM Betting</h1>
-          </div>
-          <button class="btn secondary compact" id="clearSlipBtn">Tøm slip</button>
-        </div>
-
-        <div class="chips">
-          <button class="chip active">VM 2026</button>
-          <button class="chip">Populære</button>
-          <button class="chip">I dag</button>
-          <button class="chip">Favoritter</button>
-        </div>
-
-
-        <article class="card rules-card">
-          <div class="rules-grid">
-            <div><small>Startsaldo</small><strong>5 000</strong><span>VM Coins</span></div>
-            <div><small>Maks innsats</small><strong>500</strong><span>per kamp</span></div>
-            <div><small>Vinnprosent</small><strong>Vunne / ferdige</strong><span>spill</span></div>
-            <div><small>Sortering</small><strong>VM Coins</strong><span>leaderboard</span></div>
-          </div>
-        </article>
-
+        <div class="page-head"><div><small>VM-kamper</small><h1>VM Betting</h1></div><button class="btn secondary compact" id="clearSlipBtn">Tøm slip</button></div>
+        <div class="chips"><button class="chip active">VM 2026</button><button class="chip">Populære</button><button class="chip">I dag</button><button class="chip">Favoritter</button></div>
+        <article class="card rules-card"><div class="rules-grid"><div><small>Startsaldo</small><strong>5 000</strong><span>VM Coins</span></div><div><small>Maks innsats</small><strong>500</strong><span>per kamp</span></div><div><small>Vinnprosent</small><strong>Vunne / ferdige</strong><span>spill</span></div><div><small>Sortering</small><strong>VM Coins</strong><span>leaderboard</span></div></div></article>
         <div class="betting-layout">
           <div class="match-list" id="matchList"></div>
-
           <aside class="card bet-slip" id="betSlip">
-            <div class="card-title split">
-              <div>
-                <span class="nav-icon gold" data-icon="ticket"></span>
-                <h2>Bet Slip</h2>
-                <em id="slipCount">0</em>
-              </div>
-            </div>
-
+            <div class="card-title split"><div><span class="nav-icon gold" data-icon="ticket"></span><h2>Bet Slip</h2><em id="slipCount">0</em></div></div>
             <div id="slipEmpty" class="empty">Velg odds på en kamp for å lage kupong.</div>
-            <div id="slipContent" hidden>
-              <div id="slipItems"></div>
-              <label class="field-label" for="stakeInput">Innsats <small class="field-hint">maks 500 per kamp</small></label>
-              <input id="stakeInput" class="input" type="number" min="10" max="500" step="10" value="100" />
-              <div class="summary-line"><span>Total odds</span><b id="totalOdds">1.00</b></div>
-              <div class="summary-line"><span>Mulig gevinst</span><b class="green" id="possibleWin">0</b></div>
-              <button class="btn primary full" id="placeBetBtn">Plasser spill</button>
-            </div>
+            <div id="slipContent" hidden><div id="slipItems"></div><label class="field-label" for="stakeInput">Innsats <small class="field-hint">maks 500 per kamp</small></label><input id="stakeInput" class="input" type="number" min="10" max="500" step="10" value="100" /><div class="summary-line"><span>Total odds</span><b id="totalOdds">1.00</b></div><div class="summary-line"><span>Mulig gevinst</span><b class="green" id="possibleWin">0</b></div><button class="btn primary full" id="placeBetBtn">Plasser spill</button></div>
           </aside>
         </div>
-
         <details class="card admin-card admin-only" id="adminPanel">
           <summary>Admin: kampstyring og resultater</summary>
           <p class="admin-note">Kun Thomas kan legge inn kamper og resultater i denne demoen.</p>
-
-          <form id="matchForm" class="admin-form">
-            <input class="input" name="home" placeholder="Hjemmelag" required />
-            <input class="input" name="away" placeholder="Bortelag" required />
-            <input class="input" name="time" type="datetime-local" required />
-            <input class="input" name="homeOdds" type="number" step="0.01" value="2.10" required />
-            <input class="input" name="drawOdds" type="number" step="0.01" value="3.20" required />
-            <input class="input" name="awayOdds" type="number" step="0.01" value="2.90" required />
-            <button class="btn primary">Legg til kamp</button>
-          </form>
-
-          <form id="resultForm" class="admin-form result-form">
-            <select class="input" id="resultMatchSelect" name="matchId" required></select>
-            <select class="input" name="result" required>
-              <option value="">Velg resultat</option>
-              <option value="home">Hjemmeseier</option>
-              <option value="draw">Uavgjort</option>
-              <option value="away">Borteseier</option>
-            </select>
-            <button class="btn primary">Legg inn resultat</button>
-          </form>
+          <form id="matchForm" class="admin-form"><input class="input" name="home" placeholder="Hjemmelag" required /><input class="input" name="away" placeholder="Bortelag" required /><input class="input" name="time" type="datetime-local" required /><input class="input" name="homeOdds" type="number" step="0.01" value="2.10" required /><input class="input" name="drawOdds" type="number" step="0.01" value="3.20" required /><input class="input" name="awayOdds" type="number" step="0.01" value="2.90" required /><button class="btn primary">Legg til kamp</button></form>
+          <form id="resultForm" class="admin-form result-form"><select class="input" id="resultMatchSelect" name="matchId" required></select><select class="input" name="result" required><option value="">Velg resultat</option><option value="home">Hjemmeseier</option><option value="draw">Uavgjort</option><option value="away">Borteseier</option></select><button class="btn primary">Legg inn resultat</button></form>
         </details>
-
-        <article class="card admin-locked" id="adminLocked" hidden>
-          <strong>Admin låst</strong>
-          <p>Kun Thomas kan legge inn kampresultater.</p>
-        </article>
+        <article class="card admin-locked" id="adminLocked" hidden><strong>Admin låst</strong><p>Kun Thomas kan legge inn kampresultater.</p></article>
       </section>
 
-      <section class="page" id="page-forum">
-        <div class="page-head">
-          <div>
-            <small>Community</small>
-            <h1>Forum</h1>
-          </div>
-        </div>
-        <form class="card composer" id="postForm">
-          <input class="input" id="postTitle" placeholder="Tittel" required />
-          <textarea class="input" id="postText" rows="4" placeholder="Skriv innlegg..." required></textarea>
-          <button class="btn primary">Publiser</button>
-        </form>
-        <div class="posts" id="posts"></div>
-      </section>
-
-      <section class="page" id="page-chat">
-        <div class="page-head">
-          <div>
-            <small>Live</small>
-            <h1>Chat</h1>
-          </div>
-        </div>
-        <div class="chat-layout">
-          <aside class="card room-list">
-            <button class="room active" data-room="public">Offentlig chat <small>Alle</small></button>
-            <button class="room" data-room="Elise">Elise <small>ELO 1018</small></button>
-            <button class="room" data-room="Kjell">Kjell <small>ELO 980</small></button>
-            <button class="room" data-room="Heidi">Heidi <small>ELO 1045</small></button>
-          </aside>
-          <section class="card chat-card">
-            <div class="chat-head">
-              <strong id="roomTitle">Offentlig chat</strong>
-              <small>Live chat — lagres i Firestore</small>
-            </div>
-            <div class="messages" id="messages"></div>
-            <form id="chatForm" class="chat-form">
-              <input class="input" id="chatInput" placeholder="Skriv melding..." required />
-              <button class="btn primary">Send</button>
-            </form>
-          </section>
-        </div>
-      </section>
-
-      <section class="page" id="page-profile">
-        <article class="card profile-detail">
-          <div class="avatar large" id="profileAvatar">T</div>
-          <div>
-            <small>Brukerprofil</small>
-            <h1 data-bind="name">Thomas</h1>
-            <p>VM-tipster • Chess Lounge member</p>
-          </div>
-          <button class="btn secondary compact" id="editNameBtn">Endre navn</button>
-        </article>
-
-        <div class="stats-grid profile-stats">
-          <div class="stat"><span class="nav-icon gold" data-icon="knight"></span><small>Sjakk ELO</small><strong data-bind="elo">1032</strong></div>
-          <div class="stat"><span class="coin">◆</span><small>VM Coins</small><strong data-bind="coins">5 000</strong></div>
-          <div class="stat"><span class="nav-icon gold" data-icon="trend"></span><small>Treffprosent</small><strong data-bind="hitRate">0%</strong></div>
-          <div class="stat"><span class="nav-icon gold" data-icon="medal"></span><small>Rangering</small><strong data-bind="rank">#1</strong></div>
-        </div>
-
-        <article class="card">
-          <div class="card-title">
-            <span class="nav-icon gold" data-icon="ticket"></span>
-            <h2>Mine spill</h2>
-          </div>
-          <div id="myBets" class="my-bets"></div>
-        </article>
-      </section>
-
-      <section class="page" id="page-chess">
-        <div class="page-head">
-          <div>
-            <small>Chess Lounge</small>
-            <h1>Sjakk</h1>
-          </div>
-        </div>
-        <article class="card chess-card">
-          <div>
-            <h2>Sjakkrom</h2>
-            <p>Koble denne siden til sjakkspillet ditt. Profilene viser sjakk-ELO sammen med VM-statistikk.</p>
-            <div class="chess-stats">
-              <div><small>Din ELO</small><strong data-bind="elo">1032</strong></div>
-              <div><small>Nivå</small><strong>Gull III</strong></div>
-            </div>
-            <a class="btn primary" href="play.html">Åpne sjakkrom</a>
-          </div>
-          <div class="mini-board" id="miniBoard"></div>
-        </article>
-      </section>
+      <section class="page" id="page-forum"><div class="page-head"><div><small>Community</small><h1>Forum</h1></div></div><form class="card composer" id="postForm"><input class="input" id="postTitle" placeholder="Tittel" required /><textarea class="input" id="postText" rows="4" placeholder="Skriv innlegg..." required></textarea><button class="btn primary">Publiser</button></form><div class="posts" id="posts"></div></section>
+      <section class="page" id="page-chat"><div class="page-head"><div><small>Live</small><h1>Chat</h1></div></div><div class="chat-layout"><aside class="card room-list"><button class="room active" data-room="public">Offentlig chat <small>Alle</small></button><button class="room" data-room="Elise">Elise <small>ELO 1018</small></button><button class="room" data-room="Kjell">Kjell <small>ELO 980</small></button><button class="room" data-room="Heidi">Heidi <small>ELO 1045</small></button></aside><section class="card chat-card"><div class="chat-head"><strong id="roomTitle">Offentlig chat</strong><small>Live chat — lagres i Firestore</small></div><div class="messages" id="messages"></div><form id="chatForm" class="chat-form"><input class="input" id="chatInput" placeholder="Skriv melding..." required /><button class="btn primary">Send</button></form></section></div></section>
+      <section class="page" id="page-profile"><article class="card profile-detail"><div class="avatar large" id="profileAvatar">T</div><div><small>Brukerprofil</small><h1 data-bind="name">Thomas</h1><p>VM-tipster • Chess Lounge member</p></div><button class="btn secondary compact" id="editNameBtn">Endre navn</button></article><div class="stats-grid profile-stats"><div class="stat"><span class="nav-icon gold" data-icon="knight"></span><small>Sjakk ELO</small><strong data-bind="elo">1032</strong></div><div class="stat"><span class="coin">◆</span><small>VM Coins</small><strong data-bind="coins">5 000</strong></div><div class="stat"><span class="nav-icon gold" data-icon="trend"></span><small>Treffprosent</small><strong data-bind="hitRate">0%</strong></div><div class="stat"><span class="nav-icon gold" data-icon="medal"></span><small>Rangering</small><strong data-bind="rank">#1</strong></div></div><article class="card"><div class="card-title"><span class="nav-icon gold" data-icon="ticket"></span><h2>Mine spill</h2></div><div id="myBets" class="my-bets"></div></article></section>
+      <section class="page" id="page-chess"><div class="page-head"><div><small>Chess Lounge</small><h1>Sjakk</h1></div></div><article class="card chess-card"><div><h2>Sjakkrom</h2><p>Koble denne siden til sjakkspillet ditt. Profilene viser sjakk-ELO sammen med VM-statistikk.</p><div class="chess-stats"><div><small>Din ELO</small><strong data-bind="elo">1032</strong></div><div><small>Nivå</small><strong>Gull III</strong></div></div><a class="btn primary" href="play.html">Åpne sjakkrom</a></div><div class="mini-board" id="miniBoard"></div></article></section>
     </main>
 
     <nav class="bottom-nav" aria-label="Mobilmeny">
@@ -376,7 +222,7 @@
   <script src="js/app.js?v=2"></script>
   <script src="js/core/boot.js?v=14"></script>
   <script src="js/core/result-admin-fix.js?v=5"></script>
-  <script src="js/core/result-quick-buttons.js?v=2"></script>
+  <script src="js/core/result-quick-buttons.js?v=3"></script>
   <script src="js/core/rank-titles.js?v=3"></script>
   <script src="js/vm-match-cards.js?v=7"></script>
 </body>
