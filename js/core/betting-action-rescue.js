@@ -1,4 +1,5 @@
 (()=>{
+  const ADMIN_EMAIL='thomas93berland@gmail.com';
   const toast=msg=>{try{const t=document.getElementById('toast');if(t){t.textContent=msg;t.hidden=false;clearTimeout(toast.x);toast.x=setTimeout(()=>t.hidden=true,4500)}else alert(msg)}catch{alert(msg)}};
   const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
   const ready=()=>{try{return window.firebase&&firebase.auth&&firebase.firestore&&firebase.auth().currentUser}catch{return false}};
@@ -16,12 +17,19 @@
   async function adminCheck(){
     if(!ready())return false;
     const u=firebase.auth().currentUser;
-    const s=await firebase.firestore().collection('users').doc(u.uid).get();
-    admin=!!(s.exists&&s.data()?.isAdmin===true);
+    const email=String(u.email||'').toLowerCase();
+    try{
+      const s=await firebase.firestore().collection('users').doc(u.uid).get();
+      admin=email===ADMIN_EMAIL||!!(s.exists&&s.data()?.isAdmin===true);
+    }catch(e){
+      console.warn('Rescue admin check failed',e);
+      admin=email===ADMIN_EMAIL;
+    }
     const panel=document.getElementById('adminPanel');
     const locked=document.getElementById('adminLocked');
-    if(panel)panel.hidden=!admin;
+    if(panel){panel.hidden=!admin;if(admin)panel.style.display='block';}
     if(locked)locked.hidden=admin;
+    document.querySelectorAll('.admin-only').forEach(el=>{if(admin){el.hidden=false;el.style.display='block';}});
     return admin;
   }
 
@@ -30,19 +38,33 @@
     return s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(a.time||'').localeCompare(String(b.time||'')));
   }
 
+  function unlockSelect(select){
+    if(!select)return;
+    try{
+      if(Object.prototype.hasOwnProperty.call(select,'innerHTML')) delete select.innerHTML;
+    }catch(e){console.warn('Could not unlock selector innerHTML',e)}
+    select.dataset.resultSelectorLocked='no';
+    select.dataset.quickResultLocked='no';
+    select.disabled=false;
+    select.style.pointerEvents='auto';
+    select.style.position='relative';
+    select.style.zIndex='999';
+  }
+
   async function fillResultSelector(){
     if(!ready())return;
     const select=document.getElementById('resultMatchSelect');
     if(!select)return;
     if(!admin)await adminCheck();
     if(!admin)return;
+    unlockSelect(select);
     const current=select.value;
     const missing=(await loadMatches()).filter(m=>!hasResult(m));
     const body=missing.length
       ? missing.map(m=>`<option value="${esc(m.id)}">${esc(when(m.time))} · ${esc(title(m))}</option>`).join('')
       : '<option value="" disabled>Ingen kamper uten resultat</option>';
     const html='<option value="">Velg kamp uten resultat</option>'+body;
-    if(html!==lastSelectHtml){
+    if(html!==lastSelectHtml||select.innerHTML!==html||select.options.length<2){
       lastSelectHtml=html;
       select.innerHTML=html;
       if(current&&[...select.options].some(o=>o.value===current))select.value=current;
@@ -70,9 +92,10 @@
       form.reset();
       lastSelectHtml='';
       toast('Resultat lagt inn');
-      setTimeout(fillResultSelector,350);
-      setTimeout(()=>window.VM_SAFE_BOOT?.settleBets?.({id,result}),900);
-      setTimeout(()=>window.VM_UPCOMING_MATCH_SEED?.boot?.(),1400);
+      setTimeout(fillResultSelector,250);
+      setTimeout(()=>window.VM_SAFE_BOOT?.settleBets?.({id,result}),850);
+      setTimeout(()=>window.VM_UPCOMING_MATCH_SEED?.boot?.(),1200);
+      setTimeout(()=>window.VM_QUICK_RESULT?.render?.(),1300);
     }catch(err){
       console.error('Result rescue failed',err);
       toast((err?.code?err.code+': ':'')+(err?.message||'Kunne ikke legge inn resultat'));
@@ -97,9 +120,10 @@
       const userSnap=await userRef.get();
       const profile=userSnap.exists?userSnap.data():{};
       const coins=Number(profile.coins||0);
-      const stake=Math.min(Number(document.getElementById('stakeInput')?.value||0),Number(window.VM_RULES?.MAX_STAKE||500));
+      const max=Number(window.VM_RULES?.MAX_STAKE||500);
+      const stake=Number(document.getElementById('stakeInput')?.value||0);
       if(stake<10)return toast('Innsats må være minst 10');
-      if(stake>Number(window.VM_RULES?.MAX_STAKE||500))return toast('Maks innsats er 500');
+      if(stake>max)return toast('Maks innsats er '+max);
       if(stake>coins)return toast('Ikke nok VM Coins');
       const buttons=selectedButtons();
       if(!buttons.length)return toast('Velg odds først');
@@ -151,9 +175,9 @@
 
   document.addEventListener('submit',submitResult,true);
   document.addEventListener('click',placeBet,true);
-  document.addEventListener('click',e=>{if(e.target.closest?.('[data-page="betting"]'))setTimeout(boot,350)},true);
-  window.VM_BETTING_ACTION_RESCUE={boot,fillResultSelector,placeBet};
+  document.addEventListener('click',e=>{if(e.target.closest?.('[data-page="betting"],#adminPanel,#resultForm,#resultMatchSelect,#placeBetBtn'))setTimeout(boot,220)},true);
+  window.VM_BETTING_ACTION_RESCUE={boot,fillResultSelector,placeBet,adminCheck};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else setTimeout(boot,600);
   try{firebase.auth().onAuthStateChanged(u=>{if(u)setTimeout(boot,800)})}catch{}
-  setInterval(fillResultSelector,3000);
+  setInterval(fillResultSelector,1600);
 })();
