@@ -17,51 +17,19 @@
         <div class="brand-logo" aria-hidden="true">
           <svg viewBox="0 0 64 64"><path d="M32 6c9 0 16 7 16 16 0 11-9 21-16 30C25 43 16 33 16 22 16 13 23 6 32 6Z"/><path d="M24 22h16M32 14v16M22 52h20M26 58h12"/></svg>
         </div>
-        <div>
-          <strong>VM Lounge</strong>
-          <span>2026</span>
-        </div>
+        <div><strong>VM Lounge</strong><span>2026</span></div>
       </div>
-
-      <div class="auth-copy">
-        <h1>Logg inn</h1>
-        <p>Registrer deg for å få ekte VM Coins, leaderboard, chat, forum og betting sammen med venner.</p>
-      </div>
-
-      <div class="auth-tabs">
-        <button class="auth-tab active" data-auth-tab="login">Logg inn</button>
-        <button class="auth-tab" data-auth-tab="register">Registrer</button>
-      </div>
-
-      <form id="loginForm" class="auth-form">
-        <input class="input" id="loginEmail" type="email" placeholder="E-post" autocomplete="email" required />
-        <input class="input" id="loginPassword" type="password" placeholder="Passord" autocomplete="current-password" required />
-        <button class="btn primary full">Logg inn</button>
-      </form>
-
-      <form id="registerForm" class="auth-form" hidden>
-        <input class="input" id="registerName" type="text" placeholder="Brukernavn" autocomplete="nickname" required />
-        <input class="input" id="registerEmail" type="email" placeholder="E-post" autocomplete="email" required />
-        <input class="input" id="registerPassword" type="password" placeholder="Passord, minst 6 tegn" autocomplete="new-password" minlength="6" required />
-        <button class="btn primary full">Opprett bruker</button>
-      </form>
-
+      <div class="auth-copy"><h1>Logg inn</h1><p>Registrer deg for å få ekte VM Coins, leaderboard, chat, forum og betting sammen med venner.</p></div>
+      <div class="auth-tabs"><button class="auth-tab active" data-auth-tab="login">Logg inn</button><button class="auth-tab" data-auth-tab="register">Registrer</button></div>
+      <form id="loginForm" class="auth-form"><input class="input" id="loginEmail" type="email" placeholder="E-post" autocomplete="email" required /><input class="input" id="loginPassword" type="password" placeholder="Passord" autocomplete="current-password" required /><button class="btn primary full">Logg inn</button></form>
+      <form id="registerForm" class="auth-form" hidden><input class="input" id="registerName" type="text" placeholder="Brukernavn" autocomplete="nickname" required /><input class="input" id="registerEmail" type="email" placeholder="E-post" autocomplete="email" required /><input class="input" id="registerPassword" type="password" placeholder="Passord, minst 6 tegn" autocomplete="new-password" minlength="6" required /><button class="btn primary full">Opprett bruker</button></form>
       <p class="auth-note">Startsaldo: 5 000 VM Coins · Maks innsats: 500 per kamp</p>
     </div>
   </section>
 
   <div class="app">
     <aside class="sidebar" id="sidebar" aria-label="Hovedmeny">
-      <div class="brand">
-        <div class="brand-logo" aria-hidden="true">
-          <svg viewBox="0 0 64 64"><path d="M32 6c9 0 16 7 16 16 0 11-9 21-16 30C25 43 16 33 16 22 16 13 23 6 32 6Z"/><path d="M24 22h16M32 14v16M22 52h20M26 58h12"/></svg>
-        </div>
-        <div>
-          <strong>VM Lounge</strong>
-          <span>2026</span>
-        </div>
-      </div>
-
+      <div class="brand"><div class="brand-logo" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M32 6c9 0 16 7 16 16 0 11-9 21-16 30C25 43 16 33 16 22 16 13 23 6 32 6Z"/><path d="M24 22h16M32 14v16M22 52h20M26 58h12"/></svg></div><div><strong>VM Lounge</strong><span>2026</span></div></div>
       <nav class="side-nav">
         <button class="nav-item active" data-page="home"><span class="nav-icon" data-icon="home"></span><span>Home</span></button>
         <button class="nav-item" data-page="betting"><span class="nav-icon" data-icon="ball"></span><span>Betting</span></button>
@@ -72,25 +40,14 @@
         <button class="nav-item" data-page="profile"><span class="nav-icon" data-icon="profile"></span><span>Profil</span></button>
         <button class="nav-item" data-page="chess"><span class="nav-icon" data-icon="knight"></span><span>Sjakk</span></button>
       </nav>
-
       <div class="side-wallet"><small>Din saldo</small><strong><span data-bind="coins">5 000</span></strong><span>VM Coins</span></div>
     </aside>
 
     <main class="main">
-      <header class="topbar">
-        <button class="menu-toggle" id="menuToggle" aria-label="Åpne meny"><span></span><span></span><span></span></button>
-        <div class="mobile-brand"><div class="brand-logo small" aria-hidden="true"><span class="nav-icon" data-icon="trophy"></span></div><div><strong>VM Lounge</strong><span>2026</span></div></div>
-        <div class="top-actions"><div class="coin-pill"><i class="coin">◆</i><strong data-bind="coins">5 000</strong></div><button class="bell" aria-label="Varsler"><i></i></button></div>
-      </header>
-
+      <header class="topbar"><button class="menu-toggle" id="menuToggle" aria-label="Åpne meny"><span></span><span></span><span></span></button><div class="mobile-brand"><div class="brand-logo small" aria-hidden="true"><span class="nav-icon" data-icon="trophy"></span></div><div><strong>VM Lounge</strong><span>2026</span></div></div><div class="top-actions"><div class="coin-pill"><i class="coin">◆</i><strong data-bind="coins">5 000</strong></div><button class="bell" aria-label="Varsler"><i></i></button></div></header>
       <div class="search"><span class="nav-icon" data-icon="search"></span><input id="searchInput" placeholder="Søk etter kamp, spiller eller innlegg" /></div>
 
-      <section class="page active" id="page-home">
-        <article class="hero"><div class="hero-text"><small>VM 2026</small><h1>Betting med <span>venner</span></h1><p>Spill med falsk valuta, bygg status på leaderboardet og følg VM-kampene sammen.</p><div class="hero-actions"><button class="btn primary" data-go="betting">Se kamper</button><button class="btn secondary" data-go="leaderboard">Leaderboard</button></div></div><div class="hero-art" aria-hidden="true"><div class="globe"></div><div class="trophy-shadow"></div></div></article>
-        <div class="stats-grid"><div class="stat"><span class="nav-icon gold" data-icon="ticket"></span><small>Plasserte spill</small><strong data-bind="placedBets">0</strong></div><div class="stat"><span class="nav-icon gold" data-icon="medal"></span><small>Vinnprosent</small><strong data-bind="hitRate">0%</strong></div><div class="stat"><span class="coin">◆</span><small>VM Coins</small><strong data-bind="coins">5 000</strong></div><div class="stat profit"><span class="nav-icon gold" data-icon="trend"></span><small>Netto</small><strong data-bind="netProfit">0</strong></div></div>
-        <div class="home-grid"><article class="card"><div class="card-title"><span class="nav-icon gold" data-icon="trophy"></span><h2>Toppliste</h2></div><div id="homeLeaderboard" class="leaderboard"></div></article><article class="card"><div class="card-title"><span class="nav-icon gold" data-icon="pulse"></span><h2>Nylig aktivitet</h2></div><div id="homeActivity" class="activity-list"><div class="activity"><i class="coin tiny">◆</i><p>Velkommen til VM Lounge 2026</p><time>Nå</time></div><div class="activity"><i class="coin tiny">◆</i><p>Startsaldo er satt til 5 000 VM Coins</p><time>Regel</time></div><div class="activity"><i class="coin tiny">◆</i><p>Maks innsats per kamp er 500 VM Coins</p><time>Regel</time></div></div></article></div>
-      </section>
-
+      <section class="page active" id="page-home"><article class="hero"><div class="hero-text"><small>VM 2026</small><h1>Betting med <span>venner</span></h1><p>Spill med falsk valuta, bygg status på leaderboardet og følg VM-kampene sammen.</p><div class="hero-actions"><button class="btn primary" data-go="betting">Se kamper</button><button class="btn secondary" data-go="leaderboard">Leaderboard</button></div></div><div class="hero-art" aria-hidden="true"><div class="globe"></div><div class="trophy-shadow"></div></div></article><div class="stats-grid"><div class="stat"><span class="nav-icon gold" data-icon="ticket"></span><small>Plasserte spill</small><strong data-bind="placedBets">0</strong></div><div class="stat"><span class="nav-icon gold" data-icon="medal"></span><small>Vinnprosent</small><strong data-bind="hitRate">0%</strong></div><div class="stat"><span class="coin">◆</span><small>VM Coins</small><strong data-bind="coins">5 000</strong></div><div class="stat profit"><span class="nav-icon gold" data-icon="trend"></span><small>Netto</small><strong data-bind="netProfit">0</strong></div></div><div class="home-grid"><article class="card"><div class="card-title"><span class="nav-icon gold" data-icon="trophy"></span><h2>Toppliste</h2></div><div id="homeLeaderboard" class="leaderboard"></div></article><article class="card"><div class="card-title"><span class="nav-icon gold" data-icon="pulse"></span><h2>Nylig aktivitet</h2></div><div id="homeActivity" class="activity-list"><div class="activity"><i class="coin tiny">◆</i><p>Velkommen til VM Lounge 2026</p><time>Nå</time></div><div class="activity"><i class="coin tiny">◆</i><p>Startsaldo er satt til 5 000 VM Coins</p><time>Regel</time></div><div class="activity"><i class="coin tiny">◆</i><p>Maks innsats per kamp er 500 VM Coins</p><time>Regel</time></div></div></article></div></section>
       <section class="page" id="page-leaderboard"><div class="page-head"><div><small>Venneliga</small><h1>Leaderboard</h1></div></div><article class="card"><div id="leaderboardPageList" class="leaderboard big"></div></article></section>
 
       <section class="page" id="page-betting">
@@ -128,6 +85,7 @@
   <script src="js/firebase-config.js?v=5"></script>
   <script src="js/app.js?v=2"></script>
   <script src="js/core/boot.js?v=14"></script>
+  <script src="js/core/betting-action-rescue.js?v=2"></script>
   <script src="js/core/result-admin-fix.js?v=5"></script>
   <script src="js/core/result-quick-buttons.js?v=4"></script>
   <script src="js/core/result-selector-lock.js?v=1"></script>
