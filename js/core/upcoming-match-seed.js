@@ -1,5 +1,6 @@
 (()=>{
   const BATCH_SIZE=4;
+  const MATCH_END_GRACE_MS=115*60*1000;
   const fixtures=[
     {id:'wc2026-esp-ksa-2026-06-21',home:'Spania',away:'Saudi-Arabia',time:'2026-06-21T16:00:00Z',group:'Group H',odds:{home:1.32,draw:5.10,away:8.00}},
     {id:'wc2026-bel-iri-2026-06-21',home:'Belgia',away:'Iran',time:'2026-06-21T19:00:00Z',group:'Group G',odds:{home:1.70,draw:3.65,away:4.55}},
@@ -30,6 +31,7 @@
   let matches=[];
   let existingById=new Map();
   let existingByKey=new Map();
+  let fixtureById=new Map(fixtures.map(f=>[f.id,f]));
   let allowedIds=new Set();
   let unsub=null;
   let observer=null;
@@ -39,35 +41,37 @@
   const norm=s=>String(s||'').trim().toLowerCase();
   const key=m=>`${norm(m.home)}|${norm(m.away)}`;
   const hasResult=m=>!!(m&&String(m.result||'').trim());
+  const ended=v=>{const ms=Date.parse(v||'');return Number.isFinite(ms)&&Date.now()>=ms+MATCH_END_GRACE_MS};
+  const started=v=>{const ms=Date.parse(v||'');return Number.isFinite(ms)&&Date.now()>=ms};
 
   async function isAdmin(){
     if(!ready())return false;
     const u=firebase.auth().currentUser;
     const s=await firebase.firestore().collection('users').doc(u.uid).get();
-    return !!(s.exists&&s.data()?.isAdmin===true);
+    return !!(s.exists&&s.data()?.isAdmin===true)||String(u.email||'').toLowerCase()==='thomas93berland@gmail.com';
   }
 
   function rebuildMaps(docs){
     matches=docs||matches||[];
     existingById=new Map();
     existingByKey=new Map();
-    matches.forEach(m=>{
-      existingById.set(m.id,m);
-      existingByKey.set(key(m),m);
-    });
+    matches.forEach(m=>{existingById.set(m.id,m);existingByKey.set(key(m),m)});
   }
 
   function existingForFixture(f){return existingById.get(f.id)||existingByKey.get(key(f));}
+
+  function groupDone(group){
+    const last=group[group.length-1];
+    if(!last)return false;
+    const lastDoc=existingForFixture(last);
+    return hasResult(lastDoc)||ended(lastDoc?.time||last.time);
+  }
 
   function currentBatchIndex(){
     let batch=0;
     while(batch*BATCH_SIZE<fixtures.length){
       const group=fixtures.slice(batch*BATCH_SIZE,batch*BATCH_SIZE+BATCH_SIZE);
-      const last=group[group.length-1];
-      if(!last)break;
-      const lastDoc=existingForFixture(last);
-      if(hasResult(lastDoc))batch++;
-      else break;
+      if(groupDone(group))batch++; else break;
     }
     return Math.min(batch,Math.floor((fixtures.length-1)/BATCH_SIZE));
   }
@@ -79,11 +83,7 @@
 
   function computeAllowedIds(){
     allowedIds=new Set();
-    currentGroup().forEach(f=>{
-      allowedIds.add(f.id);
-      const doc=existingForFixture(f);
-      if(doc?.id)allowedIds.add(doc.id);
-    });
+    currentGroup().forEach(f=>{allowedIds.add(f.id);const doc=existingForFixture(f);if(doc?.id)allowedIds.add(doc.id)});
     return allowedIds;
   }
 
@@ -92,8 +92,17 @@
     if(!list)return;
     computeAllowedIds();
     [...list.querySelectorAll('.match-card')].forEach(card=>{
-      const id=card.querySelector('.odd[data-m]')?.dataset?.m||'';
-      card.style.display=allowedIds.has(id)?'':'none';
+      const btn=card.querySelector('.odd[data-m]');
+      const id=btn?.dataset?.m||'';
+      const doc=existingById.get(id);
+      const f=fixtureById.get(id)||fixtures.find(x=>existingForFixture(x)?.id===id);
+      const time=doc?.time||f?.time||'';
+      const visible=allowedIds.has(id)&&!hasResult(doc)&&!started(time);
+      card.style.display=visible?'':'none';
+      card.querySelectorAll('.odd[data-m]').forEach(b=>{
+        if(visible)b.removeAttribute('disabled');
+        else b.disabled=true;
+      });
     });
   }
 
@@ -106,10 +115,7 @@
 
   function listenMatches(){
     if(!ready()||unsub)return;
-    unsub=firebase.firestore().collection('matches').onSnapshot(s=>{
-      rebuildMaps(s.docs.map(d=>({id:d.id,...d.data()})));
-      decorateBoard();
-    },e=>console.warn('Upcoming match window listen failed',e));
+    unsub=firebase.firestore().collection('matches').onSnapshot(s=>{rebuildMaps(s.docs.map(d=>({id:d.id,...d.data()})));decorateBoard()},e=>console.warn('Upcoming match window listen failed',e));
   }
 
   async function seedCurrentBatch(){
@@ -117,21 +123,14 @@
     const db=firebase.firestore();
     const snap=await db.collection('matches').get();
     rebuildMaps(snap.docs.map(d=>({id:d.id,...d.data()})));
-    const group=currentGroup();
-    const missing=group.filter(f=>!existingForFixture(f));
-    if(!missing.length){decorateBoard();return;}
+    const missing=currentGroup().filter(f=>!existingForFixture(f));
+    if(!missing.length){decorateBoard();return}
     const batch=db.batch();
     const now=Date.now();
-    missing.forEach(f=>{
-      batch.set(db.collection('matches').doc(f.id),{
-        home:f.home,away:f.away,time:f.time,group:f.group,result:null,odds:f.odds,
-        seeded:true,seedGroup:'upcoming-vm-2026',createdAtMs:now,
-        createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-      },{merge:true});
-    });
+    missing.forEach(f=>batch.set(db.collection('matches').doc(f.id),{home:f.home,away:f.away,time:f.time,group:f.group,result:null,odds:f.odds,seeded:true,seedGroup:'upcoming-vm-2026',createdAtMs:now,createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true}));
     await batch.commit();
     toast(`${missing.length} kommende kamp(er) lagt ut for betting`);
-    setTimeout(()=>window.VM_RESULT_FIX?.refreshSelect?.(),800);
+    setTimeout(()=>window.VM_RESULT_FIX?.refreshSelect?.(),500);
   }
 
   function boot(){
@@ -139,13 +138,14 @@
     watchBoard();
     listenMatches();
     seedCurrentBatch().catch(e=>console.warn('Could not seed current match batch',e));
-    setTimeout(decorateBoard,500);
-    setTimeout(decorateBoard,1500);
+    setTimeout(decorateBoard,250);
+    setTimeout(decorateBoard,900);
+    setTimeout(decorateBoard,1800);
   }
 
   window.VM_UPCOMING_MATCH_SEED={boot,seedCurrentBatch,fixtures,currentGroup,computeAllowedIds};
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else setTimeout(boot,600);
-  try{firebase.auth().onAuthStateChanged(u=>{if(u)setTimeout(boot,1200)})}catch{}
-  document.addEventListener('click',e=>{if(e.target.closest?.('[data-page="betting"]'))setTimeout(boot,250)});
-  setInterval(decorateBoard,2500);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else setTimeout(boot,300);
+  try{firebase.auth().onAuthStateChanged(u=>{if(u)setTimeout(boot,700)})}catch{}
+  document.addEventListener('click',e=>{if(e.target.closest?.('[data-page="betting"]'))setTimeout(boot,160)});
+  setInterval(decorateBoard,1200);
 })();
