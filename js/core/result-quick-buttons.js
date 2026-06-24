@@ -21,7 +21,7 @@
     const email=(u.email||'').toLowerCase();
     try{
       const s=await firebase.firestore().collection('users').doc(u.uid).get();
-      admin=email===ADMIN_EMAIL || !!(s.exists&&s.data()?.isAdmin===true);
+      admin=email===ADMIN_EMAIL||!!(s.exists&&s.data()?.isAdmin===true);
     }catch(e){
       console.warn('Quick result admin check failed',e);
       admin=email===ADMIN_EMAIL;
@@ -62,7 +62,11 @@
   }
 
   function unresolved(ms){
-    return (ms||[]).filter(m=>!hasResult(m)&&isPast(m)).sort((a,b)=>Date.parse(a.time||'')-Date.parse(b.time||''));
+    return (ms||[]).filter(m=>!hasResult(m)).sort((a,b)=>{
+      const ap=isPast(a)?0:1,bp=isPast(b)?0:1;
+      if(ap!==bp)return ap-bp;
+      return Date.parse(a.time||'')-Date.parse(b.time||'');
+    });
   }
 
   function nativeInnerHtmlDescriptor(el){
@@ -96,8 +100,8 @@
     lockNativeSelect(select);
     const current=select.value;
     const list=unresolved(matches);
-    const html='<option value="">Velg ferdig kamp uten resultat</option>'+(
-      list.length?list.map(m=>`<option value="${esc(m.id)}">${esc(when(m.time))} · ${esc(title(m))} · slutt / mangler resultat</option>`).join(''):'<option value="" disabled>Ingen ferdige kamper uten resultat</option>'
+    const html='<option value="">Velg kamp uten resultat</option>'+(
+      list.length?list.map(m=>`<option value="${esc(m.id)}">${isPast(m)?'⏰':'🟢'} ${esc(when(m.time))} · ${esc(title(m))} · ${isPast(m)?'mangler resultat':'uten resultat'}</option>`).join(''):'<option value="" disabled>Ingen kamper uten resultat</option>'
     );
     if(select.innerHTML!==html||select.options.length<2){
       writingSelect=true;
@@ -124,13 +128,13 @@
     }
     const list=unresolved(matches);
     if(!list.length){
-      panel.innerHTML='<div class="quick-result-title">Rask resultatvelger</div><div class="quick-result-empty">Ingen ferdige kamper mangler resultat akkurat nå.</div>';
+      panel.innerHTML='<div class="quick-result-title">Rask resultatvelger</div><div class="quick-result-empty">Ingen kamper mangler resultat akkurat nå.</div>';
       return;
     }
-    panel.innerHTML='<div class="quick-result-title">Rask resultatvelger · kun sluttede kamper</div>'+list.map(m=>`
+    panel.innerHTML='<div class="quick-result-title">Rask resultatvelger · kun kamper uten resultat</div>'+list.map(m=>`
       <div class="quick-result-row">
         <b>${esc(title(m))}</b>
-        <small>${esc(when(m.time))} · slutt / mangler resultat</small>
+        <small>${isPast(m)?'Slutt / mangler resultat':'Ikke spilt ennå / uten resultat'} · ${esc(when(m.time))}</small>
         <div class="quick-result-buttons">
           <button type="button" data-quick-result="home" data-match-id="${esc(m.id)}">H: ${esc(m.home||'Hjemme')}</button>
           <button type="button" data-quick-result="draw" data-match-id="${esc(m.id)}">U: Uavgjort</button>
@@ -148,14 +152,7 @@
     const m=matches.find(x=>x.id===id)||{};
     const db=firebase.firestore();
     const ref=db.collection('matches').doc(id);
-    const payload={
-      result:String(result),
-      resultLabel:label(m,result),
-      status:'Ferdig',
-      updatedBy:firebase.auth().currentUser.uid,
-      updatedAtMs:Date.now(),
-      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-    };
+    const payload={result:String(result),resultLabel:label(m,result),status:'Ferdig',updatedBy:firebase.auth().currentUser.uid,updatedAtMs:Date.now(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
     try{
       await ref.set(payload,{merge:true});
       const check=await ref.get();
