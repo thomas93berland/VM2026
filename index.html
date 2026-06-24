@@ -63,135 +63,42 @@
       </div>
 
       <nav class="side-nav">
-        <button class="nav-item active" data-page="home">
-          <span class="nav-icon" data-icon="home"></span>
-          <span>Home</span>
-        </button>
-        <button class="nav-item" data-page="betting">
-          <span class="nav-icon" data-icon="ball"></span>
-          <span>Betting</span>
-        </button>
-        <a class="nav-item" href="tips.html">
-          <span class="nav-icon" data-icon="ticket"></span>
-          <span>Tips</span>
-        </a>
-        <button class="nav-item" data-page="leaderboard">
-          <span class="nav-icon" data-icon="medal"></span>
-          <span>Leaderboard</span>
-        </button>
-        <button class="nav-item" data-page="forum">
-          <span class="nav-icon" data-icon="users"></span>
-          <span>Forum</span>
-        </button>
-        <button class="nav-item" data-page="chat">
-          <span class="nav-icon" data-icon="chat"></span>
-          <span>Chat</span>
-        </button>
-        <button class="nav-item" data-page="profile">
-          <span class="nav-icon" data-icon="profile"></span>
-          <span>Profil</span>
-        </button>
-        <button class="nav-item" data-page="chess">
-          <span class="nav-icon" data-icon="knight"></span>
-          <span>Sjakk</span>
-        </button>
+        <button class="nav-item active" data-page="home"><span class="nav-icon" data-icon="home"></span><span>Home</span></button>
+        <button class="nav-item" data-page="betting"><span class="nav-icon" data-icon="ball"></span><span>Betting</span></button>
+        <a class="nav-item" href="tips.html"><span class="nav-icon" data-icon="ticket"></span><span>Tips</span></a>
+        <button class="nav-item" data-page="leaderboard"><span class="nav-icon" data-icon="medal"></span><span>Leaderboard</span></button>
+        <button class="nav-item" data-page="forum"><span class="nav-icon" data-icon="users"></span><span>Forum</span></button>
+        <button class="nav-item" data-page="chat"><span class="nav-icon" data-icon="chat"></span><span>Chat</span></button>
+        <button class="nav-item" data-page="profile"><span class="nav-icon" data-icon="profile"></span><span>Profil</span></button>
+        <button class="nav-item" data-page="chess"><span class="nav-icon" data-icon="knight"></span><span>Sjakk</span></button>
       </nav>
 
-      <div class="side-wallet">
-        <small>Din saldo</small>
-        <strong><span data-bind="coins">5 000</span></strong>
-        <span>VM Coins</span>
-      </div>
+      <div class="side-wallet"><small>Din saldo</small><strong><span data-bind="coins">5 000</span></strong><span>VM Coins</span></div>
     </aside>
 
     <main class="main">
       <header class="topbar">
         <button class="menu-toggle" id="menuToggle" aria-label="Åpne meny"><span></span><span></span><span></span></button>
-        <div class="mobile-brand">
-          <div class="brand-logo small" aria-hidden="true"><span class="nav-icon" data-icon="trophy"></span></div>
-          <div><strong>VM Lounge</strong><span>2026</span></div>
-        </div>
-        <div class="top-actions">
-          <div class="coin-pill"><i class="coin">◆</i><strong data-bind="coins">5 000</strong></div>
-          <button class="bell" aria-label="Varsler"><i></i></button>
-        </div>
+        <div class="mobile-brand"><div class="brand-logo small" aria-hidden="true"><span class="nav-icon" data-icon="trophy"></span></div><div><strong>VM Lounge</strong><span>2026</span></div></div>
+        <div class="top-actions"><div class="coin-pill"><i class="coin">◆</i><strong data-bind="coins">5 000</strong></div><button class="bell" aria-label="Varsler"><i></i></button></div>
       </header>
 
-      <div class="search">
-        <span class="nav-icon" data-icon="search"></span>
-        <input id="searchInput" placeholder="Søk etter kamp, spiller eller innlegg" />
-      </div>
+      <div class="search"><span class="nav-icon" data-icon="search"></span><input id="searchInput" placeholder="Søk etter kamp, spiller eller innlegg" /></div>
 
       <section class="page active" id="page-home">
-        <article class="hero">
-          <div class="hero-text">
-            <small>VM 2026</small>
-            <h1>Betting med <span>venner</span></h1>
-            <p>Spill med falsk valuta, bygg status på leaderboardet og følg VM-kampene sammen.</p>
-            <div class="hero-actions">
-              <button class="btn primary" data-go="betting">Se kamper</button>
-              <button class="btn secondary" data-go="leaderboard">Leaderboard</button>
-            </div>
-          </div>
-          <div class="hero-art" aria-hidden="true">
-            <div class="globe"></div>
-            <div class="trophy-shadow"></div>
-          </div>
-        </article>
-
-        <div class="stats-grid">
-          <div class="stat"><span class="nav-icon gold" data-icon="ticket"></span><small>Plasserte spill</small><strong data-bind="placedBets">0</strong></div>
-          <div class="stat"><span class="nav-icon gold" data-icon="medal"></span><small>Vinnprosent</small><strong data-bind="hitRate">0%</strong></div>
-          <div class="stat"><span class="coin">◆</span><small>VM Coins</small><strong data-bind="coins">5 000</strong></div>
-          <div class="stat profit"><span class="nav-icon gold" data-icon="trend"></span><small>Netto</small><strong data-bind="netProfit">0</strong></div>
-        </div>
-
-        <div class="home-grid">
-          <article class="card">
-            <div class="card-title">
-              <span class="nav-icon gold" data-icon="trophy"></span>
-              <h2>Toppliste</h2>
-            </div>
-            <div id="homeLeaderboard" class="leaderboard"></div>
-          </article>
-
-          <article class="card">
-            <div class="card-title">
-              <span class="nav-icon gold" data-icon="pulse"></span>
-              <h2>Nylig aktivitet</h2>
-            </div>
-            <div id="homeActivity" class="activity-list">
-              <div class="activity"><i class="coin tiny">◆</i><p>Velkommen til VM Lounge 2026</p><time>Nå</time></div>
-              <div class="activity"><i class="coin tiny">◆</i><p>Startsaldo er satt til 5 000 VM Coins</p><time>Regel</time></div>
-              <div class="activity"><i class="coin tiny">◆</i><p>Maks innsats per kamp er 500 VM Coins</p><time>Regel</time></div>
-            </div>
-          </article>
-        </div>
+        <article class="hero"><div class="hero-text"><small>VM 2026</small><h1>Betting med <span>venner</span></h1><p>Spill med falsk valuta, bygg status på leaderboardet og følg VM-kampene sammen.</p><div class="hero-actions"><button class="btn primary" data-go="betting">Se kamper</button><button class="btn secondary" data-go="leaderboard">Leaderboard</button></div></div><div class="hero-art" aria-hidden="true"><div class="globe"></div><div class="trophy-shadow"></div></div></article>
+        <div class="stats-grid"><div class="stat"><span class="nav-icon gold" data-icon="ticket"></span><small>Plasserte spill</small><strong data-bind="placedBets">0</strong></div><div class="stat"><span class="nav-icon gold" data-icon="medal"></span><small>Vinnprosent</small><strong data-bind="hitRate">0%</strong></div><div class="stat"><span class="coin">◆</span><small>VM Coins</small><strong data-bind="coins">5 000</strong></div><div class="stat profit"><span class="nav-icon gold" data-icon="trend"></span><small>Netto</small><strong data-bind="netProfit">0</strong></div></div>
+        <div class="home-grid"><article class="card"><div class="card-title"><span class="nav-icon gold" data-icon="trophy"></span><h2>Toppliste</h2></div><div id="homeLeaderboard" class="leaderboard"></div></article><article class="card"><div class="card-title"><span class="nav-icon gold" data-icon="pulse"></span><h2>Nylig aktivitet</h2></div><div id="homeActivity" class="activity-list"><div class="activity"><i class="coin tiny">◆</i><p>Velkommen til VM Lounge 2026</p><time>Nå</time></div><div class="activity"><i class="coin tiny">◆</i><p>Startsaldo er satt til 5 000 VM Coins</p><time>Regel</time></div><div class="activity"><i class="coin tiny">◆</i><p>Maks innsats per kamp er 500 VM Coins</p><time>Regel</time></div></div></article></div>
       </section>
 
-      <section class="page" id="page-leaderboard">
-        <div class="page-head"><div><small>Venneliga</small><h1>Leaderboard</h1></div></div>
-        <article class="card"><div id="leaderboardPageList" class="leaderboard big"></div></article>
-      </section>
+      <section class="page" id="page-leaderboard"><div class="page-head"><div><small>Venneliga</small><h1>Leaderboard</h1></div></div><article class="card"><div id="leaderboardPageList" class="leaderboard big"></div></article></section>
 
       <section class="page" id="page-betting">
         <div class="page-head"><div><small>VM-kamper</small><h1>VM Betting</h1></div><button class="btn secondary compact" id="clearSlipBtn">Tøm slip</button></div>
         <div class="chips"><button class="chip active">VM 2026</button><button class="chip">Populære</button><button class="chip">I dag</button><button class="chip">Favoritter</button></div>
         <article class="card rules-card"><div class="rules-grid"><div><small>Startsaldo</small><strong>5 000</strong><span>VM Coins</span></div><div><small>Maks innsats</small><strong>500</strong><span>per kamp</span></div><div><small>Vinnprosent</small><strong>Vunne / ferdige</strong><span>spill</span></div><div><small>Sortering</small><strong>VM Coins</strong><span>leaderboard</span></div></div></article>
-        <div class="betting-layout">
-          <div class="match-list" id="matchList"></div>
-          <aside class="card bet-slip" id="betSlip">
-            <div class="card-title split"><div><span class="nav-icon gold" data-icon="ticket"></span><h2>Bet Slip</h2><em id="slipCount">0</em></div></div>
-            <div id="slipEmpty" class="empty">Velg odds på en kamp for å lage kupong.</div>
-            <div id="slipContent" hidden><div id="slipItems"></div><label class="field-label" for="stakeInput">Innsats <small class="field-hint">maks 500 per kamp</small></label><input id="stakeInput" class="input" type="number" min="10" max="500" step="10" value="100" /><div class="summary-line"><span>Total odds</span><b id="totalOdds">1.00</b></div><div class="summary-line"><span>Mulig gevinst</span><b class="green" id="possibleWin">0</b></div><button class="btn primary full" id="placeBetBtn">Plasser spill</button></div>
-          </aside>
-        </div>
-        <details class="card admin-card admin-only" id="adminPanel">
-          <summary>Admin: kampstyring og resultater</summary>
-          <p class="admin-note">Kun Thomas kan legge inn kamper og resultater i denne demoen.</p>
-          <form id="matchForm" class="admin-form"><input class="input" name="home" placeholder="Hjemmelag" required /><input class="input" name="away" placeholder="Bortelag" required /><input class="input" name="time" type="datetime-local" required /><input class="input" name="homeOdds" type="number" step="0.01" value="2.10" required /><input class="input" name="drawOdds" type="number" step="0.01" value="3.20" required /><input class="input" name="awayOdds" type="number" step="0.01" value="2.90" required /><button class="btn primary">Legg til kamp</button></form>
-          <form id="resultForm" class="admin-form result-form"><select class="input" id="resultMatchSelect" name="matchId" required></select><select class="input" name="result" required><option value="">Velg resultat</option><option value="home">Hjemmeseier</option><option value="draw">Uavgjort</option><option value="away">Borteseier</option></select><button class="btn primary">Legg inn resultat</button></form>
-        </details>
+        <div class="betting-layout"><div class="match-list" id="matchList"></div><aside class="card bet-slip" id="betSlip"><div class="card-title split"><div><span class="nav-icon gold" data-icon="ticket"></span><h2>Bet Slip</h2><em id="slipCount">0</em></div></div><div id="slipEmpty" class="empty">Velg odds på en kamp for å lage kupong.</div><div id="slipContent" hidden><div id="slipItems"></div><label class="field-label" for="stakeInput">Innsats <small class="field-hint">maks 500 per kamp</small></label><input id="stakeInput" class="input" type="number" min="10" max="500" step="10" value="100" /><div class="summary-line"><span>Total odds</span><b id="totalOdds">1.00</b></div><div class="summary-line"><span>Mulig gevinst</span><b class="green" id="possibleWin">0</b></div><button class="btn primary full" id="placeBetBtn">Plasser spill</button></div></aside></div>
+        <details class="card admin-card admin-only" id="adminPanel"><summary>Admin: kampstyring og resultater</summary><p class="admin-note">Kun Thomas kan legge inn kamper og resultater i denne demoen.</p><form id="matchForm" class="admin-form"><input class="input" name="home" placeholder="Hjemmelag" required /><input class="input" name="away" placeholder="Bortelag" required /><input class="input" name="time" type="datetime-local" required /><input class="input" name="homeOdds" type="number" step="0.01" value="2.10" required /><input class="input" name="drawOdds" type="number" step="0.01" value="3.20" required /><input class="input" name="awayOdds" type="number" step="0.01" value="2.90" required /><button class="btn primary">Legg til kamp</button></form><form id="resultForm" class="admin-form result-form"><select class="input" id="resultMatchSelect" name="matchId" required></select><select class="input" name="result" required><option value="">Velg resultat</option><option value="home">Hjemmeseier</option><option value="draw">Uavgjort</option><option value="away">Borteseier</option></select><button class="btn primary">Legg inn resultat</button></form></details>
         <article class="card admin-locked" id="adminLocked" hidden><strong>Admin låst</strong><p>Kun Thomas kan legge inn kampresultater.</p></article>
       </section>
 
@@ -222,7 +129,8 @@
   <script src="js/app.js?v=2"></script>
   <script src="js/core/boot.js?v=14"></script>
   <script src="js/core/result-admin-fix.js?v=5"></script>
-  <script src="js/core/result-quick-buttons.js?v=3"></script>
+  <script src="js/core/result-quick-buttons.js?v=4"></script>
+  <script src="js/core/result-selector-lock.js?v=1"></script>
   <script src="js/core/rank-titles.js?v=3"></script>
   <script src="js/vm-match-cards.js?v=7"></script>
 </body>
