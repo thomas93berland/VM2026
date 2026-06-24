@@ -4,6 +4,7 @@
   let unsub=null;
   let bound=false;
   let saving=false;
+  let writingSelect=false;
   const ADMIN_EMAIL='thomas93berland@gmail.com';
   const ready=()=>{try{return window.firebase&&firebase.auth&&firebase.firestore&&firebase.auth().currentUser}catch{return false}};
   const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
@@ -32,11 +33,7 @@
   function openAdminUi(){
     if(!admin)return;
     const panel=document.getElementById('adminPanel');
-    if(panel){
-      panel.hidden=false;
-      panel.style.display='block';
-      panel.classList.remove('admin-locked');
-    }
+    if(panel){panel.hidden=false;panel.style.display='block';panel.classList.remove('admin-locked')}
     const locked=document.getElementById('adminLocked');
     if(locked)locked.hidden=true;
     document.querySelectorAll('.admin-only').forEach(el=>{el.hidden=false;el.style.display='block'});
@@ -47,7 +44,9 @@
     const style=document.createElement('style');
     style.id='quickResultButtonsCss';
     style.textContent=`
-      #resultForm .input{min-height:46px!important;}
+      #resultForm{position:relative!important;z-index:20!important;pointer-events:auto!important;}
+      #resultForm .input{min-height:48px!important;pointer-events:auto!important;position:relative!important;z-index:30!important;}
+      #resultMatchSelect{background:rgba(3,10,22,.90)!important;color:#ffd77a!important;border-color:rgba(255,216,122,.42)!important;font-weight:950!important;}
       .quick-result-panel{display:grid!important;gap:10px!important;margin-top:14px!important;padding:12px!important;border-radius:18px!important;background:rgba(3,10,22,.52)!important;border:1px solid rgba(255,216,122,.16)!important;position:relative!important;z-index:5!important;pointer-events:auto!important;}
       .quick-result-title{color:#ffd77a!important;font-weight:1000!important;font-size:13px!important;letter-spacing:.04em!important;text-transform:uppercase!important;}
       .quick-result-empty{padding:12px!important;border-radius:14px!important;background:rgba(255,255,255,.045)!important;color:rgba(235,238,247,.78)!important;font-weight:850!important;line-height:1.35!important;}
@@ -63,18 +62,51 @@
   }
 
   function unresolved(ms){
-    return (ms||[])
-      .filter(m=>!hasResult(m)&&isPast(m))
-      .sort((a,b)=>Date.parse(a.time||'')-Date.parse(b.time||''));
+    return (ms||[]).filter(m=>!hasResult(m)&&isPast(m)).sort((a,b)=>Date.parse(a.time||'')-Date.parse(b.time||''));
+  }
+
+  function nativeInnerHtmlDescriptor(el){
+    let p=el;
+    while(p){
+      const d=Object.getOwnPropertyDescriptor(p,'innerHTML');
+      if(d?.get&&d?.set)return d;
+      p=Object.getPrototypeOf(p);
+    }
+    return null;
+  }
+
+  function lockNativeSelect(select){
+    if(!select||select.dataset.quickResultLocked==='yes')return;
+    const d=nativeInnerHtmlDescriptor(select);
+    if(!d)return;
+    Object.defineProperty(select,'innerHTML',{
+      configurable:true,
+      get(){return d.get.call(this)},
+      set(v){
+        if(writingSelect){d.set.call(this,v);return;}
+        setTimeout(syncNativeSelect,60);
+      }
+    });
+    select.dataset.quickResultLocked='yes';
   }
 
   function syncNativeSelect(){
     const select=document.getElementById('resultMatchSelect');
     if(!select)return;
+    lockNativeSelect(select);
+    const current=select.value;
     const list=unresolved(matches);
-    select.innerHTML='<option value="">Velg ferdig kamp uten resultat</option>'+(
+    const html='<option value="">Velg ferdig kamp uten resultat</option>'+(
       list.length?list.map(m=>`<option value="${esc(m.id)}">${esc(when(m.time))} · ${esc(title(m))} · slutt / mangler resultat</option>`).join(''):'<option value="" disabled>Ingen ferdige kamper uten resultat</option>'
     );
+    if(select.innerHTML!==html||select.options.length<2){
+      writingSelect=true;
+      try{
+        select.innerHTML=html;
+        if(current&&[...select.options].some(o=>o.value===current))select.value=current;
+      }finally{writingSelect=false;}
+    }
+    select.disabled=false;
   }
 
   function render(){
@@ -124,13 +156,11 @@
       updatedAtMs:Date.now(),
       updatedAt:firebase.firestore.FieldValue.serverTimestamp()
     };
-
     try{
       await ref.set(payload,{merge:true});
       const check=await ref.get();
       const saved=check.exists?check.data().result:null;
       if(String(saved)!==String(result))throw new Error('Resultatet ble ikke lagret. Sjekk Firestore-regler eller innlogging.');
-
       matches=matches.map(x=>x.id===id?{...x,...payload}:x);
       render();
       toast(`Resultat lagt inn: ${label(m,result)} ✅`);
@@ -152,6 +182,15 @@
       e.preventDefault();
       e.stopImmediatePropagation();
       try{await saveResult(btn.dataset.matchId,btn.dataset.quickResult,btn)}
+      catch(err){console.error(err);toast((err?.code?err.code+': ':'')+(err?.message||'Kunne ikke legge inn resultat'))}
+    },true);
+    document.addEventListener('submit',async e=>{
+      const form=e.target.closest?.('#resultForm');
+      if(!form)return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      const fd=new FormData(form);
+      try{await saveResult(fd.get('matchId'),fd.get('result'))}
       catch(err){console.error(err);toast((err?.code?err.code+': ':'')+(err?.message||'Kunne ikke legge inn resultat'))}
     },true);
   }
@@ -179,6 +218,6 @@
   bind();
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else setTimeout(boot,300);
   try{firebase.auth().onAuthStateChanged(u=>{if(u)setTimeout(boot,500)})}catch{}
-  document.addEventListener('click',e=>{if(e.target.closest?.('[data-page="betting"]'))setTimeout(boot,250)});
+  document.addEventListener('click',e=>{if(e.target.closest?.('[data-page="betting"],#resultForm,#resultMatchSelect,#adminPanel'))setTimeout(boot,250)});
   setInterval(()=>{if(admin)render()},3000);
 })();
