@@ -13,6 +13,7 @@
   let admin=false;
   let lastSelectHtml='';
   let lock=false;
+  let matchMap=new Map();
 
   async function adminCheck(){
     if(!ready())return false;
@@ -35,14 +36,13 @@
 
   async function loadMatches(){
     const s=await firebase.firestore().collection('matches').get();
-    return s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(a.time||'').localeCompare(String(b.time||'')));
+    const arr=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(a.time||'').localeCompare(String(b.time||'')));
+    matchMap=new Map(arr.map(m=>[m.id,m]));
+    return arr;
   }
 
   function unlockSelect(select){
     if(!select)return;
-    try{
-      if(Object.prototype.hasOwnProperty.call(select,'innerHTML')) delete select.innerHTML;
-    }catch(e){console.warn('Could not unlock selector innerHTML',e)}
     select.dataset.resultSelectorLocked='no';
     select.dataset.quickResultLocked='no';
     select.disabled=false;
@@ -102,8 +102,79 @@
     }finally{lock=false;}
   }
 
+  async function enableOpenOdds(){
+    if(!ready())return;
+    if(!matchMap.size)await loadMatches();
+    document.querySelectorAll('#matchList .match-card').forEach(card=>{
+      const first=card.querySelector('.odd[data-m]');
+      if(!first)return;
+      const id=first.dataset.m;
+      const m=matchMap.get(id);
+      const buttons=[...card.querySelectorAll('.odd[data-m][data-p]')];
+      if(m&&hasResult(m)){
+        card.classList.add('safe-finished');
+        card.classList.remove('safe-open','safe-waiting-result');
+        buttons.forEach(b=>b.disabled=true);
+        return;
+      }
+      card.classList.add('safe-open');
+      card.classList.remove('safe-finished','safe-waiting-result');
+      card.querySelector('.safe-match-status')?.remove();
+      buttons.forEach(b=>{
+        b.disabled=false;
+        b.style.pointerEvents='auto';
+        b.style.cursor='pointer';
+        b.removeAttribute('aria-disabled');
+      });
+    });
+  }
+
   function selectedButtons(){
     return [...document.querySelectorAll('#matchList .odd.selected[data-m][data-p]')].filter(b=>!b.disabled&&b.offsetParent!==null);
+  }
+
+  function updateSlipDom(){
+    const buttons=selectedButtons();
+    const count=document.getElementById('slipCount');
+    const empty=document.getElementById('slipEmpty');
+    const content=document.getElementById('slipContent');
+    const items=document.getElementById('slipItems');
+    const stakeInput=document.getElementById('stakeInput');
+    const totalOddsEl=document.getElementById('totalOdds');
+    const winEl=document.getElementById('possibleWin');
+    if(count)count.textContent=String(buttons.length);
+    if(empty)empty.hidden=buttons.length>0;
+    if(content)content.hidden=buttons.length===0;
+    const rows=buttons.map(b=>{
+      const card=b.closest('.match-card');
+      const teams=[...card?.querySelectorAll('.teams strong')||[]].map(x=>x.textContent.trim());
+      const titleText=teams.length>=2?`${teams[0]} – ${teams[1]}`:'Valgt kamp';
+      const labelText=b.querySelector('small')?.textContent?.trim()||'Valg';
+      const oddText=b.querySelector('strong')?.textContent?.trim()||'1.00';
+      return {titleText,labelText,odd:Number(oddText)||1};
+    });
+    if(items)items.innerHTML=rows.map(s=>`<div class="slip-item"><div><b>${esc(s.labelText)}</b><small>${esc(s.titleText)}</small></div><b>${s.odd.toFixed(2)}</b></div>`).join('');
+    const stake=Math.min(Number(stakeInput?.value||0)||0,Number(window.VM_RULES?.MAX_STAKE||500));
+    const total=rows.reduce((a,s)=>a*Number(s.odd||1),1);
+    if(totalOddsEl)totalOddsEl.textContent=total.toFixed(2);
+    if(winEl)winEl.textContent=N(Math.floor(stake*total));
+  }
+
+  async function selectOdd(e){
+    const btn=e.target?.closest?.('#matchList .odd[data-m][data-p]');
+    if(!btn)return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    await enableOpenOdds();
+    if(btn.disabled)return toast('Denne kampen er låst');
+    const card=btn.closest('.match-card');
+    const id=btn.dataset.m;
+    const m=matchMap.get(id);
+    if(m&&hasResult(m))return toast(`${title(m)} har allerede resultat`);
+    const wasSelected=btn.classList.contains('selected');
+    card?.querySelectorAll('.odd[data-m][data-p]').forEach(x=>x.classList.remove('selected'));
+    if(!wasSelected)btn.classList.add('selected');
+    updateSlipDom();
   }
 
   async function placeBet(e){
@@ -115,6 +186,7 @@
     lock=true;
     try{
       if(!ready())return toast('Logg inn først');
+      await enableOpenOdds();
       const u=firebase.auth().currentUser;
       const userRef=firebase.firestore().collection('users').doc(u.uid);
       const userSnap=await userRef.get();
@@ -143,24 +215,11 @@
       const possibleWin=Math.floor(stake*total);
       const batch=firebase.firestore().batch();
       const betRef=firebase.firestore().collection('bets').doc();
-      batch.set(betRef,{
-        userId:u.uid,
-        userName:profile.name||u.displayName||u.email?.split('@')[0]||'Spiller',
-        selections,
-        stake,
-        totalOdds:Number(total.toFixed(2)),
-        possibleWin,
-        status:'Aktiv',
-        createdAtMs:Date.now(),
-        createdAt:firebase.firestore.FieldValue.serverTimestamp()
-      });
-      batch.update(userRef,{
-        coins:firebase.firestore.FieldValue.increment(-stake),
-        placedBets:firebase.firestore.FieldValue.increment(1),
-        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-      });
+      batch.set(betRef,{userId:u.uid,userName:profile.name||u.displayName||u.email?.split('@')[0]||'Spiller',selections,stake,totalOdds:Number(total.toFixed(2)),possibleWin,status:'Aktiv',createdAtMs:Date.now(),createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+      batch.update(userRef,{coins:firebase.firestore.FieldValue.increment(-stake),placedBets:firebase.firestore.FieldValue.increment(1),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
       await batch.commit();
       document.querySelectorAll('#matchList .odd.selected').forEach(x=>x.classList.remove('selected'));
+      updateSlipDom();
       toast(`Spill plassert · mulig gevinst ${N(possibleWin)} VM Coins`);
     }catch(err){
       console.error('Bet rescue failed',err);
@@ -171,13 +230,16 @@
   function boot(){
     if(!ready())return;
     adminCheck().then(fillResultSelector).catch(console.warn);
+    loadMatches().then(()=>{enableOpenOdds();updateSlipDom();}).catch(console.warn);
   }
 
   document.addEventListener('submit',submitResult,true);
+  document.addEventListener('click',selectOdd,true);
   document.addEventListener('click',placeBet,true);
-  document.addEventListener('click',e=>{if(e.target.closest?.('[data-page="betting"],#adminPanel,#resultForm,#resultMatchSelect,#placeBetBtn'))setTimeout(boot,220)},true);
-  window.VM_BETTING_ACTION_RESCUE={boot,fillResultSelector,placeBet,adminCheck};
+  document.addEventListener('input',e=>{if(e.target?.id==='stakeInput')updateSlipDom();},true);
+  document.addEventListener('click',e=>{if(e.target.closest?.('[data-page="betting"],#matchList,#adminPanel,#resultForm,#resultMatchSelect,#placeBetBtn'))setTimeout(boot,220)},true);
+  window.VM_BETTING_ACTION_RESCUE={boot,fillResultSelector,placeBet,adminCheck,enableOpenOdds,updateSlipDom};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else setTimeout(boot,600);
   try{firebase.auth().onAuthStateChanged(u=>{if(u)setTimeout(boot,800)})}catch{}
-  setInterval(fillResultSelector,1600);
+  setInterval(boot,1600);
 })();
