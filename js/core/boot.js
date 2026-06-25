@@ -28,16 +28,11 @@
     css.id='safeMatchStatusCss';
     css.textContent=`
       #matchList .match-card{position:relative!important;}
-      #matchList .safe-match-status{
-        display:inline-flex!important;align-items:center!important;justify-content:center!important;
-        width:max-content!important;margin:8px auto 2px!important;padding:4px 9px!important;
-        border-radius:999px!important;font-size:11px!important;font-weight:900!important;letter-spacing:.02em!important;
-        border:1px solid rgba(255,255,255,.12)!important;background:rgba(255,255,255,.06)!important;color:rgba(245,247,251,.82)!important;
-      }
+      #matchList .safe-match-status{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:max-content!important;margin:8px auto 2px!important;padding:4px 9px!important;border-radius:999px!important;font-size:11px!important;font-weight:900!important;letter-spacing:.02em!important;border:1px solid rgba(255,255,255,.12)!important;background:rgba(255,255,255,.06)!important;color:rgba(245,247,251,.82)!important;}
       #matchList .safe-match-status.waiting{background:rgba(255,191,73,.13)!important;border-color:rgba(255,191,73,.32)!important;color:#ffd27a!important;}
       #matchList .safe-match-status.done{background:rgba(79,225,159,.12)!important;border-color:rgba(79,225,159,.28)!important;color:#7ff0bd!important;}
-      #matchList .match-card.safe-waiting-result .odd,
       #matchList .match-card.safe-finished .odd{opacity:.48!important;filter:saturate(.7)!important;cursor:not-allowed!important;}
+      #matchList .match-card.safe-open .odd{opacity:1!important;filter:none!important;cursor:pointer!important;pointer-events:auto!important;}
     `;
     document.head.appendChild(css);
   }
@@ -96,14 +91,8 @@
         return;
       }
 
-      if(isPastTime(info.time)){
-        card.classList.add('safe-waiting-result');
-        odds.forEach(b=>b.disabled=true);
-        statusNode(card,'Venter resultat','waiting');
-        return;
-      }
-
       card.classList.add('safe-open');
+      odds.forEach(b=>b.disabled=false);
       const existing=card.querySelector('.safe-match-status');
       if(existing)existing.remove();
     }catch(e){console.warn('Match status update skipped',e)}
@@ -158,12 +147,9 @@
       if(info.result!==sel.pick)lost=true;
     }
 
-    if(hasMissing){
-      return await voidBetForDeletedMatch(betId,bet);
-    }
+    if(hasMissing)return await voidBetForDeletedMatch(betId,bet);
 
     const betRef=db.collection('bets').doc(betId);
-
     if(pendingFuture&&!lost)return {settled:false,waiting:false,voided:false};
 
     if(pendingPast&&!lost){
