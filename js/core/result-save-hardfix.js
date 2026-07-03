@@ -1,5 +1,5 @@
 (()=>{
-  let admin=false,bound=false,lastHtml='';
+  let admin=false,bound=false,lastHtml='',saving=false;
   const $=id=>document.getElementById(id);
   const ready=()=>{try{return window.firebase&&firebase.auth&&firebase.firestore&&firebase.auth().currentUser}catch{return false}};
   const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
@@ -14,6 +14,7 @@
     if(!p){p=document.createElement('p');p.id='resultHardfixStatus';p.className='admin-note';form.insertAdjacentElement('afterend',p)}
     p.textContent=msg;
     p.style.color=kind==='bad'?'#ffb0b0':kind==='good'?'#a9ffd0':'#ffd77a';
+    p.style.fontWeight='900';
   }
 
   async function checkAdmin(){
@@ -50,7 +51,7 @@
     forceAdminUi();
     if(!admin){
       select.innerHTML='<option value="">Mangler admin-tilgang</option>';
-      status('Du er innlogget, men Firestore-brukeren din mangler isAdmin:true. Resultat kan ikke lagres før admin er aktiv.', 'bad');
+      status('Du er innlogget, men brukeren din mangler isAdmin:true i Firestore. Resultat kan ikke lagres før admin er aktiv.', 'bad');
       return;
     }
     try{
@@ -71,17 +72,20 @@
   }
 
   async function saveResult(form){
-    if(!ready())return toast('Logg inn først');
-    if(!(await checkAdmin())){
-      status('Stoppet: users/{uid}.isAdmin er ikke true. Firestore vil nekte lagring.', 'bad');
-      return toast('Mangler admin-tilgang');
-    }
-    forceAdminUi();
-    const fd=new FormData(form);
-    const matchId=String(fd.get('matchId')||'').trim();
-    const result=String(fd.get('result')||'').trim();
-    if(!matchId||!result)return toast('Velg kamp og resultat');
+    if(saving)return;
+    saving=true;
     try{
+      if(!ready()){toast('Logg inn først');return}
+      if(!(await checkAdmin())){
+        status('Stoppet: users/{uid}.isAdmin er ikke true. Firestore vil nekte lagring.', 'bad');
+        toast('Mangler admin-tilgang');
+        return;
+      }
+      forceAdminUi();
+      const fd=new FormData(form);
+      const matchId=String(fd.get('matchId')||'').trim();
+      const result=String(fd.get('result')||'').trim();
+      if(!matchId||!result){toast('Velg kamp og resultat');status('Velg både kamp og H/U/B-resultat før du lagrer.','bad');return}
       status('Lagrer resultat...');
       const ref=firebase.firestore().collection('matches').doc(matchId);
       await ref.set({result,status:'Ferdig',updatedAtMs:Date.now(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
@@ -90,7 +94,7 @@
       form.reset();
       lastHtml='';
       toast('Resultat lagret ✅');
-      status('Resultat lagret. Bets oppdateres automatisk.', 'good');
+      status('Resultat lagret og bekreftet i Firestore. Bets oppdateres automatisk.', 'good');
       setTimeout(refreshSelect,250);
       setTimeout(()=>window.VM_SAFE_BOOT?.settleBets?.({id:matchId,result}),700);
       setTimeout(()=>window.VM_UPCOMING_MATCH_SEED?.boot?.(),1200);
@@ -100,15 +104,26 @@
       if(e?.code==='permission-denied')msg+=' — Firestore nekter. Sjekk at bruker-dokumentet ditt har isAdmin:true.';
       status(msg,'bad');
       toast(msg);
+    }finally{
+      saving=false;
     }
   }
 
   function bind(){
     const form=$('resultForm');
-    if(!form||bound)return;
+    if(!form)return;
+    const btn=form.querySelector('button[type="submit"],button:not([type])');
+    if(bound)return;
     bound=true;
     form.addEventListener('submit',e=>{e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();saveResult(form)},true);
     document.addEventListener('submit',e=>{if(e.target===$('resultForm')){e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();saveResult(e.target)}},true);
+    btn?.addEventListener('click',e=>{
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      saveResult(form);
+    },true);
+    status('Resultat-lagring er klar. Velg kamp + resultat og trykk Legg inn resultat.');
   }
 
   async function boot(){
