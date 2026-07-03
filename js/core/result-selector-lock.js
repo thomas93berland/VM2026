@@ -53,7 +53,7 @@
   }
 
   function nativeInnerHtmlDescriptor(el){
-    let p=el;
+    let p=Object.getPrototypeOf(el);
     while(p){
       const d=Object.getOwnPropertyDescriptor(p,'innerHTML');
       if(d?.get&&d?.set)return d;
