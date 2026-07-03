@@ -1,6 +1,6 @@
 (()=>{
-  if(window.VM_RESULT_MOBILE_HOTFIX_LOADED)return;
-  window.VM_RESULT_MOBILE_HOTFIX_LOADED=true;
+  if(window.VM_RESULT_MOBILE_HOTFIX_V2)return;
+  window.VM_RESULT_MOBILE_HOTFIX_V2=true;
 
   let admin=false;
   let matches=[];
@@ -24,7 +24,7 @@
 
   function withTimeout(promise,ms,label){
     let timer;
-    const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error((label||'Operasjon')+' tok for lang tid. Sjekk nett/admin og prøv igjen.')),ms)});
+    const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error((label||'Operasjon')+' tok for lang tid. Prøv refresh og lagre igjen.')),ms)});
     return Promise.race([promise,timeout]).finally(()=>clearTimeout(timer));
   }
 
@@ -33,7 +33,7 @@
     const u=firebase.auth().currentUser;
     const email=String(u?.email||'').toLowerCase();
     try{
-      const s=await withTimeout(firebase.firestore().collection('users').doc(u.uid).get(),9000,'Admin-sjekk');
+      const s=await withTimeout(firebase.firestore().collection('users').doc(u.uid).get(),6000,'Admin-sjekk');
       admin=!!(s.exists&&s.data()?.isAdmin===true)||email===ADMIN_EMAIL;
     }catch(e){
       console.warn('Mobile result admin check failed',e);
@@ -51,9 +51,8 @@
     style.id='vmResultMobileHotfixCss';
     style.textContent=`
       #resultForm{display:none!important;}
-      #safeResultPicker,#vmResultButtonPanel,#simpleResultBox{display:none!important;}
-      #mobileResultBox{margin:16px 0 0!important;padding:15px!important;border-radius:20px!important;background:linear-gradient(145deg,rgba(15,25,43,.92),rgba(3,10,22,.97))!important;border:1px solid rgba(255,216,122,.42)!important;box-shadow:0 14px 34px rgba(0,0,0,.30)!important;position:relative!important;z-index:160!important;overflow:visible!important;}
-      #mobileResultBox h3{margin:0 0 7px!important;color:#ffd77a!important;font-size:17px!important;font-weight:1000!important;letter-spacing:.01em!important;}
+      #mobileResultBox{margin:16px 0 130px!important;padding:15px!important;border-radius:20px!important;background:linear-gradient(145deg,rgba(15,25,43,.92),rgba(3,10,22,.97))!important;border:1px solid rgba(255,216,122,.42)!important;box-shadow:0 14px 34px rgba(0,0,0,.30)!important;position:relative!important;z-index:160!important;overflow:visible!important;}
+      #mobileResultBox h3{margin:0 0 7px!important;color:#ffd77a!important;font-size:17px!important;font-weight:1000!important;}
       #mobileResultBox .result-help{margin:0 0 12px!important;color:rgba(235,238,247,.76)!important;font-size:12px!important;font-weight:850!important;line-height:1.38!important;}
       #mobileResultBox .result-list{display:grid!important;gap:8px!important;max-height:330px!important;overflow:auto!important;padding:0 3px 2px 0!important;margin-bottom:13px!important;-webkit-overflow-scrolling:touch!important;}
       #mobileResultBox .result-match-btn{width:100%!important;text-align:left!important;border-radius:16px!important;border:1px solid rgba(255,255,255,.11)!important;background:rgba(255,255,255,.055)!important;color:#fff!important;padding:11px 12px!important;display:grid!important;gap:3px!important;touch-action:manipulation!important;position:relative!important;z-index:170!important;cursor:pointer!important;}
@@ -70,7 +69,7 @@
       #mobileResultBox .result-status.good{color:#a9ffd0!important;}
       #mobileResultBox .result-status.bad{color:#ffb0b0!important;}
       #mobileResultBox .result-empty{padding:12px!important;border-radius:14px!important;background:rgba(255,255,255,.045)!important;border:1px dashed rgba(255,255,255,.14)!important;color:rgba(235,238,247,.78)!important;font-weight:850!important;}
-      @media(max-width:430px){#mobileResultBox{padding:13px!important;border-radius:18px!important;margin-bottom:104px!important}#mobileResultBox .result-picks{grid-template-columns:1fr!important}#mobileResultBox .result-list{max-height:340px!important}}
+      @media(max-width:430px){#mobileResultBox{padding:13px!important;border-radius:18px!important;margin-bottom:145px!important}#mobileResultBox .result-picks{grid-template-columns:1fr!important}#mobileResultBox .result-list{max-height:340px!important}}
     `;
     document.head.appendChild(style);
   }
@@ -82,16 +81,8 @@
     el.className='result-status '+kind;
   }
 
-  function removeDuplicateBoxes(){
-    $('safeResultPicker')?.remove();
-    $('vmResultButtonPanel')?.remove();
-    $('simpleResultBox')?.remove();
-    $('simpleResultCss')?.remove();
-  }
-
   function ensureBox(){
     addCss();
-    removeDuplicateBoxes();
     const panel=$('adminPanel');
     if(!panel)return null;
     const form=$('resultForm');
@@ -118,28 +109,14 @@
   }
 
   function unresolved(){
-    return matches
-      .filter(m=>!hasResult(m))
-      .sort((a,b)=>{
-        const as=started(a)?0:1,bs=started(b)?0:1;
-        return (as-bs)||String(a.time||'').localeCompare(String(b.time||''));
-      });
+    return matches.filter(m=>!hasResult(m)).sort((a,b)=>{const as=started(a)?0:1,bs=started(b)?0:1;return(as-bs)||String(a.time||'').localeCompare(String(b.time||''))});
   }
-
   function selectedMatch(){return matches.find(m=>m.id===selectedMatchId)}
-
-  function syncClassicForm(list){
-    const select=$('resultMatchSelect');
-    if(select){
-      select.innerHTML='<option value="">Velg kamp uten resultat</option>'+list.map(m=>`<option value="${esc(m.id)}">${esc(when(m.time))} · ${esc(title(m))}</option>`).join('');
-    }
-  }
 
   function render(){
     const box=ensureBox();
     if(!box)return;
     const list=unresolved();
-    syncClassicForm(list);
     if(selectedMatchId&&!list.some(m=>m.id===selectedMatchId)){selectedMatchId='';selectedResult=''}
     const listBox=$('mobileResultList');
     if(listBox){
@@ -160,10 +137,7 @@
 
   function listen(){
     if(!ready()||unsub)return;
-    unsub=firebase.firestore().collection('matches').onSnapshot(s=>{
-      matches=s.docs.map(d=>({id:d.id,...d.data()}));
-      render();
-    },e=>{console.warn('Result hotfix match listen failed',e);status('Kunne ikke laste kamper: '+(e?.message||e),'bad')});
+    unsub=firebase.firestore().collection('matches').onSnapshot(s=>{matches=s.docs.map(d=>({id:d.id,...d.data()}));render()},e=>{console.warn('Result match listen failed',e);status('Kunne ikke laste kamper: '+(e?.message||e),'bad')});
   }
 
   async function save(){
@@ -173,31 +147,31 @@
     const result=selectedResult;
     const m=selectedMatch();
     try{
-      if(!(await checkAdmin())){status('Mangler admin-tilgang. Sjekk users/{uid}.isAdmin = true.','bad');return toast('Kun admin kan legge inn resultat')}
+      if(!(await checkAdmin())){status('Mangler admin-tilgang.','bad');return toast('Kun admin kan legge inn resultat')}
       if(!id){status('Velg en kamp først.','bad');return toast('Velg kamp først')}
       if(!result){status('Velg Hjemme, Uavgjort eller Borte først.','bad');return toast('Velg resultat først')}
       saving=true;
       if(btn){btn.disabled=true;btn.textContent='Lagrer resultat...'}
       status(`Lagrer: ${title(m)} → ${resultLabel(m,result)} ...`);
       const ref=firebase.firestore().collection('matches').doc(id);
-      await withTimeout(ref.set({
-        result,
-        status:'Ferdig',
-        updatedAtMs:Date.now(),
-        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-      },{merge:true}),12000,'Lagring av resultat');
-      matches=matches.map(x=>x.id===id?{...x,result,status:'Ferdig',updatedAtMs:Date.now()}:x);
-      toast('Resultat lagret ✅');
-      status(`Lagret ✅ ${title(m)} → ${resultLabel(m,result)}`,'good');
+      const data={result,updatedAtMs:Date.now(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+      await withTimeout(ref.update(data).catch(err=>{
+        if(String(err?.code||'').includes('not-found'))return ref.set(data,{merge:true});
+        throw err;
+      }),9000,'Lagring av resultat');
+      matches=matches.map(x=>x.id===id?{...x,result,updatedAtMs:Date.now()}:x);
       selectedMatchId='';
       selectedResult='';
+      toast('Resultat lagret ✅');
+      status(`Lagret ✅ ${title(m)} → ${resultLabel(m,result)}`,'good');
       render();
       setTimeout(()=>window.VM_SAFE_BOOT?.settleBets?.({id,result}),500);
       setTimeout(()=>window.VM_UPCOMING_MATCH_SEED?.boot?.(),900);
       setTimeout(()=>window.VM_RESULT_FIX?.refreshSelect?.(),1000);
     }catch(err){
-      console.error('Mobile result hotfix save failed',err);
-      const msg=(err?.code?err.code+': ':'')+(err?.message||'Kunne ikke lagre resultat');
+      console.error('Mobile result save failed',err);
+      const code=String(err?.code||'');
+      const msg=code.includes('permission-denied')?'Mangler Firestore-rettighet. Sjekk at Thomas-brukeren er admin.':((err?.code?err.code+': ':'')+(err?.message||'Kunne ikke lagre resultat'));
       status(msg,'bad');
       toast(msg);
     }finally{
@@ -207,8 +181,8 @@
   }
 
   function bind(){
-    if(window.VM_RESULT_MOBILE_HOTFIX_BOUND)return;
-    window.VM_RESULT_MOBILE_HOTFIX_BOUND=true;
+    if(window.VM_RESULT_MOBILE_HOTFIX_BOUND_V2)return;
+    window.VM_RESULT_MOBILE_HOTFIX_BOUND_V2=true;
     window.addEventListener('click',e=>{
       const matchBtn=e.target.closest?.('[data-hotfix-match]');
       const pickBtn=e.target.closest?.('[data-hotfix-pick]');
@@ -239,5 +213,5 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
   try{firebase.auth().onAuthStateChanged(u=>{if(u)setTimeout(boot,350)})}catch{}
   document.addEventListener('click',e=>{if(e.target.closest?.('[data-page="betting"],#adminPanel,summary,#mobileResultBox'))setTimeout(boot,120)});
-  setInterval(()=>{if(ready())render()},2500);
+  setInterval(()=>{if(ready()&&!saving)render()},2500);
 })();
