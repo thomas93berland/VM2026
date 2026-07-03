@@ -33,7 +33,6 @@
   const key=m=>`${norm(m.home)}|${norm(m.away)}`;
   const hasResult=m=>!!(m&&String(m.result||'').trim());
   const msOf=v=>Date.parse(v||'');
-  const ended=v=>{const ms=msOf(v);return Number.isFinite(ms)&&Date.now()>=ms+MATCH_END_GRACE_MS};
   const started=v=>{const ms=msOf(v);return Number.isFinite(ms)&&Date.now()>=ms};
 
   function loadResultSaveLite(){
@@ -64,7 +63,7 @@
     const last=group[group.length-1];
     if(!last)return false;
     const lastDoc=existingForFixture(last);
-    return hasResult(lastDoc)||ended(lastDoc?.time||last.time);
+    return hasResult(lastDoc);
   }
 
   function currentBatchIndex(){
@@ -112,7 +111,7 @@
 
   function listenMatches(){
     if(!ready()||unsub)return;
-    unsub=firebase.firestore().collection('matches').onSnapshot(s=>{rebuildMaps(s.docs.map(d=>({id:d.id,...d.data()})));decorateBoard()},e=>console.warn('Upcoming match window listen failed',e));
+    unsub=firebase.firestore().collection('matches').onSnapshot(s=>{rebuildMaps(s.docs.map(d=>({id:d.id,...d.data()})));decorateBoard();window.VM_RESULT_STABLE?.refreshSelect?.()},e=>console.warn('Upcoming match window listen failed',e));
   }
 
   async function seedCurrentBatch(){
@@ -132,6 +131,7 @@
     await batch.commit();
     toast(`${missing.length} kommende kamp(er) lagt ut for betting`);
     setTimeout(()=>window.VM_RESULT_FIX?.refreshSelect?.(),400);
+    setTimeout(()=>window.VM_RESULT_STABLE?.refreshSelect?.(),500);
     setTimeout(()=>window.VM_RESULT_SAVE_LITE?.boot?.(),700);
   }
 
