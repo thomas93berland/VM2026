@@ -1,13 +1,15 @@
 (()=>{
-  let admin=false;
+  let firestoreAdmin=false;
+  let identityThomas=false;
   let matches=[];
   let unsub=null;
   let bound=false;
   let saving=false;
+  let currentUid='';
   const ADMIN_EMAIL='thomas93berland@gmail.com';
   const ready=()=>{try{return window.firebase&&firebase.auth&&firebase.firestore&&firebase.auth().currentUser}catch{return false}};
   const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
-  const toast=msg=>{try{const t=document.getElementById('toast');if(t){t.textContent=msg;t.hidden=false;clearTimeout(toast.x);toast.x=setTimeout(()=>t.hidden=true,4200)}else alert(msg)}catch{alert(msg)}};
+  const toast=msg=>{try{const t=document.getElementById('toast');if(t){t.textContent=msg;t.hidden=false;clearTimeout(toast.x);toast.x=setTimeout(()=>t.hidden=true,6500)}else alert(msg)}catch{alert(msg)}};
   const title=m=>(m.home||'Hjemme')+' – '+(m.away||'Borte');
   const label=(m,r)=>r==='home'?(m.home||'Hjemme'):r==='away'?(m.away||'Borte'):'Uavgjort';
   const when=v=>{const d=new Date(v);return v&&!isNaN(d)?d.toLocaleString('nb-NO',{weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'Ukjent tid'};
@@ -15,23 +17,29 @@
   const isStarted=m=>{const ms=Date.parse(m?.time||'');return !Number.isFinite(ms)||ms<=Date.now()+60000};
 
   async function checkAdmin(){
-    if(!ready()){admin=false;return false}
+    firestoreAdmin=false;
+    identityThomas=false;
+    currentUid='';
+    if(!ready())return false;
     const u=firebase.auth().currentUser;
+    currentUid=u.uid;
     const email=String(u.email||'').toLowerCase();
     const name=String(u.displayName||email.split('@')[0]||'').toLowerCase();
+    identityThomas=email===ADMIN_EMAIL||name.includes('thomas');
     try{
       const s=await firebase.firestore().collection('users').doc(u.uid).get();
-      admin=email===ADMIN_EMAIL||name.includes('thomas')||!!(s.exists&&s.data()?.isAdmin===true);
+      firestoreAdmin=!!(s.exists&&s.data()?.isAdmin===true);
     }catch(e){
       console.warn('Quick result admin check failed',e);
-      admin=email===ADMIN_EMAIL||name.includes('thomas');
+      firestoreAdmin=false;
     }
     openAdminUi();
-    return admin;
+    return firestoreAdmin;
   }
 
   function openAdminUi(){
-    if(!admin)return;
+    const canSee=firestoreAdmin||identityThomas;
+    if(!canSee)return;
     const panel=document.getElementById('adminPanel');
     if(panel){panel.hidden=false;panel.style.display='block';panel.classList.remove('admin-locked')}
     const locked=document.getElementById('adminLocked');
@@ -50,7 +58,10 @@
       .quick-result-title{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;color:#ffd77a!important;font-weight:1000!important;font-size:13px!important;letter-spacing:.04em!important;text-transform:uppercase!important;}
       .quick-result-title span{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-width:32px!important;height:27px!important;border-radius:999px!important;background:rgba(228,184,78,.12)!important;border:1px solid rgba(228,184,78,.28)!important;color:#ffd77a!important;font-size:12px!important;}
       .quick-result-note{color:rgba(235,238,247,.70)!important;font-size:12px!important;font-weight:800!important;line-height:1.35!important;margin-top:-2px!important;}
-      .quick-result-empty{padding:12px!important;border-radius:14px!important;background:rgba(255,255,255,.045)!important;color:rgba(235,238,247,.78)!important;font-weight:850!important;line-height:1.35!important;border:1px dashed rgba(255,255,255,.12)!important;}
+      .quick-result-empty,.quick-result-warning{padding:12px!important;border-radius:14px!important;background:rgba(255,255,255,.045)!important;color:rgba(235,238,247,.82)!important;font-weight:850!important;line-height:1.42!important;border:1px dashed rgba(255,255,255,.12)!important;}
+      .quick-result-warning{border-color:rgba(255,118,118,.36)!important;background:rgba(255,118,118,.08)!important;color:#ffd0d0!important;}
+      .quick-result-warning b{display:block!important;color:#ffd77a!important;margin-bottom:5px!important;}
+      .quick-result-warning code{display:inline-block!important;margin-top:7px!important;padding:4px 7px!important;border-radius:8px!important;background:rgba(0,0,0,.25)!important;color:#fff!important;font-size:11px!important;word-break:break-word!important;}
       .quick-result-row{display:grid!important;gap:8px!important;padding:11px!important;border-radius:16px!important;background:linear-gradient(145deg,rgba(15,25,43,.78),rgba(7,14,28,.92))!important;border:1px solid rgba(255,255,255,.08)!important;}
       .quick-result-row b{color:#fff!important;font-size:14px!important;line-height:1.2!important;}
       .quick-result-row small{color:rgba(215,219,228,.72)!important;font-size:11px!important;font-weight:800!important;}
@@ -76,7 +87,7 @@
     addCss();
     openAdminUi();
     const adminPanel=document.getElementById('adminPanel');
-    if(!adminPanel||!admin)return;
+    if(!adminPanel||(!firestoreAdmin&&!identityThomas))return;
     let panel=document.getElementById('quickResultPanel');
     if(!panel){
       panel=document.createElement('section');
@@ -86,6 +97,12 @@
       if(form)form.insertAdjacentElement('afterend',panel);
       else adminPanel.appendChild(panel);
     }
+
+    if(identityThomas&&!firestoreAdmin){
+      panel.innerHTML=`<div class="quick-result-title">Resultatknapper <span>!</span></div><div class="quick-result-warning"><b>Du er logget inn som Thomas, men Firestore sier at du ikke er admin.</b>Resultater kan ikke lagres før bruker-dokumentet ditt har <code>isAdmin: true</code> i Firestore.<br><br>UID: <code>${esc(currentUid||'ukjent')}</code></div>`;
+      return;
+    }
+
     const list=unresolved();
     if(!list.length){
       panel.innerHTML='<div class="quick-result-title">Resultatknapper <span>0</span></div><div class="quick-result-empty">Ingen kamper mangler resultat akkurat nå.</div>';
@@ -107,7 +124,10 @@
   async function saveResult(id,result,button=null){
     if(saving)return;
     if(!id||!result)return toast('Velg kamp og resultat');
-    if(!(await checkAdmin()))return toast('Kun admin kan legge inn resultat');
+    if(!(await checkAdmin())){
+      render();
+      return toast('Resultat kan ikke lagres: users/'+(currentUid||'dinUid')+' må ha isAdmin: true i Firestore');
+    }
     saving=true;
     if(button)button.disabled=true;
     const m=matches.find(x=>x.id===id)||{};
@@ -127,7 +147,7 @@
       await ref.set(payload,{merge:true});
       const check=await ref.get();
       const saved=check.exists?check.data().result:null;
-      if(String(saved)!==String(result))throw new Error('Resultatet ble ikke lagret. Sjekk Firestore-regler eller innlogging.');
+      if(String(saved)!==String(result))throw new Error('Resultatet ble ikke lagret. Sjekk Firestore-regler eller admin-status.');
       matches=matches.map(x=>x.id===id?{...x,...payload}:x);
       render();
       toast(`Resultat lagt inn: ${label(m,result)} ✅`);
@@ -135,7 +155,11 @@
       setTimeout(()=>window.VM_UPCOMING_MATCH_SEED?.boot?.(),1200);
     }catch(err){
       console.error(err);
-      toast((err?.code?err.code+': ':'')+(err?.message||'Kunne ikke legge inn resultat'));
+      if(String(err?.code||'').includes('permission-denied')){
+        toast('Permission denied: Sett isAdmin: true på bruker-dokumentet ditt i Firestore først.');
+      }else{
+        toast((err?.code?err.code+': ':'')+(err?.message||'Kunne ikke legge inn resultat'));
+      }
     }finally{
       saving=false;
       if(button)button.disabled=false;
@@ -165,7 +189,7 @@
   async function boot(){
     if(!ready())return;
     await checkAdmin();
-    if(!admin)return;
+    if(!firestoreAdmin&&!identityThomas)return;
     bind();
     listen();
     render();
@@ -178,5 +202,5 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else setTimeout(boot,300);
   try{firebase.auth().onAuthStateChanged(u=>{if(u)setTimeout(boot,500)})}catch{}
   document.addEventListener('click',e=>{if(e.target.closest?.('[data-page="betting"],#adminPanel,#quickResultPanel'))setTimeout(boot,250)});
-  setInterval(()=>{if(admin)render()},3000);
+  setInterval(()=>{if(firestoreAdmin||identityThomas)render()},3000);
 })();
