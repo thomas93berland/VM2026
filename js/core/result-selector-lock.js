@@ -4,6 +4,7 @@
   let unsub=null;
   let bound=false;
   let saving=false;
+  let writingSelect=false;
   const ADMIN_EMAIL='thomas93berland@gmail.com';
   const ready=()=>{try{return window.firebase&&firebase.auth&&firebase.firestore&&firebase.auth().currentUser}catch{return false}};
   const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
@@ -33,7 +34,7 @@
     if(!admin)return;
     const panel=document.getElementById('adminPanel');
     const locked=document.getElementById('adminLocked');
-    if(panel){panel.hidden=false;panel.style.display='block';}
+    if(panel){panel.hidden=false;panel.style.display='block';panel.classList.remove('admin-locked')}
     if(locked)locked.hidden=true;
     document.querySelectorAll('.admin-only').forEach(el=>{el.hidden=false;el.style.display='block'});
   }
@@ -49,6 +50,31 @@
       #resultSelectorSimpleHint{display:block!important;margin:10px 0 0!important;color:rgba(255,215,122,.88)!important;font-size:12px!important;font-weight:850!important;line-height:1.35!important;}
     `;
     document.head.appendChild(style);
+  }
+
+  function nativeInnerHtmlDescriptor(el){
+    let p=el;
+    while(p){
+      const d=Object.getOwnPropertyDescriptor(p,'innerHTML');
+      if(d?.get&&d?.set)return d;
+      p=Object.getPrototypeOf(p);
+    }
+    return null;
+  }
+
+  function lockSelect(select){
+    if(!select||select.dataset.resultSelectorLocked==='yes')return;
+    const d=nativeInnerHtmlDescriptor(select);
+    if(!d)return;
+    Object.defineProperty(select,'innerHTML',{
+      configurable:true,
+      get(){return d.get.call(this)},
+      set(v){
+        if(writingSelect){d.set.call(this,v);return}
+        setTimeout(refresh,40);
+      }
+    });
+    select.dataset.resultSelectorLocked='yes';
   }
 
   async function loadRows(){
@@ -67,9 +93,10 @@
     const form=document.getElementById('resultForm');
     const select=document.getElementById('resultMatchSelect');
     if(!form||!select)return;
+    lockSelect(select);
     let hint=document.getElementById('resultSelectorSimpleHint');
     if(!hint){hint=document.createElement('p');hint.id='resultSelectorSimpleHint';form.insertAdjacentElement('afterend',hint)}
-    if(!admin){hint.textContent='Admin ikke bekreftet. Logg inn som Thomas/admin.';return;}
+    if(!admin){hint.textContent='Admin ikke bekreftet. Logg inn som Thomas/admin.';return}
     const current=select.value;
     const rows=await loadRows();
     const body=rows.length
@@ -78,10 +105,14 @@
     const html='<option value="">Velg sluttkamp uten resultat</option>'+body;
     if(html!==lastHtml||select.innerHTML!==html){
       lastHtml=html;
-      select.innerHTML=html;
-      if(current&&[...select.options].some(o=>o.value===current))select.value=current;
+      writingSelect=true;
+      try{
+        select.innerHTML=html;
+        if(current&&[...select.options].some(o=>o.value===current))select.value=current;
+      }finally{writingSelect=false}
     }
     select.disabled=false;
+    select.required=true;
     hint.textContent=rows.length?`Viser ${rows.length} sluttkamp(er) som mangler resultat.`:'Ingen sluttkamper mangler resultat akkurat nå.';
   }
 
@@ -91,9 +122,10 @@
     saving=true;
     try{
       if(!(await checkAdmin()))return toast('Kun admin kan legge inn resultat');
-      const snap=await firebase.firestore().collection('matches').doc(id).get();
+      const ref=firebase.firestore().collection('matches').doc(id);
+      const snap=await ref.get();
       const m=snap.exists?{id:snap.id,...snap.data()}:{};
-      await firebase.firestore().collection('matches').doc(id).set({
+      await ref.set({
         result:String(result),
         resultLabel:label(m,result),
         status:'Ferdig',
@@ -101,17 +133,19 @@
         updatedAtMs:Date.now(),
         updatedAt:firebase.firestore.FieldValue.serverTimestamp()
       },{merge:true});
+      const check=await ref.get();
+      if(String(check.data()?.result||'')!==String(result))throw new Error('Resultatet ble ikke lagret. Sjekk Firestore-regler eller innlogging.');
       toast('Resultat lagt inn ✅');
       lastHtml='';
       const form=document.getElementById('resultForm');
       if(form)form.reset();
-      setTimeout(refresh,200);
+      setTimeout(refresh,120);
       setTimeout(()=>window.VM_SAFE_BOOT?.settleBets?.({id,result}),800);
       setTimeout(()=>window.VM_UPCOMING_MATCH_SEED?.boot?.(),1200);
     }catch(err){
       console.error('Result save failed',err);
       toast((err?.code?err.code+': ':'')+(err?.message||'Kunne ikke legge inn resultat'));
-    }finally{saving=false;}
+    }finally{saving=false}
   }
 
   function bind(){
