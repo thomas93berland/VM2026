@@ -2,27 +2,26 @@
   if(window.VM_RESULT_SAVE_LITE_RELOADER)return;
   window.VM_RESULT_SAVE_LITE_RELOADER=true;
 
-  function loadFreshResultPicker(){
+  function loadClickFix(){
     try{
-      if(document.querySelector('script[src*="result-admin-fix.js?v=8"]')){
-        setTimeout(()=>window.VM_RESULT_FIX?.boot?.(),300);
+      if(document.querySelector('script[src*="result-click-fix.js"]')){
+        setTimeout(()=>window.VM_RESULT_CLICK_FIX?.boot?.(),250);
         return;
       }
       const s=document.createElement('script');
-      s.src='js/core/result-admin-fix.js?v=8';
+      s.src='js/core/result-click-fix.js?v=1';
       s.defer=true;
-      s.onload=()=>setTimeout(()=>window.VM_RESULT_FIX?.boot?.(),250);
+      s.onload=()=>setTimeout(()=>window.VM_RESULT_CLICK_FIX?.boot?.(),250);
       document.body.appendChild(s);
-    }catch(e){console.warn('Could not reload result picker',e)}
+    }catch(e){console.warn('Could not load result click fix',e)}
   }
 
   function boot(){
-    loadFreshResultPicker();
-    setTimeout(()=>window.VM_RESULT_FIX?.boot?.(),900);
-    setTimeout(()=>window.VM_RESULT_FIX?.render?.(),1400);
+    loadClickFix();
+    setTimeout(()=>window.VM_RESULT_CLICK_FIX?.boot?.(),700);
   }
 
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
   try{firebase.auth().onAuthStateChanged(u=>{if(u)setTimeout(boot,700)})}catch{}
-  document.addEventListener('click',e=>{if(e.target.closest?.('[data-page="betting"],#adminPanel,#mobileResultBox'))setTimeout(boot,250)});
+  document.addEventListener('click',e=>{if(e.target.closest?.('[data-page="betting"],#adminPanel,#resultForm'))setTimeout(boot,250)});
 })();
