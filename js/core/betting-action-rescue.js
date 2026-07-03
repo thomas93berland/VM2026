@@ -5,13 +5,11 @@
   const ready=()=>{try{return window.firebase&&firebase.auth&&firebase.firestore&&firebase.auth().currentUser}catch{return false}};
   const N=n=>Number(n||0).toLocaleString('nb-NO');
   const hasResult=m=>!!String(m?.result||'').trim();
-  const when=v=>{const d=new Date(v);return v&&!isNaN(d)?d.toLocaleString('nb-NO',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'Ukjent tid'};
   const title=m=>(m.home||'Hjemme')+' – '+(m.away||'Borte');
   const label=(m,p)=>p==='home'?(m.home||'Hjemme'):p==='away'?(m.away||'Borte'):'Uavgjort';
   const odds=(m,p)=>Number(m?.odds?.[p]||1);
 
   let admin=false;
-  let lastSelectHtml='';
   let lock=false;
   let matchMap=new Map();
 
@@ -41,34 +39,8 @@
     return arr;
   }
 
-  function unlockSelect(select){
-    if(!select)return;
-    select.dataset.resultSelectorLocked='no';
-    select.dataset.quickResultLocked='no';
-    select.disabled=false;
-    select.style.pointerEvents='auto';
-    select.style.position='relative';
-    select.style.zIndex='999';
-  }
-
-  async function fillResultSelector(){
-    if(!ready())return;
-    const select=document.getElementById('resultMatchSelect');
-    if(!select)return;
-    if(!admin)await adminCheck();
-    if(!admin)return;
-    unlockSelect(select);
-    const current=select.value;
-    const missing=(await loadMatches()).filter(m=>!hasResult(m));
-    const body=missing.length
-      ? missing.map(m=>`<option value="${esc(m.id)}">${esc(when(m.time))} · ${esc(title(m))}</option>`).join('')
-      : '<option value="" disabled>Ingen kamper uten resultat</option>';
-    const html='<option value="">Velg kamp uten resultat</option>'+body;
-    if(html!==lastSelectHtml||select.innerHTML!==html||select.options.length<2){
-      lastSelectHtml=html;
-      select.innerHTML=html;
-      if(current&&[...select.options].some(o=>o.value===current))select.value=current;
-    }
+  function fillResultSelector(){
+    try{window.VM_QUICK_RESULT?.render?.()}catch(e){console.warn('Quick result render skipped',e)}
   }
 
   async function submitResult(e){
@@ -76,30 +48,8 @@
     if(!form)return;
     e.preventDefault();
     e.stopImmediatePropagation();
-    if(lock)return;
-    lock=true;
-    try{
-      if(!(await adminCheck()))return toast('Du mangler admin-rettighet i Firestore');
-      const fd=new FormData(form);
-      const id=String(fd.get('matchId')||'').trim();
-      const result=String(fd.get('result')||'').trim();
-      if(!id||!result)return toast('Velg kamp og resultat');
-      await firebase.firestore().collection('matches').doc(id).set({
-        result,
-        updatedAtMs:Date.now(),
-        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-      },{merge:true});
-      form.reset();
-      lastSelectHtml='';
-      toast('Resultat lagt inn');
-      setTimeout(fillResultSelector,250);
-      setTimeout(()=>window.VM_SAFE_BOOT?.settleBets?.({id,result}),850);
-      setTimeout(()=>window.VM_UPCOMING_MATCH_SEED?.boot?.(),1200);
-      setTimeout(()=>window.VM_QUICK_RESULT?.render?.(),1300);
-    }catch(err){
-      console.error('Result rescue failed',err);
-      toast((err?.code?err.code+': ':'')+(err?.message||'Kunne ikke legge inn resultat'));
-    }finally{lock=false;}
+    toast('Bruk resultatknappene under for å legge inn resultat');
+    try{window.VM_QUICK_RESULT?.boot?.()}catch{}
   }
 
   async function enableOpenOdds(){
@@ -218,7 +168,7 @@
       batch.set(betRef,{userId:u.uid,userName:profile.name||u.displayName||u.email?.split('@')[0]||'Spiller',selections,stake,totalOdds:Number(total.toFixed(2)),possibleWin,status:'Aktiv',createdAtMs:Date.now(),createdAt:firebase.firestore.FieldValue.serverTimestamp()});
       batch.update(userRef,{coins:firebase.firestore.FieldValue.increment(-stake),placedBets:firebase.firestore.FieldValue.increment(1),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
       await batch.commit();
-      document.querySelectorAll('#matchList .odd.selected').forEach(x=>x.classList.remove('selected'));
+      document.querySelectorAll('#matchList .odd.selected').forEach(b=>b.classList.remove('selected'));
       updateSlipDom();
       toast(`Spill plassert · mulig gevinst ${N(possibleWin)} VM Coins`);
     }catch(err){
@@ -237,9 +187,9 @@
   document.addEventListener('click',selectOdd,true);
   document.addEventListener('click',placeBet,true);
   document.addEventListener('input',e=>{if(e.target?.id==='stakeInput')updateSlipDom();},true);
-  document.addEventListener('click',e=>{if(e.target.closest?.('[data-page="betting"],#matchList,#adminPanel,#resultForm,#resultMatchSelect,#placeBetBtn'))setTimeout(boot,220)},true);
+  document.addEventListener('click',e=>{if(e.target.closest?.('[data-page="betting"],#matchList,#adminPanel,#quickResultPanel,#placeBetBtn'))setTimeout(boot,220)},true);
   window.VM_BETTING_ACTION_RESCUE={boot,fillResultSelector,placeBet,adminCheck,enableOpenOdds,updateSlipDom};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else setTimeout(boot,600);
   try{firebase.auth().onAuthStateChanged(u=>{if(u)setTimeout(boot,800)})}catch{}
-  setInterval(boot,1600);
+  setInterval(boot,2200);
 })();
