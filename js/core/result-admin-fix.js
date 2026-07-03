@@ -1,17 +1,39 @@
 (()=>{
-  let admin=false,bound=false,lastHtml='',refreshing=false,selectObserver=null,unsubMatches=null;
-  const toast=msg=>{try{const t=document.getElementById('toast');if(t){t.textContent=msg;t.hidden=false;clearTimeout(toast.x);toast.x=setTimeout(()=>t.hidden=true,4200)}else alert(msg)}catch{alert(msg)}};
+  let admin=false,bound=false,lastHtml='',refreshing=false,selectObserver=null,unsubMatches=null,adminInfo=null;
+  const toast=msg=>{try{const t=document.getElementById('toast');if(t){t.textContent=msg;t.hidden=false;clearTimeout(toast.x);toast.x=setTimeout(()=>t.hidden=true,5200)}else alert(msg)}catch{alert(msg)}};
   const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
   const ready=()=>{try{return window.firebase&&firebase.auth&&firebase.firestore&&firebase.auth().currentUser}catch{return false}};
+  const yes=v=>v===true||v===1||String(v??'').trim().toLowerCase()==='true'||String(v??'').trim()==='1'||String(v??'').trim().toLowerCase()==='ja';
   const when=v=>{const d=new Date(v);return v&&!isNaN(d)?d.toLocaleString('nb-NO',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'Ukjent tid'};
   const title=m=>(m.home||'Hjemme')+' – '+(m.away||'Borte');
-  const label=(m,p)=>p==='home'?m.home:p==='away'?m.away:'Uavgjort';
   const hasResult=m=>!!String(m?.result||'').trim();
   const isPast=m=>{const ms=Date.parse(m?.time||'');return Number.isFinite(ms)&&ms<Date.now()};
 
   async function checkAdmin(){
-    try{const u=firebase.auth().currentUser;if(!u){admin=false;return false}const s=await firebase.firestore().collection('users').doc(u.uid).get();admin=!!(s.exists&&s.data()?.isAdmin===true);return admin}
-    catch(e){console.warn('Admin check failed',e);admin=false;return false}
+    try{
+      const u=firebase.auth().currentUser;if(!u){admin=false;return false}
+      const s=await firebase.firestore().collection('users').doc(u.uid).get();
+      const d=s.exists?s.data()||{}:{};
+      admin=d.isAdmin===true||yes(d.isAdmin)||yes(d.admin)||yes(d.is_admin)||yes(d.isadmin);
+      adminInfo={uid:u.uid,email:u.email||'',exists:s.exists,raw:d.isAdmin,admin};
+      adminUi();
+      return admin;
+    }catch(e){console.warn('Admin check failed',e);admin=false;adminInfo={error:e?.message||String(e)};adminUi();return false}
+  }
+
+  function addAdminCss(){
+    if(document.getElementById('resultAdminDiagnosticCss'))return;
+    const style=document.createElement('style');style.id='resultAdminDiagnosticCss';
+    style.textContent=`#resultFixHint{margin:10px 0 0!important;padding:10px 11px!important;border-radius:14px!important;background:rgba(255,216,122,.08)!important;border:1px solid rgba(255,216,122,.22)!important;color:rgba(246,247,251,.9)!important;font-size:12px!important;font-weight:800!important;line-height:1.35!important;word-break:break-word!important}#resultFixHint b{color:#ffd77a!important}#resultFixHint.ok{background:rgba(79,225,159,.08)!important;border-color:rgba(79,225,159,.28)!important}#resultFixHint.bad{background:rgba(255,118,118,.08)!important;border-color:rgba(255,118,118,.28)!important}`;
+    document.head.appendChild(style);
+  }
+
+  function adminUi(){
+    addAdminCss();
+    const panel=document.getElementById('adminPanel'),locked=document.getElementById('adminLocked');
+    if(panel){panel.hidden=!admin;if(admin)panel.open=true}
+    if(locked)locked.hidden=admin;
+    addHint();
   }
 
   async function loadMatches(){
@@ -35,12 +57,31 @@
     setTimeout(()=>{refreshing=false},150);
   }
 
+  function permissionMessage(err){
+    const uid=adminInfo?.uid||firebase.auth().currentUser?.uid||'DIN_UID';
+    if(err?.code==='permission-denied')return `permission-denied: Firestore nekter skriving. Sjekk at users/${uid}.isAdmin er boolean true, og at Firestore-reglene faktisk er publisert.`;
+    return (err?.code?err.code+': ':'')+(err?.message||'Feil');
+  }
+
+  async function submitMatch(e){
+    const form=document.getElementById('matchForm');
+    if(!form||e.target!==form)return;
+    e.preventDefault();e.stopImmediatePropagation();
+    try{
+      if(!(await checkAdmin()))return toast('Kun admin. Se admin-diagnosen under panelet.');
+      const fd=new FormData(form),home=String(fd.get('home')||'').trim(),away=String(fd.get('away')||'').trim(),time=String(fd.get('time')||'').trim();
+      if(!home||!away||!time)return toast('Fyll inn hjemmelag, bortelag og tid');
+      await firebase.firestore().collection('matches').add({home,away,time,group:'VM 2026',result:null,odds:{home:Number(fd.get('homeOdds')||2.1),draw:Number(fd.get('drawOdds')||3.2),away:Number(fd.get('awayOdds')||2.9)},createdBy:firebase.auth().currentUser.uid,createdAtMs:Date.now(),createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+      form.reset();toast('Kamp lagt til');setTimeout(refreshSelect,500);
+    }catch(err){console.error('Match submit failed',err);toast(permissionMessage(err))}
+  }
+
   async function submitResult(e){
     const form=document.getElementById('resultForm');
     if(!form||e.target!==form)return;
     e.preventDefault();e.stopImmediatePropagation();
     try{
-      if(!(await checkAdmin()))return toast('Kun admin kan legge inn resultat');
+      if(!(await checkAdmin()))return toast('Kun admin. Se admin-diagnosen under panelet.');
       const fd=new FormData(form),id=fd.get('matchId'),result=fd.get('result');
       if(!id||!result)return toast('Velg kamp og resultat');
       await firebase.firestore().collection('matches').doc(id).set({result,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAtMs:Date.now()},{merge:true});
@@ -48,16 +89,22 @@
       form.reset();lastHtml='';
       setTimeout(refreshSelect,250);setTimeout(refreshSelect,900);
       setTimeout(()=>window.VM_SAFE_BOOT?.settleBets?.({id,result}),900);
-    }catch(err){console.error('Result override failed',err);toast((err?.code?err.code+': ':'')+(err?.message||'Kunne ikke legge inn resultat'))}
+      setTimeout(()=>window.VM_UPCOMING_MATCH_SEED?.boot?.(),1200);
+    }catch(err){console.error('Result submit failed',err);toast(permissionMessage(err))}
   }
 
   function addHint(){
-    const form=document.getElementById('resultForm');if(!form)return;
+    const form=document.getElementById('resultForm');
+    const panel=document.getElementById('adminPanel');
+    if(!form&&!panel)return;
     const select=document.getElementById('resultMatchSelect');
     if(select){select.style.minHeight='48px';select.style.borderColor='rgba(255,216,122,.38)';select.style.background='rgba(3,10,22,.86)';select.style.color='#ffd77a';select.style.fontWeight='900'}
     let p=document.getElementById('resultFixHint');
-    if(!p){p=document.createElement('p');p.id='resultFixHint';p.className='admin-note';form.insertAdjacentElement('afterend',p)}
-    p.textContent='Resultatvelgeren viser kun kamper som er slutt og mangler resultat. Hvis listen er tom, finnes det ingen sluttkamper som trenger resultat.';
+    if(!p){p=document.createElement('p');p.id='resultFixHint';p.className='admin-note';(panel?.querySelector('.admin-note')||form).insertAdjacentElement('afterend',p)}
+    if(!adminInfo){p.textContent='Admin-sjekk: laster...';return}
+    const raw=typeof adminInfo.raw==='undefined'?'mangler':`${String(adminInfo.raw)} (${typeof adminInfo.raw})`;
+    p.className='admin-note '+(admin?'ok':'bad');
+    p.innerHTML=admin?`✅ <b>Admin OK</b><br>E-post: ${esc(adminInfo.email||'')}<br>UID: ${esc(adminInfo.uid||'')}<br>isAdmin: ${esc(raw)}<br>Resultatvelgeren viser kun sluttkamper som mangler resultat.`:`❌ <b>Admin ikke godkjent</b><br>E-post: ${esc(adminInfo.email||'')}<br>UID: ${esc(adminInfo.uid||'')}<br>Fant users/${esc(adminInfo.uid||'')}: ${adminInfo.exists?'ja':'nei'}<br>isAdmin: ${esc(raw)}<br>Riktig er <b>users/${esc(adminInfo.uid||'DIN_UID')}</b> → <b>isAdmin</b> = boolean <b>true</b>.`;
   }
 
   function watchSelect(){
@@ -74,12 +121,12 @@
 
   async function boot(){
     if(!ready())return;
-    await checkAdmin();if(!admin)return;
-    if(!bound){document.addEventListener('submit',submitResult,true);bound=true}
+    await checkAdmin();
+    if(!bound){document.addEventListener('submit',submitMatch,true);document.addEventListener('submit',submitResult,true);bound=true}
     addHint();watchSelect();listenMatches();refreshSelect();setTimeout(refreshSelect,300);setTimeout(refreshSelect,900);setTimeout(refreshSelect,1800);
   }
 
-  window.VM_RESULT_FIX={boot,refreshSelect};
+  window.VM_RESULT_FIX={boot,refreshSelect,checkAdmin};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
   try{firebase.auth().onAuthStateChanged(u=>{if(u)boot()})}catch{}
   document.addEventListener('click',e=>{if(e.target.closest?.('[data-page="betting"],#adminPanel,#resultForm,#resultMatchSelect'))setTimeout(boot,200)});
