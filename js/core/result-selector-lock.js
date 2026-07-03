@@ -1,5 +1,5 @@
 (()=>{
-  let admin=false,lastHtml='',unsub=null,bound=false,saving=false,writingSelect=false;
+  let admin=false,lastHtml='',unsub=null,bound=false,saving=false,refreshTimer=null;
   const ready=()=>{try{return window.firebase&&firebase.auth&&firebase.firestore&&firebase.auth().currentUser}catch{return false}};
   const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
   const toast=msg=>{try{const t=document.getElementById('toast');if(t){t.textContent=msg;t.hidden=false;clearTimeout(toast.x);toast.x=setTimeout(()=>t.hidden=true,4200)}else alert(msg)}catch{alert(msg)}};
@@ -14,13 +14,8 @@
   async function checkAdmin(){
     if(!ready()){admin=false;return false}
     const u=firebase.auth().currentUser;
-    try{
-      const s=await firebase.firestore().collection('users').doc(u.uid).get();
-      admin=!!(s.exists&&s.data()?.isAdmin===true);
-    }catch(e){
-      console.warn('Result admin check failed',e);
-      admin=false;
-    }
+    try{const s=await firebase.firestore().collection('users').doc(u.uid).get();admin=!!(s.exists&&s.data()?.isAdmin===true)}
+    catch(e){console.warn('Result admin check failed',e);admin=false}
     return admin;
   }
 
@@ -38,30 +33,44 @@
     const style=document.createElement('style');
     style.id='resultSelectorSimpleCss';
     style.textContent=`
-      #resultForm{position:relative!important;z-index:30!important;pointer-events:auto!important;display:grid!important;gap:10px!important;}
-      #resultForm .input,#resultMatchSelect{min-height:50px!important;pointer-events:auto!important;position:relative!important;z-index:35!important;}
-      #resultMatchSelect{background:rgba(3,10,22,.94)!important;color:#ffd77a!important;border:1px solid rgba(255,216,122,.48)!important;font-weight:950!important;}
+      #resultForm{position:relative!important;z-index:40!important;pointer-events:auto!important;display:grid!important;gap:10px!important;overflow:visible!important;}
+      #resultForm .input,#resultMatchSelectSafe{min-height:52px!important;pointer-events:auto!important;position:relative!important;z-index:45!important;}
+      #resultMatchSelect{display:none!important;}
+      #resultMatchSelectSafe{background:rgba(3,10,22,.94)!important;color:#ffd77a!important;border:1px solid rgba(255,216,122,.58)!important;font-weight:950!important;touch-action:manipulation!important;}
       #resultSelectorSimpleHint{display:block!important;margin:10px 0 0!important;color:rgba(255,215,122,.88)!important;font-size:12px!important;font-weight:850!important;line-height:1.35!important;}
     `;
     document.head.appendChild(style);
   }
 
-  function nativeInnerHtmlDescriptor(el){
-    let p=Object.getPrototypeOf(el);
-    while(p){const d=Object.getOwnPropertyDescriptor(p,'innerHTML');if(d?.get&&d?.set)return d;p=Object.getPrototypeOf(p)}
-    return null;
+  function safeSelect(){
+    const form=document.getElementById('resultForm');
+    const old=document.getElementById('resultMatchSelect');
+    if(!form||!old)return null;
+    old.removeAttribute('name');
+    old.required=false;
+    old.disabled=true;
+    old.setAttribute('aria-hidden','true');
+    old.style.display='none';
+    let safe=document.getElementById('resultMatchSelectSafe');
+    if(!safe){
+      safe=document.createElement('select');
+      safe.id='resultMatchSelectSafe';
+      safe.name='matchId';
+      safe.required=true;
+      safe.className='input';
+      old.insertAdjacentElement('afterend',safe);
+    }
+    safe.disabled=false;
+    safe.required=true;
+    return safe;
   }
 
-  function lockSelect(select){
-    if(!select||select.dataset.resultSelectorLocked==='yes')return;
-    const d=nativeInnerHtmlDescriptor(select);
-    if(!d)return;
-    Object.defineProperty(select,'innerHTML',{
-      configurable:true,
-      get(){return d.get.call(this)},
-      set(v){if(writingSelect){d.set.call(this,v);return}setTimeout(refresh,30)}
-    });
-    select.dataset.resultSelectorLocked='yes';
+  function hint(text){
+    const form=document.getElementById('resultForm');
+    if(!form)return;
+    let h=document.getElementById('resultSelectorSimpleHint');
+    if(!h){h=document.createElement('p');h.id='resultSelectorSimpleHint';form.insertAdjacentElement('afterend',h)}
+    h.textContent=text;
   }
 
   async function loadRows(){
@@ -78,13 +87,10 @@
     addCss();
     await checkAdmin();
     openAdminUi();
-    const form=document.getElementById('resultForm');
-    const select=document.getElementById('resultMatchSelect');
-    if(!form||!select)return;
-    lockSelect(select);
-    let hint=document.getElementById('resultSelectorSimpleHint');
-    if(!hint){hint=document.createElement('p');hint.id='resultSelectorSimpleHint';form.insertAdjacentElement('afterend',hint)}
-    if(!admin){hint.textContent='Admin ikke bekreftet. Sjekk at brukeren din har isAdmin=true i Firestore.';return}
+    const select=safeSelect();
+    if(!select)return;
+    if(!admin){hint('Admin ikke bekreftet. Sjekk at brukeren din har isAdmin=true i Firestore.');return}
+    if(document.activeElement===select)return;
     const current=select.value;
     const rows=await loadRows();
     const body=rows.length
@@ -93,15 +99,10 @@
     const html='<option value="">Velg kamp uten resultat</option>'+body;
     if(html!==lastHtml||select.innerHTML!==html){
       lastHtml=html;
-      writingSelect=true;
-      try{
-        select.innerHTML=html;
-        if(current&&[...select.options].some(o=>o.value===current))select.value=current;
-      }finally{writingSelect=false}
+      select.innerHTML=html;
+      if(current&&[...select.options].some(o=>o.value===current))select.value=current;
     }
-    select.disabled=false;
-    select.required=true;
-    hint.textContent=rows.length?`Viser ${rows.length} kamp(er) uten resultat. Kamper med resultat skjules.`:'Ingen kamper mangler resultat akkurat nå.';
+    hint(rows.length?`Viser ${rows.length} kamp(er) uten resultat. Slutt/startede kamper ligger øverst.`:'Ingen kamper mangler resultat akkurat nå.');
   }
 
   async function save(id,result){
@@ -127,7 +128,7 @@
       lastHtml='';
       const form=document.getElementById('resultForm');
       if(form)form.reset();
-      setTimeout(refresh,100);
+      setTimeout(refresh,150);
       setTimeout(()=>window.VM_SAFE_BOOT?.settleBets?.({id,result}),700);
       setTimeout(()=>window.VM_UPCOMING_MATCH_SEED?.boot?.(),1000);
     }catch(err){
@@ -144,27 +145,30 @@
       if(!form)return;
       e.preventDefault();
       e.stopImmediatePropagation();
-      const fd=new FormData(form);
-      save(fd.get('matchId'),fd.get('result'));
+      const safe=document.getElementById('resultMatchSelectSafe');
+      const result=form.querySelector('select[name="result"]');
+      save(safe?.value,result?.value);
     },true);
-    document.addEventListener('focusin',e=>{if(e.target?.id==='resultMatchSelect')setTimeout(refresh,25)});
-    document.addEventListener('pointerdown',e=>{if(e.target?.id==='resultMatchSelect')setTimeout(refresh,25)},true);
   }
 
   function listen(){
     if(!ready()||unsub)return;
-    unsub=firebase.firestore().collection('matches').onSnapshot(()=>{lastHtml='';setTimeout(refresh,70)},e=>console.warn('Result selector listen failed',e));
+    unsub=firebase.firestore().collection('matches').onSnapshot(()=>{
+      lastHtml='';
+      clearTimeout(refreshTimer);
+      refreshTimer=setTimeout(refresh,180);
+    },e=>console.warn('Result selector listen failed',e));
   }
 
   function boot(){
     if(!ready())return;
-    bind();listen();refresh();
-    setTimeout(refresh,250);setTimeout(refresh,800);setTimeout(refresh,1600);
+    bind();listen();addCss();safeSelect();refresh();
+    setTimeout(refresh,300);setTimeout(refresh,1200);
   }
 
   window.VM_RESULT_SELECTOR_LOCK={boot,refresh,save,loadRows};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
   try{firebase.auth().onAuthStateChanged(u=>{if(u)setTimeout(boot,500)})}catch{}
-  document.addEventListener('click',e=>{if(e.target.closest?.('[data-page="betting"],#adminPanel,#resultForm,#resultMatchSelect'))setTimeout(boot,100)});
-  setInterval(refresh,1200);
+  document.addEventListener('click',e=>{if(e.target.closest?.('[data-page="betting"],#adminPanel,#resultForm'))setTimeout(boot,160)});
+  setInterval(()=>{if(document.activeElement?.id!=='resultMatchSelectSafe')refresh()},5000);
 })();
