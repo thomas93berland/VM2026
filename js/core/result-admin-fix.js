@@ -15,6 +15,7 @@
   const hasResult=m=>!!String(m?.result||'').trim();
   const msOf=v=>Date.parse(v||'');
   const resultReady=m=>{const ms=msOf(m?.time);return !Number.isFinite(ms)||Date.now()>=ms+RESULT_GRACE_MS};
+  const relevantSeed=m=>m.seedGroup==='four-match-window-2026'||!m.seeded;
 
   function addCss(){
     if(document.getElementById('directResultPanelCss'))return;
@@ -89,7 +90,8 @@
     const ids=activeWindowIds();
     return matches
       .filter(m=>!hasResult(m))
-      .filter(m=>ids&&ids.size ? ids.has(m.id) : (m.seedGroup==='four-match-window-2026'||!m.seeded))
+      .filter(m=>relevantSeed(m))
+      .filter(m=>ids&&ids.size ? ids.has(m.id) : true)
       .filter(m=>resultReady(m))
       .sort((a,b)=>String(a.time||'').localeCompare(String(b.time||'')));
   }
