@@ -3,7 +3,6 @@
   window.VM_UPCOMING_MATCH_SEED_LOADED=true;
 
   const BATCH_SIZE=4;
-  const MATCH_END_GRACE_MS=115*60*1000;
   const fixtures=[
     {id:'wc2026-sui-dza-r32-2026-07-03',home:'Sveits',away:'Algerie',time:'2026-07-03T03:00:00Z',group:'Round of 32',odds:{home:2.20,draw:3.20,away:3.10}},
     {id:'wc2026-aus-egy-r32-2026-07-03',home:'Australia',away:'Egypt',time:'2026-07-03T18:00:00Z',group:'Round of 32',odds:{home:2.85,draw:3.15,away:2.35}},
@@ -35,12 +34,17 @@
   const msOf=v=>Date.parse(v||'');
   const started=v=>{const ms=msOf(v);return Number.isFinite(ms)&&Date.now()>=ms};
 
-  function loadResultSaveLite(){
-    if(document.querySelector('script[src*="result-save-lite.js"]'))return;
+  function loadScript(src,needle){
+    if(document.querySelector(`script[src*="${needle}"]`))return;
     const script=document.createElement('script');
-    script.src='js/core/result-save-lite.js?v=1';
+    script.src=src;
     script.defer=true;
     document.body.appendChild(script);
+  }
+
+  function loadResultHelpers(){
+    loadScript('js/core/result-save-lite.js?v=1','result-save-lite.js');
+    loadScript('js/core/result-admin-stable.js?v=1','result-admin-stable.js');
   }
 
   async function isAdmin(){
@@ -111,7 +115,12 @@
 
   function listenMatches(){
     if(!ready()||unsub)return;
-    unsub=firebase.firestore().collection('matches').onSnapshot(s=>{rebuildMaps(s.docs.map(d=>({id:d.id,...d.data()})));decorateBoard();window.VM_RESULT_STABLE?.refreshSelect?.()},e=>console.warn('Upcoming match window listen failed',e));
+    unsub=firebase.firestore().collection('matches').onSnapshot(s=>{
+      rebuildMaps(s.docs.map(d=>({id:d.id,...d.data()})));
+      decorateBoard();
+      setTimeout(()=>window.VM_RESULT_STABLE?.refreshSelect?.(),120);
+      setTimeout(()=>window.VM_RESULT_FIX?.refreshSelect?.(),180);
+    },e=>console.warn('Upcoming match window listen failed',e));
   }
 
   async function seedCurrentBatch(){
@@ -130,14 +139,13 @@
     },{merge:true}));
     await batch.commit();
     toast(`${missing.length} kommende kamp(er) lagt ut for betting`);
-    setTimeout(()=>window.VM_RESULT_FIX?.refreshSelect?.(),400);
     setTimeout(()=>window.VM_RESULT_STABLE?.refreshSelect?.(),500);
     setTimeout(()=>window.VM_RESULT_SAVE_LITE?.boot?.(),700);
   }
 
   function boot(){
     if(!ready())return;
-    loadResultSaveLite();
+    loadResultHelpers();
     watchBoard();
     listenMatches();
     seedCurrentBatch().catch(e=>console.warn('Could not seed current match batch',e));
