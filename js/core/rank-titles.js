@@ -66,25 +66,15 @@
     if (!main) return;
     const search = main.querySelector(':scope > .search') || document.querySelector('.search');
     let strip = document.getElementById('vmLoungeHeaderLogo');
-
     if (!strip) {
       strip = document.createElement('div');
       strip.id = 'vmLoungeHeaderLogo';
       strip.className = 'vm-lounge-strip';
       strip.setAttribute('role', 'img');
       strip.setAttribute('aria-label', 'TheLounge VM 2026 The Best Bet');
-      strip.innerHTML = `
-        <div class="vm-lounge-mark" aria-hidden="true"><b>TL</b><i></i></div>
-        <div class="vm-lounge-title"><small>VM 2026</small><strong>TheLounge</strong></div>
-        <div class="vm-lounge-bet-tag" aria-hidden="true"><span class="vm-lounge-bars"><span></span><span></span><span></span></span><b>The Best Bet</b></div>
-      `;
+      strip.innerHTML = `<div class="vm-lounge-mark" aria-hidden="true"><b>TL</b><i></i></div><div class="vm-lounge-title"><small>VM 2026</small><strong>TheLounge</strong></div><div class="vm-lounge-bet-tag" aria-hidden="true"><span class="vm-lounge-bars"><span></span><span></span><span></span></span><b>The Best Bet</b></div>`;
     }
-
-    if (search) {
-      search.replaceWith(strip);
-      return;
-    }
-
+    if (search) { search.replaceWith(strip); return; }
     if (!strip.isConnected) {
       const topbar = main.querySelector('.topbar');
       if (topbar) topbar.insertAdjacentElement('afterend', strip);
@@ -95,10 +85,7 @@
   function installBettingPoster(){
     const page = document.getElementById('page-betting');
     if (!page) return;
-    page.querySelectorAll('.betting-poster,.betting-hero-image,.vm-betting-night-poster').forEach(el => {
-      if (el.id !== 'vmBettingNightPoster') el.remove();
-    });
-
+    page.querySelectorAll('.betting-poster,.betting-hero-image,.vm-betting-night-poster').forEach(el => { if (el.id !== 'vmBettingNightPoster') el.remove(); });
     let poster = document.getElementById('vmBettingNightPoster');
     if (!poster) {
       poster = document.createElement('article');
@@ -106,7 +93,6 @@
       poster.className = 'vm-betting-poster-card vm-betting-night-poster';
       poster.innerHTML = '<img src="assets/vm-kamper-ikveld.svg?v=1" alt="VM-kamper i kveld – fire kamper, full spenning" loading="eager" />';
     }
-
     const head = page.querySelector('.page-head');
     if (head && head.nextElementSibling !== poster) head.insertAdjacentElement('afterend', poster);
     else if (!poster.isConnected) page.prepend(poster);
@@ -115,21 +101,16 @@
   function sortedUsers(){
     return [...users].sort((a,b) => (Number(b.coins||0) - Number(a.coins||0)) || String(a.name||'').localeCompare(String(b.name||'')));
   }
-
   function badgeClass(rank, extra=''){
     return `vm-rank-badge${extra}${rank.level===7?' top-rank':''}`;
   }
-
   function injectLeaderboard(){
     const sorted = sortedUsers();
     ['homeLeaderboard','leaderboardPageList'].forEach(id => {
-      const box = document.getElementById(id);
-      if (!box) return;
+      const box = document.getElementById(id); if (!box) return;
       [...box.querySelectorAll('.leaderboard-row')].forEach((row, i) => {
-        const u = sorted[i];
-        if (!u) return;
-        const holder = row.querySelector('div:not(.avatar)');
-        if (!holder) return;
+        const u = sorted[i]; if (!u) return;
+        const holder = row.querySelector('div:not(.avatar)'); if (!holder) return;
         const r = rankTitle(u.coins);
         let badge = holder.querySelector('.vm-rank-badge');
         if (!badge) { badge = document.createElement('span'); holder.appendChild(badge); }
@@ -138,20 +119,13 @@
       });
     });
   }
-
   function injectProfile(){
-    const u = me;
-    if (!u) return;
+    const u = me; if (!u) return;
     const r = rankTitle(u.coins);
     const detail = document.querySelector('#page-profile .profile-detail');
     if (detail) {
       let badge = detail.querySelector('#vmProfileRank');
-      if (!badge) {
-        badge = document.createElement('div');
-        badge.id = 'vmProfileRank';
-        const target = detail.querySelector('p') || detail.querySelector('h1') || detail;
-        target.insertAdjacentElement('afterend', badge);
-      }
+      if (!badge) { badge = document.createElement('div'); badge.id = 'vmProfileRank'; const target = detail.querySelector('p') || detail.querySelector('h1') || detail; target.insertAdjacentElement('afterend', badge); }
       badge.className = badgeClass(r,' big');
       badge.innerHTML = `${r.icon} Rank: ${esc(r.title)} <span class="vm-rank-coins">${Number(u.coins||0).toLocaleString('nb-NO')} coins</span>`;
     }
@@ -173,33 +147,25 @@
   }
 
   function render(){ addCss(); installHeaderLogo(); installBettingPoster(); injectLeaderboard(); injectProfile(); }
-
   function listen(){
     if (!ready()) return;
     const db = firebase.firestore();
     const u = firebase.auth().currentUser;
-    if (!unsubUsers) {
-      unsubUsers = db.collection('users').onSnapshot(s => { users = s.docs.map(d => ({ id:d.id, ...d.data() })); render(); }, e => console.warn('Rank users failed', e));
-    }
-    if (u && !unsubMe) {
-      unsubMe = db.collection('users').doc(u.uid).onSnapshot(s => { me = s.exists ? { id:s.id, ...s.data() } : null; render(); }, e => console.warn('Rank me failed', e));
-    }
+    if (!unsubUsers) unsubUsers = db.collection('users').onSnapshot(s => { users = s.docs.map(d => ({ id:d.id, ...d.data() })); render(); }, e => console.warn('Rank users failed', e));
+    if (u && !unsubMe) unsubMe = db.collection('users').doc(u.uid).onSnapshot(s => { me = s.exists ? { id:s.id, ...s.data() } : null; render(); }, e => console.warn('Rank me failed', e));
   }
-
   function watch(){
     if (observer || !document.body) return;
     observer = new MutationObserver(() => setTimeout(render, 80));
     observer.observe(document.body, { childList:true, subtree:true });
   }
-
   function loadUpcomingSeeder(){
     if (document.querySelector('script[src*="upcoming-match-seed.js"]')) return;
     const script = document.createElement('script');
-    script.src = 'js/core/upcoming-match-seed.js?v=3';
+    script.src = 'js/core/upcoming-match-seed.js?v=4';
     script.defer = true;
     document.body.appendChild(script);
   }
-
   function boot(){ addCss(); installHeaderLogo(); installBettingPoster(); watch(); loadUpcomingSeeder(); if (ready()) listen(); render(); }
 
   window.VM_RANK_TITLES = { boot, render, rankTitle };
