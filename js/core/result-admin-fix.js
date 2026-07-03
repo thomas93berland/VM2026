@@ -4,6 +4,7 @@
   let unsub=null;
   let bound=false;
   let booted=false;
+  const RESULT_GRACE_MS=105*60*1000;
 
   const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
   const ready=()=>{try{return window.firebase&&firebase.auth&&firebase.firestore&&firebase.auth().currentUser}catch{return false}};
@@ -12,7 +13,8 @@
   const when=v=>{const d=new Date(v);return v&&!isNaN(d)?d.toLocaleString('nb-NO',{weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'Ukjent tid'};
   const label=(m,p)=>p==='home'?(m.home||'Hjemme'):p==='away'?(m.away||'Borte'):'Uavgjort';
   const hasResult=m=>!!String(m?.result||'').trim();
-  const isPast=m=>{const ms=Date.parse(m?.time||'');return Number.isFinite(ms)&&ms<Date.now()};
+  const msOf=v=>Date.parse(v||'');
+  const resultReady=m=>{const ms=msOf(m?.time);return !Number.isFinite(ms)||Date.now()>=ms+RESULT_GRACE_MS};
 
   function addCss(){
     if(document.getElementById('directResultPanelCss'))return;
@@ -26,8 +28,7 @@
       .direct-result-head small{display:block!important;margin-top:4px!important;color:rgba(235,238,247,.68)!important;font-size:12px!important;font-weight:800!important;line-height:1.3!important;}
       .direct-result-count{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-width:32px!important;height:28px!important;padding:0 9px!important;border-radius:999px!important;background:rgba(228,184,78,.12)!important;border:1px solid rgba(228,184,78,.28)!important;color:#ffd77a!important;font-size:12px!important;font-weight:1000!important;}
       .direct-result-list{display:grid!important;gap:10px!important;}
-      .direct-result-row{padding:11px!important;border-radius:16px!important;background:rgba(255,255,255,.045)!important;border:1px solid rgba(255,255,255,.08)!important;}
-      .direct-result-row.done-past{border-color:rgba(255,197,94,.24)!important;background:linear-gradient(145deg,rgba(255,197,94,.075),rgba(255,255,255,.035))!important;}
+      .direct-result-row{padding:11px!important;border-radius:16px!important;background:linear-gradient(145deg,rgba(255,197,94,.075),rgba(255,255,255,.035))!important;border:1px solid rgba(255,197,94,.24)!important;}
       .direct-result-teams{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;margin-bottom:5px!important;}
       .direct-result-teams b{color:#fff!important;font-size:14px!important;line-height:1.15!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;}
       .direct-result-time{display:block!important;color:rgba(235,238,247,.65)!important;font-size:11px!important;font-weight:800!important;margin-bottom:9px!important;}
@@ -51,9 +52,20 @@
     }catch(e){console.warn('Direct result admin check failed',e);admin=false;return false}
   }
 
+  function cleanupOldResultUi(){
+    try{
+      document.getElementById('vmResultButtonPanel')?.remove();
+      document.getElementById('directResultPanelCssOld')?.remove();
+      const form=document.getElementById('resultForm');
+      if(form)form.style.display='none';
+      const panels=[...document.querySelectorAll('#adminPanel section,#adminPanel article,#adminPanel .card')].filter(el=>el.id!=='directResultPanel'&&String(el.textContent||'').toLowerCase().includes('automatisk resultatpanel'));
+      panels.forEach(el=>el.remove());
+    }catch(e){console.warn('Old result cleanup skipped',e)}
+  }
+
   function ensurePanel(){
+    cleanupOldResultUi();
     const form=document.getElementById('resultForm');
-    if(form)form.style.display='none';
     let panel=document.getElementById('directResultPanel');
     if(panel)return panel;
     const adminPanel=document.getElementById('adminPanel');
@@ -65,13 +77,21 @@
     return panel;
   }
 
+  function activeWindowIds(){
+    try{
+      const ids=window.VM_UPCOMING_MATCH_SEED?.computeAllowedIds?.();
+      if(ids&&ids.size)return ids;
+    }catch(e){console.warn('Could not read active 4-match window',e)}
+    return null;
+  }
+
   function unresolved(){
+    const ids=activeWindowIds();
     return matches
       .filter(m=>!hasResult(m))
-      .sort((a,b)=>{
-        const ap=isPast(a)?0:1,bp=isPast(b)?0:1;
-        return ap-bp || String(a.time||'').localeCompare(String(b.time||''));
-      });
+      .filter(m=>ids&&ids.size ? ids.has(m.id) : (m.seedGroup==='four-match-window-2026'||!m.seeded))
+      .filter(m=>resultReady(m))
+      .sort((a,b)=>String(a.time||'').localeCompare(String(b.time||'')));
   }
 
   function render(){
@@ -80,20 +100,16 @@
     if(!panel)return;
     if(!admin){panel.innerHTML='';return}
     const rows=unresolved();
-    const list=rows.length?rows.map(m=>{
-      const past=isPast(m);
-      return `<article class="direct-result-row ${past?'done-past':''}" data-direct-result-row="${esc(m.id)}">
-        <div class="direct-result-teams"><b>${esc(m.home||'Hjemme')}</b><b>${esc(m.away||'Borte')}</b></div>
-        <span class="direct-result-time">${esc(when(m.time))} · <span class="direct-result-status">${past?'Slutt / mangler resultat':'Ikke spilt ennå'}</span></span>
-        <div class="direct-result-buttons">
-          <button type="button" class="direct-result-btn" data-result-match="${esc(m.id)}" data-result-pick="home">${esc(label(m,'home'))}</button>
-          <button type="button" class="direct-result-btn" data-result-match="${esc(m.id)}" data-result-pick="draw">Uavgjort</button>
-          <button type="button" class="direct-result-btn" data-result-match="${esc(m.id)}" data-result-pick="away">${esc(label(m,'away'))}</button>
-        </div>
-      </article>`;
-    }).join(''):'<div class="direct-result-empty">Ingen kamper uten resultat akkurat nå. Når nye kamper legges ut, dukker de opp her automatisk.</div>';
-
-    panel.innerHTML=`<div class="direct-result-head"><div><h3>Automatisk resultatpanel</h3><small>Dropdownen er fjernet. Kamper uten resultat vises automatisk her. Trykk riktig utfall, så oppdateres kamp, bets og toppliste.</small></div><span class="direct-result-count">${rows.length}</span></div><div class="direct-result-list">${list}</div>`;
+    const list=rows.length?rows.map(m=>`<article class="direct-result-row" data-direct-result-row="${esc(m.id)}">
+      <div class="direct-result-teams"><b>${esc(m.home||'Hjemme')}</b><b>${esc(m.away||'Borte')}</b></div>
+      <span class="direct-result-time">${esc(when(m.time))} · <span class="direct-result-status">Slutt / mangler resultat</span></span>
+      <div class="direct-result-buttons">
+        <button type="button" class="direct-result-btn" data-result-match="${esc(m.id)}" data-result-pick="home">${esc(label(m,'home'))}</button>
+        <button type="button" class="direct-result-btn" data-result-match="${esc(m.id)}" data-result-pick="draw">Uavgjort</button>
+        <button type="button" class="direct-result-btn" data-result-match="${esc(m.id)}" data-result-pick="away">${esc(label(m,'away'))}</button>
+      </div>
+    </article>`).join(''):'<div class="direct-result-empty">Ingen ferdige kamper i aktiv 4-pakke mangler resultat akkurat nå. Gamle/ikke-aktive kamper er skjult.</div>';
+    panel.innerHTML=`<div class="direct-result-head"><div><h3>Resultatpanel</h3><small>Viser bare ferdige kamper i aktiv 4-pakke som mangler resultat. Gamle kamper skjules automatisk.</small></div><span class="direct-result-count">${rows.length}</span></div><div class="direct-result-list">${list}</div>`;
   }
 
   function listenMatches(){
@@ -141,7 +157,7 @@
       if(e.target?.id==='resultForm'){
         e.preventDefault();
         e.stopImmediatePropagation();
-        toast('Resultatvelgeren er fjernet. Bruk knappene i resultatpanelet.');
+        toast('Bruk knappene i resultatpanelet. Gammel dropdown er deaktivert.');
       }
     },true);
   }
@@ -157,11 +173,11 @@
     booted=true;
   }
 
-  window.VM_RESULT_FIX={boot,refreshSelect:render,render,saveResult};
+  window.VM_RESULT_FIX={boot,refreshSelect:render,render,saveResult,unresolved};
   window.VM_DIRECT_RESULT_PANEL={boot,render,saveResult};
 
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
   try{firebase.auth().onAuthStateChanged(u=>{if(u)setTimeout(boot,350);else{matches=[];admin=false;render()}})}catch{}
-  document.addEventListener('click',e=>{if(e.target.closest?.('[data-page="betting"]'))setTimeout(boot,250)});
-  setInterval(()=>{if(booted)render()},5000);
+  document.addEventListener('click',e=>{if(e.target.closest?.('[data-page="betting"],#adminPanel'))setTimeout(boot,250)});
+  setInterval(()=>{if(booted)render()},3000);
 })();
