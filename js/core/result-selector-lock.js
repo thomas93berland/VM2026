@@ -1,11 +1,5 @@
 (()=>{
-  let admin=false;
-  let lastHtml='';
-  let unsub=null;
-  let bound=false;
-  let saving=false;
-  let writingSelect=false;
-  const ADMIN_EMAIL='thomas93berland@gmail.com';
+  let admin=false,lastHtml='',unsub=null,bound=false,saving=false,writingSelect=false;
   const ready=()=>{try{return window.firebase&&firebase.auth&&firebase.firestore&&firebase.auth().currentUser}catch{return false}};
   const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
   const toast=msg=>{try{const t=document.getElementById('toast');if(t){t.textContent=msg;t.hidden=false;clearTimeout(toast.x);toast.x=setTimeout(()=>t.hidden=true,4200)}else alert(msg)}catch{alert(msg)}};
@@ -13,19 +7,19 @@
   const title=m=>(m.home||'Hjemme')+' – '+(m.away||'Borte');
   const label=(m,r)=>r==='home'?(m.home||'Hjemme'):r==='away'?(m.away||'Borte'):'Uavgjort';
   const hasResult=m=>!!String(m?.result||'').trim();
-  const isPast=m=>{const ms=Date.parse(m?.time||'');return Number.isFinite(ms)&&ms<=Date.now()+60000};
+  const msOf=m=>Date.parse(m?.time||'');
+  const started=m=>{const ms=msOf(m);return !Number.isFinite(ms)||ms<=Date.now()+60000};
+  const rowStatus=m=>started(m)?'⏰ slutt/startet · mangler resultat':'🟢 kommende · uten resultat';
 
   async function checkAdmin(){
     if(!ready()){admin=false;return false}
     const u=firebase.auth().currentUser;
-    const email=String(u.email||'').toLowerCase();
-    const name=String(u.displayName||email.split('@')[0]||'').toLowerCase();
     try{
       const s=await firebase.firestore().collection('users').doc(u.uid).get();
-      admin=email===ADMIN_EMAIL||name.includes('thomas')||!!(s.exists&&s.data()?.isAdmin===true);
+      admin=!!(s.exists&&s.data()?.isAdmin===true);
     }catch(e){
       console.warn('Result admin check failed',e);
-      admin=email===ADMIN_EMAIL||name.includes('thomas');
+      admin=false;
     }
     return admin;
   }
@@ -54,11 +48,7 @@
 
   function nativeInnerHtmlDescriptor(el){
     let p=Object.getPrototypeOf(el);
-    while(p){
-      const d=Object.getOwnPropertyDescriptor(p,'innerHTML');
-      if(d?.get&&d?.set)return d;
-      p=Object.getPrototypeOf(p);
-    }
+    while(p){const d=Object.getOwnPropertyDescriptor(p,'innerHTML');if(d?.get&&d?.set)return d;p=Object.getPrototypeOf(p)}
     return null;
   }
 
@@ -69,20 +59,18 @@
     Object.defineProperty(select,'innerHTML',{
       configurable:true,
       get(){return d.get.call(this)},
-      set(v){
-        if(writingSelect){d.set.call(this,v);return}
-        setTimeout(refresh,40);
-      }
+      set(v){if(writingSelect){d.set.call(this,v);return}setTimeout(refresh,30)}
     });
     select.dataset.resultSelectorLocked='yes';
   }
 
   async function loadRows(){
     const snap=await firebase.firestore().collection('matches').get();
-    return snap.docs
-      .map(d=>({id:d.id,...d.data()}))
-      .filter(m=>!hasResult(m)&&isPast(m))
-      .sort((a,b)=>String(a.time||'').localeCompare(String(b.time||'')));
+    return snap.docs.map(d=>({id:d.id,...d.data()})).filter(m=>!hasResult(m)).sort((a,b)=>{
+      const as=started(a)?0:1,bs=started(b)?0:1;
+      if(as!==bs)return as-bs;
+      return String(a.time||'').localeCompare(String(b.time||''));
+    });
   }
 
   async function refresh(){
@@ -96,13 +84,13 @@
     lockSelect(select);
     let hint=document.getElementById('resultSelectorSimpleHint');
     if(!hint){hint=document.createElement('p');hint.id='resultSelectorSimpleHint';form.insertAdjacentElement('afterend',hint)}
-    if(!admin){hint.textContent='Admin ikke bekreftet. Logg inn som Thomas/admin.';return}
+    if(!admin){hint.textContent='Admin ikke bekreftet. Sjekk at brukeren din har isAdmin=true i Firestore.';return}
     const current=select.value;
     const rows=await loadRows();
     const body=rows.length
-      ? rows.map(m=>`<option value="${esc(m.id)}">⏰ ${esc(when(m.time))} · ${esc(title(m))}</option>`).join('')
-      : '<option value="" disabled>Ingen sluttkamper uten resultat</option>';
-    const html='<option value="">Velg sluttkamp uten resultat</option>'+body;
+      ? rows.map(m=>`<option value="${esc(m.id)}">${esc(when(m.time))} · ${esc(title(m))} · ${esc(rowStatus(m))}</option>`).join('')
+      : '<option value="" disabled>Ingen kamper uten resultat</option>';
+    const html='<option value="">Velg kamp uten resultat</option>'+body;
     if(html!==lastHtml||select.innerHTML!==html){
       lastHtml=html;
       writingSelect=true;
@@ -113,7 +101,7 @@
     }
     select.disabled=false;
     select.required=true;
-    hint.textContent=rows.length?`Viser ${rows.length} sluttkamp(er) som mangler resultat.`:'Ingen sluttkamper mangler resultat akkurat nå.';
+    hint.textContent=rows.length?`Viser ${rows.length} kamp(er) uten resultat. Kamper med resultat skjules.`:'Ingen kamper mangler resultat akkurat nå.';
   }
 
   async function save(id,result){
@@ -139,9 +127,9 @@
       lastHtml='';
       const form=document.getElementById('resultForm');
       if(form)form.reset();
-      setTimeout(refresh,120);
-      setTimeout(()=>window.VM_SAFE_BOOT?.settleBets?.({id,result}),800);
-      setTimeout(()=>window.VM_UPCOMING_MATCH_SEED?.boot?.(),1200);
+      setTimeout(refresh,100);
+      setTimeout(()=>window.VM_SAFE_BOOT?.settleBets?.({id,result}),700);
+      setTimeout(()=>window.VM_UPCOMING_MATCH_SEED?.boot?.(),1000);
     }catch(err){
       console.error('Result save failed',err);
       toast((err?.code?err.code+': ':'')+(err?.message||'Kunne ikke legge inn resultat'));
@@ -159,29 +147,24 @@
       const fd=new FormData(form);
       save(fd.get('matchId'),fd.get('result'));
     },true);
+    document.addEventListener('focusin',e=>{if(e.target?.id==='resultMatchSelect')setTimeout(refresh,25)});
+    document.addEventListener('pointerdown',e=>{if(e.target?.id==='resultMatchSelect')setTimeout(refresh,25)},true);
   }
 
   function listen(){
     if(!ready()||unsub)return;
-    unsub=firebase.firestore().collection('matches').onSnapshot(()=>{
-      lastHtml='';
-      setTimeout(refresh,100);
-    },e=>console.warn('Result selector listen failed',e));
+    unsub=firebase.firestore().collection('matches').onSnapshot(()=>{lastHtml='';setTimeout(refresh,70)},e=>console.warn('Result selector listen failed',e));
   }
 
   function boot(){
     if(!ready())return;
-    bind();
-    listen();
-    refresh();
-    setTimeout(refresh,300);
-    setTimeout(refresh,900);
-    setTimeout(refresh,1800);
+    bind();listen();refresh();
+    setTimeout(refresh,250);setTimeout(refresh,800);setTimeout(refresh,1600);
   }
 
-  window.VM_RESULT_SELECTOR_LOCK={boot,refresh,save};
+  window.VM_RESULT_SELECTOR_LOCK={boot,refresh,save,loadRows};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
-  try{firebase.auth().onAuthStateChanged(u=>{if(u)setTimeout(boot,600)})}catch{}
-  document.addEventListener('click',e=>{if(e.target.closest?.('[data-page="betting"],#adminPanel,#resultForm,#resultMatchSelect'))setTimeout(boot,120)});
-  setInterval(refresh,1800);
+  try{firebase.auth().onAuthStateChanged(u=>{if(u)setTimeout(boot,500)})}catch{}
+  document.addEventListener('click',e=>{if(e.target.closest?.('[data-page="betting"],#adminPanel,#resultForm,#resultMatchSelect'))setTimeout(boot,100)});
+  setInterval(refresh,1200);
 })();
