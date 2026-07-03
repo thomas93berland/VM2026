@@ -34,19 +34,6 @@
   const msOf=v=>Date.parse(v||'');
   const started=v=>{const ms=msOf(v);return Number.isFinite(ms)&&Date.now()>=ms};
 
-  function loadScript(src,needle){
-    if(document.querySelector(`script[src*="${needle}"]`))return;
-    const script=document.createElement('script');
-    script.src=src;
-    script.defer=true;
-    document.body.appendChild(script);
-  }
-
-  function loadResultHelpers(){
-    loadScript('js/core/result-save-lite.js?v=1','result-save-lite.js');
-    loadScript('js/core/result-admin-stable.js?v=1','result-admin-stable.js');
-  }
-
   async function isAdmin(){
     if(!ready())return false;
     const u=firebase.auth().currentUser;
@@ -118,7 +105,6 @@
     unsub=firebase.firestore().collection('matches').onSnapshot(s=>{
       rebuildMaps(s.docs.map(d=>({id:d.id,...d.data()})));
       decorateBoard();
-      setTimeout(()=>window.VM_RESULT_STABLE?.refreshSelect?.(),120);
       setTimeout(()=>window.VM_RESULT_FIX?.refreshSelect?.(),180);
     },e=>console.warn('Upcoming match window listen failed',e));
   }
@@ -139,13 +125,11 @@
     },{merge:true}));
     await batch.commit();
     toast(`${missing.length} kommende kamp(er) lagt ut for betting`);
-    setTimeout(()=>window.VM_RESULT_STABLE?.refreshSelect?.(),500);
-    setTimeout(()=>window.VM_RESULT_SAVE_LITE?.boot?.(),700);
+    setTimeout(()=>window.VM_RESULT_FIX?.refreshSelect?.(),500);
   }
 
   function boot(){
     if(!ready())return;
-    loadResultHelpers();
     watchBoard();
     listenMatches();
     seedCurrentBatch().catch(e=>console.warn('Could not seed current match batch',e));
