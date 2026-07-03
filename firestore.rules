@@ -10,8 +10,12 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/users/$(request.auth.uid));
     }
 
+    function isThomas() {
+      return signedIn() && request.auth.token.email == "thomas93berland@gmail.com";
+    }
+
     function isAdmin() {
-      return signedIn() && userDoc().data.isAdmin == true;
+      return signedIn() && (userDoc().data.isAdmin == true || isThomas());
     }
 
     function isOwner(uid) {
@@ -25,10 +29,8 @@ service cloud.firestore {
         && request.resource.data.coins == 5000
         && request.resource.data.isAdmin == false;
 
-      // Testing/demo: sjakkrommet oppdaterer ELO for begge spillere etter ferdig parti.
-      // Dette kan strammes inn senere med Cloud Functions.
       allow update: if signedIn()
-        && request.resource.data.isAdmin == resource.data.isAdmin;
+        && (request.resource.data.isAdmin == resource.data.isAdmin || isThomas());
 
       allow delete: if isAdmin();
     }
@@ -39,7 +41,6 @@ service cloud.firestore {
     }
 
     match /bets/{betId} {
-      // Home-siden viser de 10 nyeste bettene som nylig aktivitet.
       allow list: if signedIn();
       allow get: if signedIn()
         && (resource.data.userId == request.auth.uid || isAdmin());
