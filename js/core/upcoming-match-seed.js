@@ -9,12 +9,10 @@
     {id:'wc2026-aus-egy-r32-2026-07-03',home:'Australia',away:'Egypt',time:'2026-07-03T18:00:00Z',group:'Round of 32',odds:{home:2.85,draw:3.15,away:2.35}},
     {id:'wc2026-arg-cpv-r32-2026-07-03',home:'Argentina',away:'Kapp Verde',time:'2026-07-03T22:00:00Z',group:'Round of 32',odds:{home:1.38,draw:4.80,away:7.40}},
     {id:'wc2026-col-gha-r32-2026-07-04',home:'Colombia',away:'Ghana',time:'2026-07-04T01:30:00Z',group:'Round of 32',odds:{home:2.05,draw:3.25,away:3.35}},
-
     {id:'wc2026-can-mar-r16-2026-07-04',home:'Canada',away:'Marokko',time:'2026-07-04T17:00:00Z',group:'Round of 16',odds:{home:2.65,draw:3.10,away:2.55}},
     {id:'wc2026-par-fra-r16-2026-07-04',home:'Paraguay',away:'Frankrike',time:'2026-07-04T21:00:00Z',group:'Round of 16',odds:{home:5.60,draw:3.95,away:1.52}},
     {id:'wc2026-bra-nor-r16-2026-07-05',home:'Brasil',away:'Norge',time:'2026-07-05T20:00:00Z',group:'Round of 16',odds:{home:1.70,draw:3.70,away:4.60}},
     {id:'wc2026-mex-eng-r16-2026-07-06',home:'Mexico',away:'England',time:'2026-07-06T00:00:00Z',group:'Round of 16',odds:{home:3.30,draw:3.20,away:2.10}},
-
     {id:'wc2026-tbd-esp-r16-2026-07-06',home:'Portugal/Kroatia-vinner',away:'Spania',time:'2026-07-06T19:00:00Z',group:'Round of 16',odds:{home:3.10,draw:3.25,away:2.15}},
     {id:'wc2026-usa-bel-r16-2026-07-07',home:'USA',away:'Belgia',time:'2026-07-07T00:00:00Z',group:'Round of 16',odds:{home:2.55,draw:3.25,away:2.55}},
     {id:'wc2026-r32-21-r16-2026-07-07',home:'Vinner Argentina/Kapp Verde',away:'Vinner Australia/Egypt',time:'2026-07-07T16:00:00Z',group:'Round of 16',odds:{home:2.00,draw:3.20,away:3.55}},
@@ -38,11 +36,17 @@
   const ended=v=>{const ms=msOf(v);return Number.isFinite(ms)&&Date.now()>=ms+MATCH_END_GRACE_MS};
   const started=v=>{const ms=msOf(v);return Number.isFinite(ms)&&Date.now()>=ms};
 
+  function loadResultSaveLite(){
+    if(document.querySelector('script[src*="result-save-lite.js"]'))return;
+    const script=document.createElement('script');
+    script.src='js/core/result-save-lite.js?v=1';
+    script.defer=true;
+    document.body.appendChild(script);
+  }
+
   async function isAdmin(){
     if(!ready())return false;
     const u=firebase.auth().currentUser;
-    const email=String(u.email||'').toLowerCase();
-    if(email===['thomas93berland','gmail.com'].join('@'))return true;
     const s=await firebase.firestore().collection('users').doc(u.uid).get();
     return !!(s.exists&&s.data()?.isAdmin===true);
   }
@@ -95,10 +99,7 @@
       const time=doc?.time||f?.time||'';
       const visible=allowedIds.has(id)&&!hasResult(doc)&&!started(time);
       card.style.display=visible?'':'none';
-      card.querySelectorAll('.odd[data-m]').forEach(b=>{
-        if(visible)b.removeAttribute('disabled');
-        else b.disabled=true;
-      });
+      card.querySelectorAll('.odd[data-m]').forEach(b=>{if(visible)b.removeAttribute('disabled');else b.disabled=true});
     });
   }
 
@@ -131,11 +132,12 @@
     await batch.commit();
     toast(`${missing.length} kommende kamp(er) lagt ut for betting`);
     setTimeout(()=>window.VM_RESULT_FIX?.refreshSelect?.(),400);
-    setTimeout(()=>window.VM_RESULT_SELECTOR_RESCUE?.refresh?.(),700);
+    setTimeout(()=>window.VM_RESULT_SAVE_LITE?.boot?.(),700);
   }
 
   function boot(){
     if(!ready())return;
+    loadResultSaveLite();
     watchBoard();
     listenMatches();
     seedCurrentBatch().catch(e=>console.warn('Could not seed current match batch',e));
