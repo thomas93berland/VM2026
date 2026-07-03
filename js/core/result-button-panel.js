@@ -28,8 +28,8 @@
     const style=document.createElement('style');
     style.id='vmResultButtonPanelCss';
     style.textContent=`
-      #resultForm{display:none!important;}
-      #resultFixHint{display:none!important;}
+      #resultForm,#resultFixHint,#resultSelectorRescueHint,#resultHardfixStatus,#resultSelectorSafeHint,#safeResultPicker,#quickResultPanel{display:none!important;visibility:hidden!important;pointer-events:none!important;height:0!important;overflow:hidden!important;margin:0!important;padding:0!important;border:0!important;}
+      #vmResultButtonPanel{display:block!important;visibility:visible!important;height:auto!important;overflow:visible!important;}
       .vm-result-panel{margin-top:14px!important;padding:14px!important;border-radius:20px!important;background:linear-gradient(145deg,rgba(12,24,43,.88),rgba(4,10,21,.94))!important;border:1px solid rgba(255,216,122,.20)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)!important;}
       .vm-result-panel-head{display:flex!important;align-items:flex-start!important;justify-content:space-between!important;gap:12px!important;margin-bottom:12px!important;}
       .vm-result-panel-head h3{margin:0!important;color:#ffd77a!important;font-size:17px!important;font-weight:1000!important;letter-spacing:-.01em!important;}
@@ -51,13 +51,12 @@
     document.head.appendChild(style);
   }
 
+  function cleanupLegacy(){
+    ['safeResultPicker','quickResultPanel','resultSelectorRescueHint','resultHardfixStatus','resultSelectorSafeHint'].forEach(id=>document.getElementById(id)?.remove());
+  }
+
   function getUnresolved(){
-    return [...matches]
-      .filter(m=>!hasResult(m))
-      .sort((a,b)=>{
-        const ap=isPast(a)?0:1,bp=isPast(b)?0:1;
-        return ap-bp||String(a.time||'').localeCompare(String(b.time||''));
-      });
+    return [...matches].filter(m=>!hasResult(m)).sort((a,b)=>{const ap=isPast(a)?0:1,bp=isPast(b)?0:1;return ap-bp||String(a.time||'').localeCompare(String(b.time||''))});
   }
 
   function ensurePanel(){
@@ -69,42 +68,17 @@
       panel.id='vmResultButtonPanel';
       panel.className='vm-result-panel';
       const resultForm=document.getElementById('resultForm');
-      if(resultForm)resultForm.insertAdjacentElement('afterend',panel);
-      else adminPanel.appendChild(panel);
+      if(resultForm)resultForm.insertAdjacentElement('afterend',panel);else adminPanel.appendChild(panel);
     }
     return panel;
   }
 
   function render(){
-    addCss();
+    addCss();cleanupLegacy();
     const panel=ensurePanel();
     if(!panel||!admin)return;
     const rows=getUnresolved();
-    panel.innerHTML=`
-      <div class="vm-result-panel-head">
-        <div>
-          <h3>Legg inn resultat</h3>
-          <p>Viser kun kamper uten resultat. Bruk knappene under — dette overstyrer den ustabile dropdownen.</p>
-        </div>
-        <span class="vm-result-count">${rows.length}</span>
-      </div>
-      <div class="vm-result-list">
-        ${rows.length?rows.map(m=>`
-          <article class="vm-result-row" data-result-row="${esc(m.id)}">
-            <div class="vm-result-meta">
-              <small>${esc(when(m.time))}</small>
-              <span class="vm-result-status">${isPast(m)?'Slutt / mangler resultat':'Ikke spilt ennå'}</span>
-            </div>
-            <div class="vm-result-title">${esc(title(m))}</div>
-            <div class="vm-result-actions">
-              <button class="vm-result-btn" type="button" data-result-match="${esc(m.id)}" data-result-pick="home">${esc(label(m,'home'))}</button>
-              <button class="vm-result-btn" type="button" data-result-match="${esc(m.id)}" data-result-pick="draw">Uavgjort</button>
-              <button class="vm-result-btn" type="button" data-result-match="${esc(m.id)}" data-result-pick="away">${esc(label(m,'away'))}</button>
-            </div>
-          </article>
-        `).join(''):'<div class="vm-result-empty">Ingen kamper mangler resultat akkurat nå.</div>'}
-      </div>
-    `;
+    panel.innerHTML=`<div class="vm-result-panel-head"><div><h3>Legg inn resultat</h3><p>Viser kun kamper uten resultat. Bruk knappene under.</p></div><span class="vm-result-count">${rows.length}</span></div><div class="vm-result-list">${rows.length?rows.map(m=>`<article class="vm-result-row" data-result-row="${esc(m.id)}"><div class="vm-result-meta"><small>${esc(when(m.time))}</small><span class="vm-result-status">${isPast(m)?'Slutt / mangler resultat':'Ikke spilt ennå'}</span></div><div class="vm-result-title">${esc(title(m))}</div><div class="vm-result-actions"><button class="vm-result-btn" type="button" data-result-match="${esc(m.id)}" data-result-pick="home">${esc(label(m,'home'))}</button><button class="vm-result-btn" type="button" data-result-match="${esc(m.id)}" data-result-pick="draw">Uavgjort</button><button class="vm-result-btn" type="button" data-result-match="${esc(m.id)}" data-result-pick="away">${esc(label(m,'away'))}</button></div></article>`).join(''):'<div class="vm-result-empty">Ingen kamper mangler resultat akkurat nå.</div>'}</div>`;
   }
 
   async function setResult(matchId,result,button){
@@ -115,51 +89,28 @@
     if(!ok)return;
     try{
       if(button)button.disabled=true;
-      await firebase.firestore().collection('matches').doc(matchId).set({
-        result,
-        updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
-        updatedAtMs:Date.now()
-      },{merge:true});
+      await firebase.firestore().collection('matches').doc(matchId).set({result,resultLabel:label(m||{},result),status:'Ferdig',updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAtMs:Date.now()},{merge:true});
       toast('Resultat lagt inn');
       setTimeout(()=>window.VM_SAFE_BOOT?.settleBets?.({id:matchId,result}),700);
       setTimeout(()=>window.VM_RESULT_FIX?.refreshSelect?.(),800);
-    }catch(e){
-      console.error('Result button failed',e);
-      toast((e?.code?e.code+': ':'')+(e?.message||'Kunne ikke legge inn resultat'));
-    }finally{
-      if(button)button.disabled=false;
-    }
+      setTimeout(()=>window.VM_UPCOMING_MATCH_SEED?.boot?.(),1000);
+    }catch(e){console.error('Result button failed',e);toast((e?.code?e.code+': ':'')+(e?.message||'Kunne ikke legge inn resultat'))}
+    finally{if(button)button.disabled=false}
   }
 
   function bind(){
     if(document.body?.dataset.vmResultButtonsBound==='1')return;
     document.body.dataset.vmResultButtonsBound='1';
-    document.addEventListener('click',e=>{
-      const btn=e.target.closest?.('[data-result-match][data-result-pick]');
-      if(!btn)return;
-      e.preventDefault();
-      e.stopPropagation();
-      setResult(btn.dataset.resultMatch,btn.dataset.resultPick,btn);
-    },true);
+    document.addEventListener('click',e=>{const btn=e.target.closest?.('[data-result-match][data-result-pick]');if(!btn)return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();setResult(btn.dataset.resultMatch,btn.dataset.resultPick,btn)},true);
   }
 
-  function listen(){
-    if(!ready()||unsub)return;
-    unsub=firebase.firestore().collection('matches').onSnapshot(s=>{
-      matches=s.docs.map(d=>({id:d.id,...d.data()}));
-      render();
-    },e=>console.warn('Result panel match listen failed',e));
-  }
+  function listen(){if(!ready()||unsub)return;unsub=firebase.firestore().collection('matches').onSnapshot(s=>{matches=s.docs.map(d=>({id:d.id,...d.data()}));render()},e=>console.warn('Result panel match listen failed',e))}
 
   async function boot(){
     if(!ready())return;
     await checkAdmin();
     if(!admin)return;
-    booted=true;
-    addCss();
-    bind();
-    listen();
-    render();
+    booted=true;addCss();cleanupLegacy();bind();listen();render();
   }
 
   window.VM_RESULT_BUTTON_PANEL={boot,render};
