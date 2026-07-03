@@ -3,6 +3,8 @@
   let matches=[];
   let unsub=null;
   let bound=false;
+  let selectedMatchId='';
+  let selectedResult='';
 
   const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
   const ready=()=>{try{return window.firebase&&firebase.auth&&firebase.firestore&&firebase.auth().currentUser}catch{return false}};
@@ -11,6 +13,7 @@
   const title=m=>(m.home||'Hjemme')+' – '+(m.away||'Borte');
   const hasResult=m=>!!String(m?.result||'').trim();
   const isPast=m=>{const ms=Date.parse(m?.time||'');return Number.isFinite(ms)&&ms<Date.now()};
+  const resultLabel=(m,r)=>r==='home'?(m?.home||'Hjemme'):r==='away'?(m?.away||'Borte'):'Uavgjort';
 
   async function checkAdmin(){
     try{
@@ -27,86 +30,119 @@
   }
 
   function addCss(){
-    if(document.getElementById('simpleResultCss'))return;
+    if(document.getElementById('mobileResultPickerCss'))return;
     const style=document.createElement('style');
-    style.id='simpleResultCss';
+    style.id='mobileResultPickerCss';
     style.textContent=`
-      #simpleResultBox{margin:14px 0!important;padding:14px!important;border-radius:18px!important;background:linear-gradient(145deg,rgba(15,25,43,.88),rgba(3,10,22,.94))!important;border:1px solid rgba(255,216,122,.35)!important;box-shadow:0 10px 28px rgba(0,0,0,.22)!important;}
-      #simpleResultBox h3{margin:0 0 10px!important;color:#ffd77a!important;font-size:15px!important;font-weight:1000!important;}
-      #simpleResultForm{display:grid!important;grid-template-columns:minmax(0,1.4fr) minmax(0,.8fr) auto!important;gap:10px!important;align-items:center!important;}
-      #simpleResultForm select,#simpleResultForm button{min-height:50px!important;border-radius:14px!important;font-size:14px!important;font-weight:900!important;}
-      #simpleResultForm select{width:100%!important;padding:0 12px!important;background:rgba(3,10,22,.94)!important;color:#ffe08a!important;border:1px solid rgba(255,216,122,.48)!important;}
-      #simpleResultForm button{padding:0 15px!important;border:1px solid rgba(255,216,122,.58)!important;background:linear-gradient(135deg,#f3cf74,#b88424)!important;color:#08111f!important;}
-      #simpleResultNote{margin:10px 0 0!important;color:rgba(235,238,247,.78)!important;font-size:12px!important;font-weight:800!important;line-height:1.35!important;}
-      @media(max-width:720px){#simpleResultForm{grid-template-columns:1fr!important}#simpleResultForm button{width:100%!important}}
+      #simpleResultBox,#simpleResultCss{display:none!important;}
+      #resultForm{display:none!important;}
+      #mobileResultBox{margin:16px 0 0!important;padding:15px!important;border-radius:20px!important;background:linear-gradient(145deg,rgba(15,25,43,.90),rgba(3,10,22,.96))!important;border:1px solid rgba(255,216,122,.35)!important;box-shadow:0 12px 30px rgba(0,0,0,.24)!important;}
+      #mobileResultBox h3{margin:0 0 6px!important;color:#ffd77a!important;font-size:17px!important;font-weight:1000!important;letter-spacing:.01em!important;}
+      #mobileResultBox .result-help{margin:0 0 12px!important;color:rgba(235,238,247,.72)!important;font-size:12px!important;font-weight:800!important;line-height:1.35!important;}
+      #mobileResultBox .result-list{display:grid!important;gap:8px!important;max-height:310px!important;overflow:auto!important;padding-right:3px!important;margin-bottom:13px!important;-webkit-overflow-scrolling:touch!important;}
+      #mobileResultBox .result-match-btn{width:100%!important;text-align:left!important;border-radius:15px!important;border:1px solid rgba(255,255,255,.10)!important;background:rgba(255,255,255,.055)!important;color:#fff!important;padding:11px 12px!important;display:grid!important;gap:3px!important;touch-action:manipulation!important;}
+      #mobileResultBox .result-match-btn strong{font-size:14px!important;line-height:1.18!important;color:#fff!important;font-weight:950!important;}
+      #mobileResultBox .result-match-btn small{font-size:11px!important;color:rgba(235,238,247,.70)!important;font-weight:800!important;}
+      #mobileResultBox .result-match-btn.is-past small{color:#ffd77a!important;}
+      #mobileResultBox .result-match-btn.active{border-color:rgba(255,216,122,.72)!important;background:rgba(228,184,78,.15)!important;box-shadow:0 0 0 2px rgba(228,184,78,.10)!important;}
+      #mobileResultBox .result-picks{display:grid!important;grid-template-columns:1fr 1fr 1fr!important;gap:8px!important;margin:12px 0!important;}
+      #mobileResultBox .result-pick-btn{min-height:46px!important;border-radius:14px!important;border:1px solid rgba(255,216,122,.32)!important;background:rgba(255,255,255,.055)!important;color:#ffe08a!important;font-size:13px!important;font-weight:1000!important;touch-action:manipulation!important;}
+      #mobileResultBox .result-pick-btn.active{background:linear-gradient(135deg,#f3cf74,#b88424)!important;color:#08111f!important;border-color:rgba(255,216,122,.68)!important;}
+      #mobileResultBox #mobileSaveResult{width:100%!important;min-height:54px!important;border-radius:16px!important;border:1px solid rgba(255,216,122,.58)!important;background:linear-gradient(135deg,#f3cf74,#b88424)!important;color:#08111f!important;font-size:16px!important;font-weight:1000!important;touch-action:manipulation!important;}
+      #mobileResultBox .result-status{margin:10px 0 0!important;color:rgba(235,238,247,.78)!important;font-size:12px!important;font-weight:850!important;line-height:1.35!important;}
+      #mobileResultBox .result-empty{padding:12px!important;border-radius:14px!important;background:rgba(255,255,255,.045)!important;border:1px dashed rgba(255,255,255,.14)!important;color:rgba(235,238,247,.78)!important;font-weight:850!important;}
+      @media(max-width:430px){#mobileResultBox{padding:13px!important;border-radius:18px!important}#mobileResultBox .result-picks{grid-template-columns:1fr!important}#mobileResultBox .result-list{max-height:340px!important}}
     `;
     document.head.appendChild(style);
   }
 
-  function ensureBox(){
-    addCss();
-    const panel=document.getElementById('adminPanel');
-    if(!panel)return;
-    let box=document.getElementById('simpleResultBox');
-    if(box)return box;
-    box=document.createElement('section');
-    box.id='simpleResultBox';
-    box.innerHTML=`
-      <h3>✅ Enkel resultatvelger</h3>
-      <form id="simpleResultForm">
-        <select id="simpleResultMatch" name="matchId" required><option value="">Laster kamper...</option></select>
-        <select id="simpleResultPick" name="result" required>
-          <option value="">Velg resultat</option>
-          <option value="home">Hjemmeseier</option>
-          <option value="draw">Uavgjort</option>
-          <option value="away">Borteseier</option>
-        </select>
-        <button type="submit">Lagre resultat</button>
-      </form>
-      <p id="simpleResultNote">Viser bare kamper som mangler resultat.</p>`;
-    const matchForm=document.getElementById('matchForm');
-    if(matchForm)matchForm.insertAdjacentElement('afterend',box);else panel.appendChild(box);
-    return box;
+  function removeBrokenBoxes(){
+    document.getElementById('simpleResultBox')?.remove();
+    document.getElementById('simpleResultCss')?.remove();
+    const old=document.getElementById('resultForm');
+    if(old)old.hidden=true;
   }
 
   function unresolved(){
     return matches.filter(m=>!hasResult(m)).sort((a,b)=>(isPast(b)?1:0)-(isPast(a)?1:0)||String(a.time||'').localeCompare(String(b.time||'')));
   }
 
-  function renderSelect(){
-    ensureBox();
-    const select=document.getElementById('simpleResultMatch');
-    const note=document.getElementById('simpleResultNote');
-    if(!select)return;
+  function ensureBox(){
+    addCss();
+    removeBrokenBoxes();
+    const panel=document.getElementById('adminPanel');
+    if(!panel)return null;
+    let box=document.getElementById('mobileResultBox');
+    if(box)return box;
+    box=document.createElement('section');
+    box.id='mobileResultBox';
+    box.innerHTML=`
+      <h3>✅ Resultatvelger</h3>
+      <p class="result-help">Trykk på kamp, velg resultat, og lagre. Viser kun kamper som mangler resultat.</p>
+      <div class="result-list" id="mobileResultList"></div>
+      <div class="result-picks" id="mobileResultPicks">
+        <button type="button" class="result-pick-btn" data-result-pick="home">Hjemme</button>
+        <button type="button" class="result-pick-btn" data-result-pick="draw">Uavgjort</button>
+        <button type="button" class="result-pick-btn" data-result-pick="away">Borte</button>
+      </div>
+      <button type="button" id="mobileSaveResult">Lagre resultat</button>
+      <p class="result-status" id="mobileResultStatus">Laster kamper...</p>`;
+    const matchForm=document.getElementById('matchForm');
+    if(matchForm)matchForm.insertAdjacentElement('afterend',box);else panel.appendChild(box);
+    return box;
+  }
+
+  function selectedMatch(){return matches.find(m=>m.id===selectedMatchId)}
+
+  function render(){
+    const box=ensureBox();
+    if(!box)return;
+    const list=document.getElementById('mobileResultList');
+    const status=document.getElementById('mobileResultStatus');
     const rows=unresolved();
-    const current=select.value;
-    select.innerHTML=rows.length?'<option value="">Velg kamp uten resultat</option>'+rows.map(m=>`<option value="${esc(m.id)}">${esc(when(m.time))} · ${esc(title(m))} · ${isPast(m)?'slutt/startet':'ikke spilt'}</option>`).join(''):'<option value="">Ingen kamper uten resultat</option>';
-    if(current&&[...select.options].some(o=>o.value===current))select.value=current;
-    if(note)note.textContent=admin?`Admin OK · ${rows.length} kamp(er) mangler resultat.`:'Admin ikke aktiv.';
+    if(selectedMatchId&&!rows.some(m=>m.id===selectedMatchId)){selectedMatchId='';selectedResult=''}
+    if(list){
+      list.innerHTML=rows.length?rows.map(m=>`<button type="button" class="result-match-btn ${m.id===selectedMatchId?'active':''} ${isPast(m)?'is-past':''}" data-result-match="${esc(m.id)}"><strong>${esc(title(m))}</strong><small>${esc(when(m.time))} · ${isPast(m)?'Slutt/startet · mangler resultat':'Ikke spilt ennå'}</small></button>`).join(''):'<div class="result-empty">Ingen kamper mangler resultat akkurat nå.</div>';
+    }
+    document.querySelectorAll('[data-result-pick]').forEach(btn=>{
+      btn.classList.toggle('active',btn.dataset.resultPick===selectedResult);
+      const m=selectedMatch();
+      if(btn.dataset.resultPick==='home')btn.textContent=m?m.home||'Hjemme':'Hjemme';
+      if(btn.dataset.resultPick==='away')btn.textContent=m?m.away||'Borte':'Borte';
+      if(btn.dataset.resultPick==='draw')btn.textContent='Uavgjort';
+    });
+    if(status){
+      const m=selectedMatch();
+      status.textContent=m&&selectedResult
+        ? `Klar: ${title(m)} → ${resultLabel(m,selectedResult)}`
+        : `Admin OK · ${rows.length} kamp(er) mangler resultat.`;
+    }
   }
 
   function listen(){
     if(!ready()||unsub)return;
     unsub=firebase.firestore().collection('matches').onSnapshot(s=>{
       matches=s.docs.map(d=>({id:d.id,...d.data()}));
-      renderSelect();
-    },e=>console.warn('Result match listen failed',e));
+      render();
+    },e=>{console.warn('Result match listen failed',e);toast('Kunne ikke laste kamper')});
   }
 
-  async function save(e){
-    const form=e.target.closest?.('#simpleResultForm');
-    if(!form)return;
-    e.preventDefault();
-    e.stopImmediatePropagation();
+  async function save(){
     if(!(await checkAdmin()))return toast('Kun admin kan legge inn resultat');
-    const fd=new FormData(form);
-    const id=fd.get('matchId');
-    const result=fd.get('result');
-    if(!id||!result)return toast('Velg kamp og resultat');
+    const id=selectedMatchId;
+    const result=selectedResult;
+    if(!id)return toast('Velg kamp først');
+    if(!result)return toast('Velg resultat først');
     try{
-      await firebase.firestore().collection('matches').doc(id).set({result,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAtMs:Date.now()},{merge:true});
+      await firebase.firestore().collection('matches').doc(id).set({
+        result,
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAtMs:Date.now()
+      },{merge:true});
       toast('Resultat lagret ✅');
-      form.reset();
+      selectedMatchId='';
+      selectedResult='';
+      render();
       setTimeout(()=>window.VM_SAFE_BOOT?.settleBets?.({id,result}),900);
       setTimeout(()=>window.VM_UPCOMING_MATCH_SEED?.boot?.(),1200);
     }catch(err){
@@ -115,18 +151,37 @@
     }
   }
 
+  function bind(){
+    if(bound)return;
+    bound=true;
+    document.addEventListener('click',e=>{
+      const matchBtn=e.target.closest?.('[data-result-match]');
+      if(matchBtn){selectedMatchId=matchBtn.dataset.resultMatch;selectedResult='';render();return}
+      const pickBtn=e.target.closest?.('[data-result-pick]');
+      if(pickBtn){selectedResult=pickBtn.dataset.resultPick;render();return}
+      if(e.target.closest?.('#mobileSaveResult')){save();return}
+    },true);
+    document.addEventListener('submit',e=>{
+      if(e.target?.id==='resultForm'||e.target?.id==='simpleResultForm'){
+        e.preventDefault();
+        e.stopImmediatePropagation();
+      }
+    },true);
+  }
+
   async function boot(){
     if(!ready())return;
     await checkAdmin();
     if(!admin)return;
     ensureBox();
+    bind();
     listen();
-    renderSelect();
-    if(!bound){document.addEventListener('submit',save,true);bound=true}
+    render();
   }
 
-  window.VM_RESULT_FIX={boot,refreshSelect:renderSelect};
+  window.VM_RESULT_FIX={boot,refreshSelect:render,render};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
   try{firebase.auth().onAuthStateChanged(u=>{if(u)boot()})}catch{}
-  document.addEventListener('click',e=>{if(e.target.closest?.('[data-page="betting"],#adminPanel,#simpleResultBox'))setTimeout(boot,200)});
+  document.addEventListener('click',e=>{if(e.target.closest?.('[data-page="betting"],#adminPanel,#mobileResultBox'))setTimeout(boot,200)});
+  setInterval(()=>{removeBrokenBoxes();if(admin)render()},4000);
 })();
