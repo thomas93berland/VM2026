@@ -1,44 +1,48 @@
 (()=>{
   let admin=false;
-  let matches=[];
-  let unsub=null;
   let bound=false;
-  let booted=false;
-  const RESULT_GRACE_MS=105*60*1000;
+  let lastHtml='';
+  let unsubMatches=null;
+  let matches=[];
+  let saving=false;
 
+  const toast=msg=>{try{const t=document.getElementById('toast');if(t){t.textContent=msg;t.hidden=false;clearTimeout(toast.x);toast.x=setTimeout(()=>t.hidden=true,4200)}else alert(msg)}catch{alert(msg)}};
   const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
   const ready=()=>{try{return window.firebase&&firebase.auth&&firebase.firestore&&firebase.auth().currentUser}catch{return false}};
-  const toast=msg=>{try{const t=document.getElementById('toast');if(t){t.textContent=msg;t.hidden=false;clearTimeout(toast.x);toast.x=setTimeout(()=>t.hidden=true,4200)}else alert(msg)}catch{alert(msg)}};
   const title=m=>(m.home||'Hjemme')+' – '+(m.away||'Borte');
-  const when=v=>{const d=new Date(v);return v&&!isNaN(d)?d.toLocaleString('nb-NO',{weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'Ukjent tid'};
   const label=(m,p)=>p==='home'?(m.home||'Hjemme'):p==='away'?(m.away||'Borte'):'Uavgjort';
+  const when=v=>{const d=new Date(v);return v&&!isNaN(d)?d.toLocaleString('nb-NO',{weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'Ukjent tid'};
   const hasResult=m=>!!String(m?.result||'').trim();
-  const msOf=v=>Date.parse(v||'');
-  const resultReady=m=>{const ms=msOf(m?.time);return !Number.isFinite(ms)||Date.now()>=ms+RESULT_GRACE_MS};
-  const relevantSeed=m=>m.seedGroup==='four-match-window-2026'||!m.seeded;
+  const timeMs=m=>{const ms=Date.parse(m?.time||'');return Number.isFinite(ms)?ms:Number.MAX_SAFE_INTEGER};
+  const isPast=m=>timeMs(m)<=Date.now();
+
+  function cleanupDirectPanel(){
+    document.getElementById('directResultPanel')?.remove();
+    document.getElementById('directResultPanelCss')?.remove();
+    document.getElementById('directResultPanelCssOld')?.remove();
+    document.getElementById('vmResultButtonPanel')?.remove();
+    const form=document.getElementById('resultForm');
+    if(form){
+      form.style.display='';
+      form.hidden=false;
+    }
+  }
 
   function addCss(){
-    if(document.getElementById('directResultPanelCss'))return;
+    if(document.getElementById('resultSelectorFixCss'))return;
     const style=document.createElement('style');
-    style.id='directResultPanelCss';
+    style.id='resultSelectorFixCss';
     style.textContent=`
-      #resultForm{display:none!important;}
-      #directResultPanel{margin-top:14px!important;padding:14px!important;border-radius:20px!important;background:linear-gradient(145deg,rgba(10,20,37,.88),rgba(4,10,20,.94))!important;border:1px solid rgba(255,216,122,.20)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)!important;}
-      .direct-result-head{display:flex!important;align-items:flex-start!important;justify-content:space-between!important;gap:10px!important;margin-bottom:12px!important;}
-      .direct-result-head h3{margin:0!important;color:#ffd77a!important;font-size:16px!important;line-height:1.15!important;text-shadow:0 0 14px rgba(228,184,78,.25)!important;}
-      .direct-result-head small{display:block!important;margin-top:4px!important;color:rgba(235,238,247,.68)!important;font-size:12px!important;font-weight:800!important;line-height:1.3!important;}
-      .direct-result-count{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-width:32px!important;height:28px!important;padding:0 9px!important;border-radius:999px!important;background:rgba(228,184,78,.12)!important;border:1px solid rgba(228,184,78,.28)!important;color:#ffd77a!important;font-size:12px!important;font-weight:1000!important;}
-      .direct-result-list{display:grid!important;gap:10px!important;}
-      .direct-result-row{padding:11px!important;border-radius:16px!important;background:linear-gradient(145deg,rgba(255,197,94,.075),rgba(255,255,255,.035))!important;border:1px solid rgba(255,197,94,.24)!important;}
-      .direct-result-teams{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;margin-bottom:5px!important;}
-      .direct-result-teams b{color:#fff!important;font-size:14px!important;line-height:1.15!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;}
-      .direct-result-time{display:block!important;color:rgba(235,238,247,.65)!important;font-size:11px!important;font-weight:800!important;margin-bottom:9px!important;}
-      .direct-result-status{color:#ffd77a!important;font-weight:950!important;}
-      .direct-result-buttons{display:grid!important;grid-template-columns:1fr 1fr 1fr!important;gap:7px!important;}
-      .direct-result-btn{min-height:38px!important;border-radius:13px!important;border:1px solid rgba(255,216,122,.28)!important;background:rgba(228,184,78,.10)!important;color:#ffd77a!important;font-size:12px!important;font-weight:1000!important;line-height:1.1!important;padding:8px 7px!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)!important;}
-      .direct-result-btn:active{transform:translateY(1px)!important;}
-      .direct-result-empty{padding:12px!important;border-radius:15px!important;border:1px dashed rgba(255,255,255,.14)!important;color:rgba(235,238,247,.74)!important;font-size:13px!important;font-weight:850!important;line-height:1.35!important;}
-      @media(max-width:430px){.direct-result-buttons{grid-template-columns:1fr!important}.direct-result-btn{min-height:42px!important;font-size:13px!important}.direct-result-teams{display:block!important}.direct-result-teams b{display:block!important;margin-bottom:3px!important}}
+      #resultForm{display:grid!important;opacity:1!important;visibility:visible!important;}
+      #resultMatchSelect,#resultForm select[name="result"]{
+        min-height:48px!important;
+        border-color:rgba(255,216,122,.36)!important;
+        background:rgba(3,10,22,.76)!important;
+        color:#fff!important;
+        font-weight:850!important;
+      }
+      #resultMatchSelect option,#resultForm select[name="result"] option{background:#07111f!important;color:#fff!important;}
+      #resultFixHint{color:rgba(255,216,122,.82)!important;font-size:12px!important;font-weight:850!important;line-height:1.35!important;}
     `;
     document.head.appendChild(style);
   }
@@ -50,136 +54,150 @@
       const s=await firebase.firestore().collection('users').doc(u.uid).get();
       admin=!!(s.exists&&s.data()?.isAdmin===true);
       return admin;
-    }catch(e){console.warn('Direct result admin check failed',e);admin=false;return false}
+    }catch(e){
+      console.warn('Result selector admin check failed',e);
+      admin=false;
+      return false;
+    }
   }
 
-  function cleanupOldResultUi(){
-    try{
-      document.getElementById('vmResultButtonPanel')?.remove();
-      document.getElementById('directResultPanelCssOld')?.remove();
-      const form=document.getElementById('resultForm');
-      if(form)form.style.display='none';
-      const panels=[...document.querySelectorAll('#adminPanel section,#adminPanel article,#adminPanel .card')].filter(el=>el.id!=='directResultPanel'&&String(el.textContent||'').toLowerCase().includes('automatisk resultatpanel'));
-      panels.forEach(el=>el.remove());
-    }catch(e){console.warn('Old result cleanup skipped',e)}
-  }
-
-  function ensurePanel(){
-    cleanupOldResultUi();
-    const form=document.getElementById('resultForm');
-    let panel=document.getElementById('directResultPanel');
-    if(panel)return panel;
-    const adminPanel=document.getElementById('adminPanel');
-    if(!adminPanel)return null;
-    panel=document.createElement('section');
-    panel.id='directResultPanel';
-    if(form)form.insertAdjacentElement('afterend',panel);
-    else adminPanel.appendChild(panel);
-    return panel;
-  }
-
-  function activeWindowIds(){
-    try{
-      const ids=window.VM_UPCOMING_MATCH_SEED?.computeAllowedIds?.();
-      if(ids&&ids.size)return ids;
-    }catch(e){console.warn('Could not read active 4-match window',e)}
-    return null;
-  }
-
-  function unresolved(){
-    const ids=activeWindowIds();
+  function unresolvedMatches(){
     return matches
       .filter(m=>!hasResult(m))
-      .filter(m=>relevantSeed(m))
-      .filter(m=>ids&&ids.size ? ids.has(m.id) : true)
-      .filter(m=>resultReady(m))
-      .sort((a,b)=>String(a.time||'').localeCompare(String(b.time||'')));
+      .sort((a,b)=>{
+        const ap=isPast(a)?0:1;
+        const bp=isPast(b)?0:1;
+        return (ap-bp)||(timeMs(a)-timeMs(b))||title(a).localeCompare(title(b));
+      });
   }
 
-  function render(){
+  function statusText(m){
+    return isPast(m)?'⏰ slutt / mangler resultat':'🟢 ikke spilt ennå';
+  }
+
+  function renderSelect(){
+    cleanupDirectPanel();
     addCss();
-    const panel=ensurePanel();
-    if(!panel)return;
-    if(!admin){panel.innerHTML='';return}
-    const rows=unresolved();
-    const list=rows.length?rows.map(m=>`<article class="direct-result-row" data-direct-result-row="${esc(m.id)}">
-      <div class="direct-result-teams"><b>${esc(m.home||'Hjemme')}</b><b>${esc(m.away||'Borte')}</b></div>
-      <span class="direct-result-time">${esc(when(m.time))} · <span class="direct-result-status">Slutt / mangler resultat</span></span>
-      <div class="direct-result-buttons">
-        <button type="button" class="direct-result-btn" data-result-match="${esc(m.id)}" data-result-pick="home">${esc(label(m,'home'))}</button>
-        <button type="button" class="direct-result-btn" data-result-match="${esc(m.id)}" data-result-pick="draw">Uavgjort</button>
-        <button type="button" class="direct-result-btn" data-result-match="${esc(m.id)}" data-result-pick="away">${esc(label(m,'away'))}</button>
-      </div>
-    </article>`).join(''):'<div class="direct-result-empty">Ingen ferdige kamper i aktiv 4-pakke mangler resultat akkurat nå. Gamle/ikke-aktive kamper er skjult.</div>';
-    panel.innerHTML=`<div class="direct-result-head"><div><h3>Resultatpanel</h3><small>Viser bare ferdige kamper i aktiv 4-pakke som mangler resultat. Gamle kamper skjules automatisk.</small></div><span class="direct-result-count">${rows.length}</span></div><div class="direct-result-list">${list}</div>`;
+    const select=document.getElementById('resultMatchSelect');
+    if(!select||!admin)return;
+    const current=select.value;
+    const rows=unresolvedMatches();
+    const body=rows.length
+      ? rows.map(m=>`<option value="${esc(m.id)}">${esc(when(m.time))} · ${esc(title(m))} · ${esc(statusText(m))}</option>`).join('')
+      : '<option value="" disabled>Ingen kamper uten resultat</option>';
+    const html='<option value="">Velg kamp uten resultat</option>'+body;
+    if(html!==lastHtml||select.options.length<2){
+      lastHtml=html;
+      select.innerHTML=html;
+      if(current&&[...select.options].some(o=>o.value===current))select.value=current;
+    }
+    addHint();
+  }
+
+  async function loadMatchesOnce(){
+    if(!ready())return;
+    const snap=await firebase.firestore().collection('matches').get();
+    matches=snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderSelect();
   }
 
   function listenMatches(){
-    if(!ready()||unsub)return;
-    unsub=firebase.firestore().collection('matches').onSnapshot(s=>{
+    if(!ready()||unsubMatches)return;
+    unsubMatches=firebase.firestore().collection('matches').onSnapshot(s=>{
       matches=s.docs.map(d=>({id:d.id,...d.data()}));
-      render();
-    },e=>{console.warn('Direct result matches failed',e);toast('Kunne ikke laste kamper uten resultat')});
+      renderSelect();
+    },e=>{console.warn('Result selector match listen failed',e);toast('Kunne ikke laste kamper til resultatvelgeren')});
   }
 
-  async function saveResult(matchId,result){
-    if(!matchId||!result)return toast('Mangler kamp eller resultat');
+  async function refreshSelect(){
+    cleanupDirectPanel();
+    addCss();
+    if(!ready())return;
+    admin=await checkAdmin();
+    if(!admin)return;
+    listenMatches();
+    if(!matches.length)await loadMatchesOnce();
+    renderSelect();
+  }
+
+  async function submitResult(e){
+    const form=document.getElementById('resultForm');
+    if(!form||e.target!==form)return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation?.();
+    if(saving)return;
+    saving=true;
     try{
-      if(!(await checkAdmin()))return toast('Kun admin kan legge inn resultat');
-      const match=matches.find(m=>m.id===matchId);
-      const text=match?`${title(match)}: ${label(match,result)}`:result;
-      const ok=confirm(`Legge inn resultat?\n\n${text}`);
-      if(!ok)return;
-      await firebase.firestore().collection('matches').doc(matchId).set({
+      admin=await checkAdmin();
+      if(!admin)return toast('Kun admin kan legge inn resultat');
+      const fd=new FormData(form);
+      const id=String(fd.get('matchId')||'').trim();
+      const result=String(fd.get('result')||'').trim();
+      if(!id||!result)return toast('Velg kamp og resultat');
+      const match=matches.find(m=>m.id===id);
+      if(match&&hasResult(match))return toast('Denne kampen har allerede resultat');
+      await firebase.firestore().collection('matches').doc(id).set({
         result,
         resultSetBy:firebase.auth().currentUser.uid,
         updatedAtMs:Date.now(),
         updatedAt:firebase.firestore.FieldValue.serverTimestamp()
       },{merge:true});
-      toast('Resultat oppdatert');
-      setTimeout(()=>window.VM_SAFE_BOOT?.settleBets?.({id:matchId,result}),600);
-      setTimeout(()=>window.VM_UPCOMING_MATCH_SEED?.boot?.(),900);
-    }catch(e){
-      console.error('Direct result save failed',e);
-      toast((e?.code?e.code+': ':'')+(e?.message||'Kunne ikke lagre resultat'));
+      toast('Resultat lagt inn');
+      form.reset();
+      lastHtml='';
+      await loadMatchesOnce();
+      renderSelect();
+      setTimeout(()=>window.VM_SAFE_BOOT?.settleBets?.({id,result}),700);
+      setTimeout(()=>window.VM_UPCOMING_MATCH_SEED?.boot?.(),1100);
+    }catch(err){
+      console.error('Result selector submit failed',err);
+      toast((err?.code?err.code+': ':'')+(err?.message||'Kunne ikke legge inn resultat'));
+    }finally{
+      saving=false;
     }
+  }
+
+  function addHint(){
+    const form=document.getElementById('resultForm');
+    if(!form)return;
+    let p=document.getElementById('resultFixHint');
+    if(!p){
+      p=document.createElement('p');
+      p.id='resultFixHint';
+      p.className='admin-note';
+      form.insertAdjacentElement('afterend',p);
+    }
+    const n=unresolvedMatches().length;
+    p.textContent=`Resultatvelgeren viser kun kamper uten resultat. Kamper som er slutt ligger øverst. Antall i velgeren: ${n}.`;
   }
 
   function bind(){
     if(bound)return;
     bound=true;
+    document.addEventListener('submit',submitResult,true);
     document.addEventListener('click',e=>{
-      const btn=e.target.closest?.('[data-result-match][data-result-pick]');
-      if(!btn)return;
-      e.preventDefault();
-      e.stopPropagation();
-      saveResult(btn.dataset.resultMatch,btn.dataset.resultPick);
-    },true);
-    document.addEventListener('submit',e=>{
-      if(e.target?.id==='resultForm'){
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        toast('Bruk knappene i resultatpanelet. Gammel dropdown er deaktivert.');
-      }
+      if(e.target.closest?.('#resultMatchSelect,#resultForm,#adminPanel'))setTimeout(refreshSelect,100);
     },true);
   }
 
   async function boot(){
     if(!ready())return;
+    cleanupDirectPanel();
     addCss();
     bind();
-    await checkAdmin();
-    ensurePanel();
+    admin=await checkAdmin();
+    if(!admin)return;
     listenMatches();
-    render();
-    booted=true;
+    refreshSelect();
+    setTimeout(refreshSelect,500);
+    setTimeout(refreshSelect,1400);
   }
 
-  window.VM_RESULT_FIX={boot,refreshSelect:render,render,saveResult,unresolved};
-  window.VM_DIRECT_RESULT_PANEL={boot,render,saveResult};
+  window.VM_RESULT_FIX={boot,refreshSelect,renderSelect,unresolvedMatches,diagnose:()=>({loadedScript:'result-admin-fix-v5-dropdown',admin,bound,matches:matches.length,unresolved:unresolvedMatches().length,selectOptions:document.getElementById('resultMatchSelect')?.options?.length||0})};
 
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
-  try{firebase.auth().onAuthStateChanged(u=>{if(u)setTimeout(boot,350);else{matches=[];admin=false;render()}})}catch{}
+  try{firebase.auth().onAuthStateChanged(u=>{if(u)setTimeout(boot,250);else{admin=false;matches=[];lastHtml=''}})}catch{}
   document.addEventListener('click',e=>{if(e.target.closest?.('[data-page="betting"],#adminPanel'))setTimeout(boot,250)});
-  setInterval(()=>{if(booted)render()},3000);
+  setInterval(refreshSelect,3000);
 })();
