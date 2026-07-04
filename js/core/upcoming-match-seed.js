@@ -33,6 +33,8 @@
   const hasResult=m=>!!(m&&String(m.result||'').trim());
   const msOf=v=>Date.parse(v||'');
   const started=v=>{const ms=msOf(v);return Number.isFinite(ms)&&Date.now()>=ms};
+  const localDay=v=>{const ms=msOf(v);return Number.isFinite(ms)?new Date(ms).toLocaleDateString('sv-SE'):''};
+  const today=()=>new Date().toLocaleDateString('sv-SE');
 
   async function isAdmin(){
     if(!ready())return false;
@@ -49,26 +51,13 @@
   }
 
   function existingForFixture(f){return existingById.get(f.id)||existingByKey.get(key(f));}
-
-  function groupDone(group){
-    const last=group[group.length-1];
-    if(!last)return false;
-    const lastDoc=existingForFixture(last);
-    return hasResult(lastDoc);
-  }
-
-  function currentBatchIndex(){
-    let batch=0;
-    while(batch*BATCH_SIZE<fixtures.length){
-      const group=fixtures.slice(batch*BATCH_SIZE,batch*BATCH_SIZE+BATCH_SIZE);
-      if(groupDone(group))batch++; else break;
-    }
-    return Math.min(batch,Math.floor((fixtures.length-1)/BATCH_SIZE));
-  }
+  function isFixtureBettable(f){const doc=existingForFixture(f);return !hasResult(doc)&&!started(doc?.time||f.time)}
 
   function currentGroup(){
-    const batch=currentBatchIndex();
-    return fixtures.slice(batch*BATCH_SIZE,batch*BATCH_SIZE+BATCH_SIZE);
+    const candidates=fixtures.filter(isFixtureBettable).sort((a,b)=>String(a.time||'').localeCompare(String(b.time||'')));
+    const todays=candidates.filter(f=>localDay(f.time)===today());
+    const rest=candidates.filter(f=>localDay(f.time)!==today());
+    return [...todays,...rest].slice(0,BATCH_SIZE);
   }
 
   function computeAllowedIds(){
@@ -120,11 +109,11 @@
     const now=Date.now();
     missing.forEach(f=>batch.set(db.collection('matches').doc(f.id),{
       home:f.home,away:f.away,time:f.time,group:f.group,result:null,odds:f.odds,
-      seeded:true,seedGroup:'four-match-window-2026',createdAtMs:now,
+      seeded:true,seedGroup:'today-first-window-2026',createdAtMs:now,
       createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()
     },{merge:true}));
     await batch.commit();
-    toast(`${missing.length} kommende kamp(er) lagt ut for betting`);
+    toast(`${missing.length} kamp(er) lagt ut for betting`);
     setTimeout(()=>window.VM_RESULT_FIX?.refreshSelect?.(),500);
   }
 
