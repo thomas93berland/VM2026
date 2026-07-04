@@ -1,6 +1,7 @@
 (()=>{
   let admin=false;
   let bound=false;
+  let directBound=false;
   let lastHtml='';
   let unsubMatches=null;
   let matches=[];
@@ -15,6 +16,21 @@
   const hasResult=m=>!!String(m?.result||'').trim();
   const timeMs=m=>{const ms=Date.parse(m?.time||'');return Number.isFinite(ms)?ms:Number.MAX_SAFE_INTEGER};
   const isPast=m=>timeMs(m)<=Date.now();
+
+  function status(msg,type='info'){
+    let box=document.getElementById('resultDebugStatus');
+    const form=document.getElementById('resultForm');
+    if(!box&&form){
+      box=document.createElement('div');
+      box.id='resultDebugStatus';
+      form.insertAdjacentElement('afterend',box);
+    }
+    if(box){
+      box.className='result-debug-status '+type;
+      box.textContent=msg;
+    }
+    if(type==='error'||type==='success'||type==='info')toast(msg);
+  }
 
   function cleanupOldPanels(){
     document.getElementById('directResultPanel')?.remove();
@@ -33,7 +49,12 @@
       #resultForm{display:grid!important;opacity:1!important;visibility:visible!important;gap:10px!important;}
       #resultMatchSelect,#resultForm select[name="result"]{min-height:48px!important;border-color:rgba(255,216,122,.36)!important;background:rgba(3,10,22,.76)!important;color:#fff!important;font-weight:850!important;}
       #resultMatchSelect option,#resultForm select[name="result"] option{background:#07111f!important;color:#fff!important;}
+      #resultForm button{min-height:46px!important;touch-action:manipulation!important;}
       #resultFixHint{color:rgba(255,216,122,.82)!important;font-size:12px!important;font-weight:850!important;line-height:1.35!important;}
+      .result-debug-status{margin:10px 0!important;padding:10px 11px!important;border-radius:14px!important;background:rgba(255,255,255,.05)!important;border:1px solid rgba(255,255,255,.10)!important;color:rgba(235,238,247,.80)!important;font-size:12px!important;font-weight:850!important;line-height:1.35!important;}
+      .result-debug-status.info{border-color:rgba(255,216,122,.22)!important;color:#ffd77a!important;background:rgba(228,184,78,.075)!important;}
+      .result-debug-status.success{border-color:rgba(72,226,148,.34)!important;color:#7ff0bd!important;background:rgba(72,226,148,.09)!important;}
+      .result-debug-status.error{border-color:rgba(255,118,118,.36)!important;color:#ff8e8e!important;background:rgba(255,118,118,.09)!important;}
       #resultQuickPanel{margin-top:12px!important;padding:12px!important;border-radius:18px!important;background:rgba(3,10,22,.48)!important;border:1px solid rgba(255,216,122,.18)!important;display:grid!important;gap:10px!important;}
       .result-quick-head{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;color:#ffd77a!important;font-size:12px!important;font-weight:1000!important;text-transform:uppercase!important;letter-spacing:.04em!important;}
       .result-quick-head small{color:rgba(235,238,247,.70)!important;font-size:11px!important;text-transform:none!important;letter-spacing:0!important;}
@@ -44,7 +65,7 @@
       .result-quick-match b{font-size:14px!important;line-height:1.15!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
       .result-quick-match small{font-size:11px!important;color:rgba(235,238,247,.68)!important;font-weight:800!important;}
       .result-quick-buttons{display:grid!important;grid-template-columns:1fr 1fr 1fr!important;gap:7px!important;}
-      .result-quick-buttons button{min-height:38px!important;border-radius:12px!important;border:1px solid rgba(255,216,122,.26)!important;background:rgba(228,184,78,.11)!important;color:#ffd77a!important;font-size:12px!important;font-weight:1000!important;cursor:pointer!important;}
+      .result-quick-buttons button{min-height:40px!important;border-radius:12px!important;border:1px solid rgba(255,216,122,.26)!important;background:rgba(228,184,78,.11)!important;color:#ffd77a!important;font-size:12px!important;font-weight:1000!important;cursor:pointer!important;touch-action:manipulation!important;}
       .result-quick-buttons button:active{transform:scale(.98)!important;}
       .result-quick-empty{padding:11px!important;border-radius:14px!important;background:rgba(255,255,255,.04)!important;border:1px dashed rgba(255,255,255,.14)!important;color:rgba(235,238,247,.72)!important;font-size:12px!important;font-weight:850!important;line-height:1.35!important;}
     `;
@@ -55,8 +76,7 @@
     try{
       const u=firebase.auth().currentUser;
       if(!u){admin=false;return false}
-      const s=firebase.firestore().collection('users').doc(u.uid);
-      const snap=await s.get();
+      const snap=await firebase.firestore().collection('users').doc(u.uid).get();
       admin=!!(snap.exists&&snap.data()?.isAdmin===true);
       return admin;
     }catch(e){console.warn('Result selector admin check failed',e);admin=false;return false}
@@ -93,6 +113,7 @@
       if(current&&[...select.options].some(o=>o.value===current))select.value=current;
     }
     renderQuickPanel(rows);
+    bindDirectControls();
     addHint();
   }
 
@@ -111,6 +132,7 @@
       return;
     }
     panel.innerHTML=`<div class="result-quick-head"><span>Kamper uten resultat</span><small>${rows.length} stk · ${past} slutt</small></div><div class="result-quick-list">${rows.map(m=>`<article class="result-quick-row ${isPast(m)?'past':'future'}"><button class="result-quick-match" type="button" data-select-match="${esc(m.id)}"><b>${esc(title(m))}</b><small>${esc(when(m.time))} · ${esc(statusText(m))}</small></button><div class="result-quick-buttons"><button type="button" data-quick-result="home" data-match-id="${esc(m.id)}">H · ${esc(m.home||'Hjemme')}</button><button type="button" data-quick-result="draw" data-match-id="${esc(m.id)}">U · Uavgjort</button><button type="button" data-quick-result="away" data-match-id="${esc(m.id)}">B · ${esc(m.away||'Borte')}</button></div></article>`).join('')}</div>`;
+    bindQuickButtons();
   }
 
   async function loadMatchesOnce(){
@@ -125,7 +147,7 @@
     unsubMatches=firebase.firestore().collection('matches').onSnapshot(s=>{
       matches=s.docs.map(d=>({id:d.id,...d.data()}));
       renderSelect();
-    },e=>{console.warn('Result selector match listen failed',e);toast('Kunne ikke laste kamper til resultatvelgeren')});
+    },e=>{console.warn('Result selector match listen failed',e);status('Kunne ikke laste kamper til resultatvelgeren','error')});
   }
 
   async function refreshSelect(){
@@ -133,28 +155,35 @@
     addCss();
     if(!ready())return;
     admin=await checkAdmin();
-    if(!admin)return;
+    if(!admin){status('Admin ikke aktivert på brukeren din.','error');return;}
     listenMatches();
     if(!matches.length)await loadMatchesOnce();
     renderSelect();
+    status(`Resultatvelger klar. Kamper uten resultat: ${unresolvedMatches().length}.`,'info');
   }
 
   async function saveResult(id,result){
-    if(saving)return;
+    if(saving){status('Lagrer allerede resultat, vent litt...','info');return;}
     saving=true;
     try{
       admin=await checkAdmin();
-      if(!admin)return toast('Kun admin kan legge inn resultat');
-      if(!id||!result)return toast('Velg kamp og resultat');
-      const match=matches.find(m=>m.id===id)||{};
-      if(match&&hasResult(match))return toast('Denne kampen har allerede resultat');
+      if(!admin){status('Kun admin kan legge inn resultat','error');return;}
+      if(!id||!result){status('Velg kamp og resultat først','error');return;}
+      let match=matches.find(m=>m.id===id)||null;
+      if(!match){
+        const snap=await firebase.firestore().collection('matches').doc(id).get();
+        match=snap.exists?{id:snap.id,...snap.data()}:null;
+      }
+      if(!match){status('Fant ikke kampen i databasen','error');return;}
+      if(hasResult(match)){status('Denne kampen har allerede resultat','error');return;}
+      status('Lagrer resultat...', 'info');
       await firebase.firestore().collection('matches').doc(id).set({
         result,
         resultSetBy:firebase.auth().currentUser.uid,
         updatedAtMs:Date.now(),
         updatedAt:firebase.firestore.FieldValue.serverTimestamp()
       },{merge:true});
-      toast('Resultat lagt inn: '+label(match,result));
+      status('Resultat lagt inn: '+title(match)+' → '+label(match,result),'success');
       document.getElementById('resultForm')?.reset();
       lastHtml='';
       await loadMatchesOnce();
@@ -163,25 +192,68 @@
       setTimeout(()=>window.VM_UPCOMING_MATCH_SEED?.boot?.(),1100);
     }catch(err){
       console.error('Result selector save failed',err);
-      toast((err?.code?err.code+': ':'')+(err?.message||'Kunne ikke legge inn resultat'));
+      status((err?.code?err.code+': ':'')+(err?.message||'Kunne ikke legge inn resultat'),'error');
     }finally{saving=false}
   }
 
-  async function submitResult(e){
+  async function submitCurrent(){
     const form=document.getElementById('resultForm');
-    if(!form||e.target!==form)return;
-    e.preventDefault();
-    e.stopPropagation();
-    e.stopImmediatePropagation?.();
+    if(!form){status('Fant ikke resultatskjemaet','error');return;}
     const fd=new FormData(form);
     await saveResult(String(fd.get('matchId')||'').trim(),String(fd.get('result')||'').trim());
+  }
+
+  function bindDirectControls(){
+    const form=document.getElementById('resultForm');
+    if(!form)return;
+    if(form.dataset.directResultBound==='1')return;
+    form.dataset.directResultBound='1';
+    form.addEventListener('submit',e=>{e.preventDefault();e.stopPropagation();submitCurrent();},true);
+    form.onsubmit=e=>{e.preventDefault();submitCurrent();return false;};
+    const submitBtn=form.querySelector('button[type="submit"],button:not([type])');
+    if(submitBtn){
+      submitBtn.type='button';
+      submitBtn.onclick=e=>{e.preventDefault();e.stopPropagation();submitCurrent();};
+    }
+    const matchSelect=document.getElementById('resultMatchSelect');
+    const resultSelect=form.querySelector('select[name="result"]');
+    matchSelect?.addEventListener('change',()=>status('Kamp valgt. Velg resultat og trykk Legg inn resultat.','info'));
+    resultSelect?.addEventListener('change',()=>status('Resultat valgt. Trykk Legg inn resultat for å lagre.','info'));
+  }
+
+  function bindQuickButtons(){
+    document.querySelectorAll('[data-select-match]').forEach(btn=>{
+      if(btn.dataset.bound==='1')return;
+      btn.dataset.bound='1';
+      btn.onclick=e=>{
+        e.preventDefault();
+        const select=document.getElementById('resultMatchSelect');
+        if(select)select.value=btn.dataset.selectMatch;
+        status('Kamp valgt fra hurtiglisten. Velg H/U/B under eller trykk Legg inn resultat.','info');
+      };
+    });
+    document.querySelectorAll('[data-quick-result]').forEach(btn=>{
+      if(btn.dataset.bound==='1')return;
+      btn.dataset.bound='1';
+      btn.onclick=async e=>{
+        e.preventDefault();
+        e.stopPropagation();
+        const id=btn.dataset.matchId;
+        const result=btn.dataset.quickResult;
+        const matchSelect=document.getElementById('resultMatchSelect');
+        const resultSelect=document.querySelector('#resultForm select[name="result"]');
+        if(matchSelect)matchSelect.value=id;
+        if(resultSelect)resultSelect.value=result;
+        await saveResult(id,result);
+      };
+    });
   }
 
   function addHint(){
     const form=document.getElementById('resultForm');
     if(!form)return;
     let p=document.getElementById('resultFixHint');
-    if(!p){p=document.createElement('p');p.id='resultFixHint';p.className='admin-note';document.getElementById('resultQuickPanel')?.insertAdjacentElement('afterend',p)||form.insertAdjacentElement('afterend',p)}
+    if(!p){p=document.createElement('p');p.id='resultFixHint';p.className='admin-note';document.getElementById('resultDebugStatus')?.insertAdjacentElement('afterend',p)||form.insertAdjacentElement('afterend',p)}
     const rows=unresolvedMatches();
     p.textContent=`Resultatvelgeren viser kun kamper uten resultat. Slutt-kamper ligger øverst. Antall: ${rows.length}.`;
   }
@@ -189,30 +261,11 @@
   function bind(){
     if(bound)return;
     bound=true;
-    document.addEventListener('submit',submitResult,true);
-    document.addEventListener('click',async e=>{
-      const pick=e.target.closest?.('[data-select-match]');
-      if(pick){
-        e.preventDefault();
-        const select=document.getElementById('resultMatchSelect');
-        if(select)select.value=pick.dataset.selectMatch;
-        return;
-      }
-      const btn=e.target.closest?.('[data-quick-result]');
-      if(btn){
-        e.preventDefault();
-        e.stopPropagation();
-        const id=btn.dataset.matchId;
-        const result=btn.dataset.quickResult;
-        const match=matches.find(m=>m.id===id)||{};
-        const matchSelect=document.getElementById('resultMatchSelect');
-        const resultSelect=document.querySelector('#resultForm select[name="result"]');
-        if(matchSelect)matchSelect.value=id;
-        if(resultSelect)resultSelect.value=result;
-        if(!confirm(`Legg inn resultat?\n\n${title(match)}\nResultat: ${label(match,result)}`))return;
-        await saveResult(id,result);
-        return;
-      }
+    document.addEventListener('submit',e=>{
+      const form=document.getElementById('resultForm');
+      if(form&&e.target===form){e.preventDefault();e.stopPropagation();submitCurrent();}
+    },true);
+    document.addEventListener('click',e=>{
       if(e.target.closest?.('#resultMatchSelect,#resultForm,#adminPanel'))setTimeout(refreshSelect,100);
     },true);
   }
@@ -222,18 +275,19 @@
     cleanupOldPanels();
     addCss();
     bind();
+    bindDirectControls();
     admin=await checkAdmin();
-    if(!admin)return;
+    if(!admin){status('Admin ikke aktivert på brukeren din.','error');return;}
     listenMatches();
     refreshSelect();
     setTimeout(refreshSelect,500);
     setTimeout(refreshSelect,1400);
   }
 
-  window.VM_RESULT_FIX={boot,refreshSelect,renderSelect,saveResult,unresolvedMatches,diagnose:()=>({loadedScript:'result-admin-fix-v6-quick-buttons',admin,bound,matches:matches.length,unresolved:unresolvedMatches().length,selectOptions:document.getElementById('resultMatchSelect')?.options?.length||0,quickRows:document.querySelectorAll('#resultQuickPanel [data-quick-result]').length})};
+  window.VM_RESULT_FIX={boot,refreshSelect,renderSelect,saveResult,submitCurrent,unresolvedMatches,diagnose:()=>({loadedScript:'result-admin-fix-v7-direct-buttons',admin,bound,directBound,matches:matches.length,unresolved:unresolvedMatches().length,selectOptions:document.getElementById('resultMatchSelect')?.options?.length||0,quickButtons:document.querySelectorAll('#resultQuickPanel [data-quick-result]').length,status:document.getElementById('resultDebugStatus')?.textContent||''})};
 
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
   try{firebase.auth().onAuthStateChanged(u=>{if(u)setTimeout(boot,250);else{admin=false;matches=[];lastHtml=''}})}catch{}
   document.addEventListener('click',e=>{if(e.target.closest?.('[data-page="betting"],#adminPanel'))setTimeout(boot,250)});
-  setInterval(refreshSelect,2500);
+  setInterval(refreshSelect,3000);
 })();
