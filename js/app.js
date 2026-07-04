@@ -18,12 +18,7 @@ function t(m){
   clearTimeout(t.x);
   t.x = setTimeout(() => e.hidden = true, 4200);
 }
-
-function err(e){
-  console.error(e);
-  t((e?.code ? e.code + ': ' : '') + (e?.message || 'Feil'));
-}
-
+function err(e){ console.error(e); t((e?.code ? e.code + ': ' : '') + (e?.message || 'Feil')); }
 function init(){
   if(!window.firebase) throw Error('Firebase SDK mangler');
   if(!window.VM_FIREBASE_CONFIG) throw Error('firebase-config.js mangler');
@@ -31,57 +26,20 @@ function init(){
   auth = firebase.auth();
   db = firebase.firestore();
 }
-
-function authScreen(v){
-  let a = $('authScreen');
-  if(a) a.hidden = !v;
-}
-
+function authScreen(v){ let a = $('authScreen'); if(a) a.hidden = !v; }
 function udef(d = {}, id = ''){
   let done = +d.completedBets || 0;
   let won = +d.wonBets || 0;
-  return {
-    uid: d.uid || id,
-    name: d.name || d.email?.split('@')[0] || 'Spiller',
-    email: d.email || '',
-    coins: +(d.coins ?? START),
-    elo: +(d.elo ?? 1000),
-    placedBets: +d.placedBets || 0,
-    wonBets: won,
-    completedBets: done,
-    netProfit: +d.netProfit || 0,
-    hitRate: P(won, done) + '%',
-    isAdmin: d.isAdmin === true
-  };
+  return { uid:d.uid || id, name:d.name || d.email?.split('@')[0] || 'Spiller', email:d.email || '', coins:+(d.coins ?? START), elo:+(d.elo ?? 1000), placedBets:+d.placedBets || 0, wonBets:won, completedBets:done, netProfit:+d.netProfit || 0, hitRate:P(won, done) + '%', isAdmin:d.isAdmin === true };
 }
-
 async function ensure(u, n = ''){
   let r = db.collection('users').doc(u.uid);
   let s = await r.get();
   if(!s.exists){
-    await r.set({
-      uid:u.uid,
-      name:n || u.displayName || u.email.split('@')[0],
-      email:u.email || '',
-      coins:START,
-      elo:1000,
-      placedBets:0,
-      wonBets:0,
-      completedBets:0,
-      netProfit:0,
-      isAdmin:false,
-      createdAtMs:Date.now(),
-      createdAt:firebase.firestore.FieldValue.serverTimestamp(),
-      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-    });
+    await r.set({ uid:u.uid, name:n || u.displayName || u.email.split('@')[0], email:u.email || '', coins:START, elo:1000, placedBets:0, wonBets:0, completedBets:0, netProfit:0, isAdmin:false, createdAtMs:Date.now(), createdAt:firebase.firestore.FieldValue.serverTimestamp(), updatedAt:firebase.firestore.FieldValue.serverTimestamp() });
   }
 }
-
-function off(){
-  unsubs.forEach(f => { try{ f(); }catch{} });
-  unsubs = [];
-}
-
+function off(){ unsubs.forEach(f => { try{ f(); }catch{} }); unsubs = []; }
 function bindAuth(){
   document.querySelectorAll('[data-auth-tab]').forEach(b => b.onclick = () => {
     let tab = b.dataset.authTab;
@@ -89,31 +47,14 @@ function bindAuth(){
     $('loginForm').hidden = tab !== 'login';
     $('registerForm').hidden = tab !== 'register';
   });
-
-  $('loginForm')?.addEventListener('submit', async e => {
-    e.preventDefault();
-    try{ await auth.signInWithEmailAndPassword($('loginEmail').value.trim(), $('loginPassword').value); }
-    catch(x){ err(x); }
-  });
-
-  $('registerForm')?.addEventListener('submit', async e => {
-    e.preventDefault();
-    try{
-      let n = $('registerName').value.trim() || 'Spiller';
-      let c = await auth.createUserWithEmailAndPassword($('registerEmail').value.trim(), $('registerPassword').value);
-      await c.user.updateProfile({ displayName:n });
-      await ensure(c.user, n);
-      t('Bruker opprettet');
-    }catch(x){ err(x); }
-  });
+  $('loginForm')?.addEventListener('submit', async e => { e.preventDefault(); try{ await auth.signInWithEmailAndPassword($('loginEmail').value.trim(), $('loginPassword').value); } catch(x){ err(x); } });
+  $('registerForm')?.addEventListener('submit', async e => { e.preventDefault(); try{ let n = $('registerName').value.trim() || 'Spiller'; let c = await auth.createUserWithEmailAndPassword($('registerEmail').value.trim(), $('registerPassword').value); await c.user.updateProfile({ displayName:n }); await ensure(c.user, n); t('Bruker opprettet'); }catch(x){ err(x); } });
 }
-
 function nav(p){
   document.querySelectorAll('.page').forEach(e => e.classList.toggle('active', e.id === 'page-' + p));
   document.querySelectorAll('[data-page]').forEach(b => b.classList.toggle('active', b.dataset.page === p));
   document.body.classList.remove('menu-open');
 }
-
 function text(){
   let m = state.me || udef();
   let rank = state.users.findIndex(x => x.uid === m.uid) + 1;
@@ -123,43 +64,36 @@ function text(){
   if($('homeAvatar')) $('homeAvatar').textContent = a;
   if($('profileAvatar')) $('profileAvatar').textContent = a;
 }
-
 function lead(){
   let h = state.users.map((u,i) => `<div class="leaderboard-row ${u.uid === user?.uid ? 'me' : ''}"><b>#${i+1}</b><div class="avatar small">${E(u.name[0] || 'S')}</div><div><b>${E(u.name)}</b><small>${u.hitRate} treff · ${u.placedBets} spill</small></div><b>${N(u.coins)}</b></div>`).join('') || '<div class="empty">Ingen spillere ennå.</div>';
   if($('homeLeaderboard')) $('homeLeaderboard').innerHTML = h;
   if($('leaderboardPageList')) $('leaderboardPageList').innerHTML = h;
 }
-
-function when(v){
-  let d = new Date(v);
-  return v && !isNaN(d) ? d.toLocaleString('nb-NO', { weekday:'short', day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) : '-';
-}
-
+function when(v){ let d = new Date(v); return v && !isNaN(d) ? d.toLocaleString('nb-NO', { weekday:'short', day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) : '-'; }
 function title(m){ return (m.home || 'Hjemme') + ' – ' + (m.away || 'Borte'); }
 function label(m,p){ return p === 'home' ? m.home : p === 'away' ? m.away : 'Uavgjort'; }
 function odds(m,p){ return +(m.odds?.[p] || 1); }
-
+function hasStarted(m){ const ms = Date.parse(m?.time || ''); return Number.isFinite(ms) && Date.now() >= ms; }
+function isBettable(m){ return !!m && !m.result && !hasStarted(m); }
+function statusLine(m){ if(m.result) return `<div>Resultat: <b>${E(label(m,m.result))}</b></div>`; if(hasStarted(m)) return '<div>Slutt / venter resultat</div>'; return ''; }
 function matches(){
   let box = $('matchList');
   if(!box) return;
-  if(!state.matches.length){
-    box.innerHTML = '<article class="card empty">Ingen kamper ennå. Thomas/admin må legge inn kamper.</article>';
-    return;
-  }
-
-  box.innerHTML = state.matches.map(m => `<article class="card match-card search-item"><div class="match-top"><small>${E(m.group || 'VM 2026')}</small><small>${when(m.time)}</small></div><div class="teams"><strong>${E(m.home)}</strong><span>vs</span><strong>${E(m.away)}</strong></div>${m.result ? `<div>Resultat: <b>${E(label(m,m.result))}</b></div>` : ''}<div class="odds-row">${['home','draw','away'].map(p => `<button class="odd ${state.sel.some(s => s.matchId === m.id && s.pick === p) ? 'selected' : ''}" data-m="${m.id}" data-p="${p}" ${m.result ? 'disabled' : ''}><small>${E(label(m,p))}</small><strong>${odds(m,p).toFixed(2)}</strong></button>`).join('')}</div></article>`).join('');
+  if(!state.matches.length){ box.innerHTML = '<article class="card empty">Ingen kamper ennå. Thomas/admin må legge inn kamper.</article>'; return; }
+  box.innerHTML = state.matches.map(m => {
+    const open = isBettable(m);
+    return `<article class="card match-card search-item"><div class="match-top"><small>${E(m.group || 'VM 2026')}</small><small>${when(m.time)}</small></div><div class="teams"><strong>${E(m.home)}</strong><span>vs</span><strong>${E(m.away)}</strong></div>${statusLine(m)}<div class="odds-row">${['home','draw','away'].map(p => `<button class="odd ${state.sel.some(s => s.matchId === m.id && s.pick === p) ? 'selected' : ''}" data-m="${m.id}" data-p="${p}" ${open ? '' : 'disabled'}><small>${E(label(m,p))}</small><strong>${odds(m,p).toFixed(2)}</strong></button>`).join('')}</div></article>`;
+  }).join('');
   box.querySelectorAll('[data-m]').forEach(b => b.onclick = () => pick(b.dataset.m, b.dataset.p));
 }
-
 function pick(id,p){
   let m = state.matches.find(x => x.id === id);
-  if(!m || m.result) return;
+  if(!isBettable(m)) return t('Denne kampen er stengt for betting');
   state.sel = state.sel.filter(x => x.matchId !== id);
   state.sel.push({ matchId:id, pick:p, odds:odds(m,p), title:title(m), label:label(m,p) });
   matches();
   slip();
 }
-
 function slip(){
   if($('slipCount')) $('slipCount').textContent = state.sel.length;
   if($('slipEmpty')) $('slipEmpty').hidden = !!state.sel.length;
@@ -170,9 +104,9 @@ function slip(){
   if($('totalOdds')) $('totalOdds').textContent = tot.toFixed(2);
   if($('possibleWin')) $('possibleWin').textContent = N(Math.floor(stake * tot));
 }
-
 async function bet(){
   if(!state.me) return t('Du må logge inn');
+  state.sel = state.sel.filter(s => isBettable(state.matches.find(m => m.id === s.matchId)));
   let stake = +$('stakeInput').value || 0;
   if(!state.sel.length) return t('Velg odds først');
   if(stake < 10 || stake > MAX) return t('Innsats må være 10–' + MAX);
@@ -183,67 +117,19 @@ async function bet(){
   let r = db.collection('bets').doc();
   b.set(r, { userId:user.uid, userName:state.me.name, selections:state.sel, stake, totalOdds:+tot.toFixed(2), possibleWin:win, status:'Aktiv', createdAtMs:Date.now(), createdAt:firebase.firestore.FieldValue.serverTimestamp() });
   b.update(db.collection('users').doc(user.uid), { coins:firebase.firestore.FieldValue.increment(-stake), placedBets:firebase.firestore.FieldValue.increment(1), updatedAt:firebase.firestore.FieldValue.serverTimestamp() });
-  try{ await b.commit(); state.sel = []; render(); t('Spill plassert'); }
-  catch(e){ err(e); }
+  try{ await b.commit(); state.sel = []; render(); t('Spill plassert'); } catch(e){ err(e); }
 }
-
-function mybets(){
-  let box = $('myBets');
-  if(!box) return;
-  box.innerHTML = state.bets.length ? state.bets.map(b => `<div class="my-bet"><div><b>${E((b.selections || []).map(s => s.label).join(' + '))}</b><small>${E((b.selections || []).map(s => s.title).join(', '))}</small></div><div><b>${N(b.possibleWin)}</b><small>${E(b.status)}</small></div></div>`).join('') : '<div class="empty">Ingen spill ennå.</div>';
-}
-
-function admin(){
-  let a = state.me?.isAdmin === true;
-  if($('adminPanel')) $('adminPanel').hidden = !a;
-  if($('adminLocked')) $('adminLocked').hidden = a;
-  if(a) setTimeout(() => window.VM_RESULT_FIX?.refreshSelect?.(), 60);
-}
-
+function mybets(){ let box = $('myBets'); if(!box) return; box.innerHTML = state.bets.length ? state.bets.map(b => `<div class="my-bet"><div><b>${E((b.selections || []).map(s => s.label).join(' + '))}</b><small>${E((b.selections || []).map(s => s.title).join(', '))}</small></div><div><b>${N(b.possibleWin)}</b><small>${E(b.status)}</small></div></div>`).join('') : '<div class="empty">Ingen spill ennå.</div>'; }
+function admin(){ let a = state.me?.isAdmin === true; if($('adminPanel')) $('adminPanel').hidden = !a; if($('adminLocked')) $('adminLocked').hidden = a; if(a) setTimeout(() => window.VM_RESULT_FIX?.refreshSelect?.(), 60); }
 async function addMatch(e){
   e.preventDefault();
   if(!state.me?.isAdmin) return t('Kun admin');
   let f = new FormData(e.target);
-  try{
-    await db.collection('matches').add({
-      home:f.get('home').trim(),
-      away:f.get('away').trim(),
-      time:f.get('time'),
-      group:'VM 2026',
-      result:null,
-      odds:{ home:+f.get('homeOdds'), draw:+f.get('drawOdds'), away:+f.get('awayOdds') },
-      createdBy:user.uid,
-      createdAtMs:Date.now(),
-      createdAt:firebase.firestore.FieldValue.serverTimestamp()
-    });
-    e.target.reset();
-    t('Kamp lagt til');
-  }catch(x){ err(x); }
+  try{ await db.collection('matches').add({ home:f.get('home').trim(), away:f.get('away').trim(), time:f.get('time'), group:'VM 2026', result:null, odds:{ home:+f.get('homeOdds'), draw:+f.get('drawOdds'), away:+f.get('awayOdds') }, createdBy:user.uid, createdAtMs:Date.now(), createdAt:firebase.firestore.FieldValue.serverTimestamp() }); e.target.reset(); t('Kamp lagt til'); }catch(x){ err(x); }
 }
-
-function forum(){
-  if($('posts')) $('posts').innerHTML = state.posts.map(p => `<article class="card post"><h3>${E(p.title)}</h3><p>${E(p.text)}</p><small>${E(p.author)}</small></article>`).join('') || '<article class="card empty">Ingen innlegg ennå.</article>';
-}
-
-async function post(e){
-  e.preventDefault();
-  let title = $('postTitle').value.trim();
-  let txt = $('postText').value.trim();
-  if(!title || !txt) return;
-  try{ await db.collection('forumPosts').add({ title, text:txt, author:state.me.name, userId:user.uid, createdAtMs:Date.now(), createdAt:firebase.firestore.FieldValue.serverTimestamp() }); e.target.reset(); }
-  catch(x){ err(x); }
-}
-
-function render(){
-  text();
-  lead();
-  matches();
-  slip();
-  mybets();
-  admin();
-  forum();
-}
-
+function forum(){ if($('posts')) $('posts').innerHTML = state.posts.map(p => `<article class="card post"><h3>${E(p.title)}</h3><p>${E(p.text)}</p><small>${E(p.author)}</small></article>`).join('') || '<article class="card empty">Ingen innlegg ennå.</article>'; }
+async function post(e){ e.preventDefault(); let title = $('postTitle').value.trim(); let txt = $('postText').value.trim(); if(!title || !txt) return; try{ await db.collection('forumPosts').add({ title, text:txt, author:state.me.name, userId:user.uid, createdAtMs:Date.now(), createdAt:firebase.firestore.FieldValue.serverTimestamp() }); e.target.reset(); } catch(x){ err(x); } }
+function render(){ text(); lead(); matches(); slip(); mybets(); admin(); forum(); }
 function listen(){
   off();
   unsubs.push(db.collection('users').doc(user.uid).onSnapshot(s => { if(s.exists){ state.me = udef(s.data(), s.id); render(); } }, err));
@@ -252,7 +138,6 @@ function listen(){
   unsubs.push(db.collection('bets').where('userId','==',user.uid).onSnapshot(s => { state.bets = s.docs.map(d => ({ id:d.id, ...d.data() })).sort((a,b) => (b.createdAtMs || 0) - (a.createdAtMs || 0)); render(); }, err));
   unsubs.push(db.collection('forumPosts').onSnapshot(s => { state.posts = s.docs.map(d => ({ id:d.id, ...d.data() })).sort((a,b) => (b.createdAtMs || 0) - (a.createdAtMs || 0)); forum(); }, err));
 }
-
 function bind(){
   bindAuth();
   document.querySelectorAll('[data-page]').forEach(b => b.onclick = () => nav(b.dataset.page));
@@ -267,23 +152,13 @@ function bind(){
   $('editNameBtn')?.addEventListener('click', async () => { let n = prompt('Nytt navn:', state.me?.name || ''); if(n) await db.collection('users').doc(user.uid).update({ name:n.trim() }); });
   $('searchInput')?.addEventListener('input', e => document.querySelectorAll('.search-item').forEach(x => x.style.display = x.textContent.toLowerCase().includes(e.target.value.toLowerCase()) ? '' : 'none'));
 }
-
 try{
   init();
   bind();
   authScreen(true);
   auth.onAuthStateChanged(async u => {
     user = u;
-    if(!u){
-      state = { me:null, users:[], matches:[], bets:[], sel:[], posts:[], chat:[] };
-      off();
-      authScreen(true);
-      return;
-    }
-    try{
-      await ensure(u);
-      authScreen(false);
-      listen();
-    }catch(e){ err(e); }
+    if(!u){ state = { me:null, users:[], matches:[], bets:[], sel:[], posts:[], chat:[] }; off(); authScreen(true); return; }
+    try{ await ensure(u); authScreen(false); listen(); }catch(e){ err(e); }
   });
 }catch(e){ err(e); }
