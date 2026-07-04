@@ -33,8 +33,7 @@
   const hasResult=m=>!!(m&&String(m.result||'').trim());
   const msOf=v=>Date.parse(v||'');
   const started=v=>{const ms=msOf(v);return Number.isFinite(ms)&&Date.now()>=ms};
-  const localDay=v=>{const ms=msOf(v);return Number.isFinite(ms)?new Date(ms).toLocaleDateString('sv-SE'):''};
-  const today=()=>new Date().toLocaleDateString('sv-SE');
+  const niceTime=v=>{const d=new Date(v);return v&&!isNaN(d)?d.toLocaleString('nb-NO',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'ukjent tid'};
 
   async function isAdmin(){
     if(!ready())return false;
@@ -51,25 +50,68 @@
   }
 
   function existingForFixture(f){return existingById.get(f.id)||existingByKey.get(key(f));}
-  function isFixtureBettable(f){const doc=existingForFixture(f);return !hasResult(doc)&&!started(doc?.time||f.time)}
+
+  function activeBatchIndex(){
+    let batch=0;
+    while(batch*BATCH_SIZE<fixtures.length){
+      const group=fixtures.slice(batch*BATCH_SIZE,batch*BATCH_SIZE+BATCH_SIZE);
+      const last=group[group.length-1];
+      if(!last)break;
+      const lastDoc=existingForFixture(last);
+      if(hasResult(lastDoc))batch++;
+      else break;
+    }
+    return Math.min(batch,Math.max(0,Math.floor((fixtures.length-1)/BATCH_SIZE)));
+  }
 
   function currentGroup(){
-    const candidates=fixtures.filter(isFixtureBettable).sort((a,b)=>String(a.time||'').localeCompare(String(b.time||'')));
-    const todays=candidates.filter(f=>localDay(f.time)===today());
-    const rest=candidates.filter(f=>localDay(f.time)!==today());
-    return [...todays,...rest].slice(0,BATCH_SIZE);
+    const batch=activeBatchIndex();
+    return fixtures.slice(batch*BATCH_SIZE,batch*BATCH_SIZE+BATCH_SIZE);
   }
 
   function computeAllowedIds(){
     allowedIds=new Set();
-    currentGroup().forEach(f=>{allowedIds.add(f.id);const doc=existingForFixture(f);if(doc?.id)allowedIds.add(doc.id)});
+    currentGroup().forEach(f=>{
+      allowedIds.add(f.id);
+      const doc=existingForFixture(f);
+      if(doc?.id)allowedIds.add(doc.id);
+    });
     return allowedIds;
+  }
+
+  function activeGroupStatus(){
+    const group=currentGroup();
+    if(!group.length)return {visible:0,pendingPast:0,openFuture:0,missing:0,last: null};
+    let visible=0,pendingPast=0,openFuture=0,missing=0;
+    group.forEach(f=>{
+      const doc=existingForFixture(f);
+      const time=doc?.time||f.time;
+      if(!doc)missing++;
+      if(hasResult(doc))return;
+      if(started(time))pendingPast++;
+      else{openFuture++;visible++;}
+    });
+    return {visible,pendingPast,openFuture,missing,last:group[group.length-1]};
+  }
+
+  function ensureEmptyMessage(show,msg){
+    const list=document.getElementById('matchList');
+    if(!list)return;
+    let card=list.querySelector('.vm-betting-empty-window');
+    if(!show){if(card)card.remove();return;}
+    if(!card){
+      card=document.createElement('article');
+      card.className='card empty vm-betting-empty-window';
+      list.appendChild(card);
+    }
+    card.innerHTML=msg;
   }
 
   function decorateBoard(){
     const list=document.getElementById('matchList');
     if(!list)return;
     computeAllowedIds();
+    let visibleCount=0;
     [...list.querySelectorAll('.match-card')].forEach(card=>{
       const btn=card.querySelector('.odd[data-m]');
       const id=btn?.dataset?.m||'';
@@ -77,9 +119,19 @@
       const f=fixtureById.get(id)||fixtures.find(x=>existingForFixture(x)?.id===id);
       const time=doc?.time||f?.time||'';
       const visible=allowedIds.has(id)&&!hasResult(doc)&&!started(time);
+      if(visible)visibleCount++;
       card.style.display=visible?'':'none';
       card.querySelectorAll('.odd[data-m]').forEach(b=>{if(visible)b.removeAttribute('disabled');else b.disabled=true});
     });
+
+    const st=activeGroupStatus();
+    if(!visibleCount&&st.pendingPast>0){
+      ensureEmptyMessage(true,`<strong>Venter på resultat</strong><p>De 4 aktive kampene har startet/sluttet. Legg inn resultat på siste kamp i denne 4-pakken, så åpnes de neste 4 kampene automatisk for betting.</p>`);
+    }else if(!visibleCount){
+      ensureEmptyMessage(true,`<strong>Ingen åpne kamper akkurat nå</strong><p>Når neste 4-pakke er klar, vises kampene her automatisk.</p>`);
+    }else{
+      ensureEmptyMessage(false,'');
+    }
   }
 
   function watchBoard(){
@@ -103,17 +155,18 @@
     const db=firebase.firestore();
     const snap=await db.collection('matches').get();
     rebuildMaps(snap.docs.map(d=>({id:d.id,...d.data()})));
-    const missing=currentGroup().filter(f=>!existingForFixture(f));
-    if(!missing.length){decorateBoard();return}
+    const group=currentGroup();
+    const missing=group.filter(f=>!existingForFixture(f));
+    if(!missing.length){decorateBoard();setTimeout(()=>window.VM_RESULT_FIX?.refreshSelect?.(),250);return}
     const batch=db.batch();
     const now=Date.now();
     missing.forEach(f=>batch.set(db.collection('matches').doc(f.id),{
       home:f.home,away:f.away,time:f.time,group:f.group,result:null,odds:f.odds,
-      seeded:true,seedGroup:'today-first-window-2026',createdAtMs:now,
+      seeded:true,seedGroup:'four-match-window-2026',createdAtMs:now,
       createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()
     },{merge:true}));
     await batch.commit();
-    toast(`${missing.length} kamp(er) lagt ut for betting`);
+    toast(`${missing.length} kamp(er) lagt inn i aktiv 4-pakke`);
     setTimeout(()=>window.VM_RESULT_FIX?.refreshSelect?.(),500);
   }
 
@@ -127,7 +180,7 @@
     setTimeout(decorateBoard,1800);
   }
 
-  window.VM_UPCOMING_MATCH_SEED={boot,seedCurrentBatch,fixtures,currentGroup,computeAllowedIds};
+  window.VM_UPCOMING_MATCH_SEED={boot,seedCurrentBatch,fixtures,currentGroup,computeAllowedIds,activeBatchIndex};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else setTimeout(boot,300);
   try{firebase.auth().onAuthStateChanged(u=>{if(u)setTimeout(boot,700)})}catch{}
   document.addEventListener('click',e=>{if(e.target.closest?.('[data-page="betting"]'))setTimeout(boot,160)});
