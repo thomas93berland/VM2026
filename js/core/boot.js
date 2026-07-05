@@ -5,7 +5,6 @@
   let matchObserver=null;
   const OPEN=['Aktiv','Venter resultat'];
   const toast=msg=>{try{const t=document.getElementById('toast');if(t){t.textContent=msg;t.hidden=false;setTimeout(()=>t.hidden=true,4200)}else alert(msg)}catch{alert(msg)}};
-  const wait=ms=>new Promise(r=>setTimeout(r,ms));
   const money=n=>Number(n||0).toLocaleString('nb-NO');
 
   function ready(){
@@ -15,11 +14,6 @@
 
   function isOpenStatus(status){
     return OPEN.includes(String(status||'Aktiv'));
-  }
-
-  function isPastTime(v){
-    const ms=Date.parse(v||'');
-    return Number.isFinite(ms)&&ms<Date.now();
   }
 
   function addStatusCss(){
@@ -74,8 +68,7 @@
       const id=btn.dataset.m;
       const info=await getMatchInfo(id,null);
       const odds=[...card.querySelectorAll('.odd[data-m]')];
-
-      card.classList.remove('safe-waiting-result','safe-finished','safe-open');
+      card.classList.remove('safe-finished','safe-open');
 
       if(info.missing){
         card.classList.add('safe-finished');
@@ -92,7 +85,6 @@
       }
 
       card.classList.add('safe-open');
-      odds.forEach(b=>b.disabled=false);
       const existing=card.querySelector('.safe-match-status');
       if(existing)existing.remove();
     }catch(e){console.warn('Match status update skipped',e)}
@@ -115,13 +107,9 @@
     const stake=Number(bet.stake||0);
     const userId=bet.userId;
     if(!userId||!isOpenStatus(bet.status))return {settled:false,voided:false};
-
     const batch=db.batch();
-    const betRef=db.collection('bets').doc(betId);
-    const userRef=db.collection('users').doc(userId);
-
-    batch.update(betRef,{status:'Kamp slettet',voidReason:'Minst én kamp i bettet er slettet',refundedStake:stake,settledAtMs:Date.now(),settledAt:firebase.firestore.FieldValue.serverTimestamp()});
-    batch.update(userRef,{coins:firebase.firestore.FieldValue.increment(stake),placedBets:firebase.firestore.FieldValue.increment(-1),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+    batch.update(db.collection('bets').doc(betId),{status:'Kamp slettet',voidReason:'Minst én kamp i bettet er slettet',refundedStake:stake,settledAtMs:Date.now(),settledAt:firebase.firestore.FieldValue.serverTimestamp()});
+    batch.update(db.collection('users').doc(userId),{coins:firebase.firestore.FieldValue.increment(stake),placedBets:firebase.firestore.FieldValue.increment(-1),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
     await batch.commit();
     return {settled:true,voided:true,amount:stake};
   }
@@ -130,32 +118,19 @@
     const db=firebase.firestore();
     const selections=Array.isArray(bet.selections)?bet.selections:[];
     if(!selections.length||!isOpenStatus(bet.status))return {settled:false,waiting:false,voided:false};
-
-    let lost=false;
-    let pendingFuture=false;
-    let pendingPast=false;
-    let hasMissing=false;
+    let lost=false,pending=false,hasMissing=false;
 
     for(const sel of selections){
       const info=await getMatchInfo(sel.matchId,forcedMatch);
       if(info.missing){hasMissing=true;continue}
-      if(!info.result){
-        if(isPastTime(info.time))pendingPast=true;
-        else pendingFuture=true;
-        continue;
-      }
+      if(!info.result){pending=true;continue}
       if(info.result!==sel.pick)lost=true;
     }
 
     if(hasMissing)return await voidBetForDeletedMatch(betId,bet);
-
     const betRef=db.collection('bets').doc(betId);
-    if(pendingFuture&&!lost)return {settled:false,waiting:false,voided:false};
-
-    if(pendingPast&&!lost){
-      if(bet.status!=='Venter resultat'){
-        await betRef.update({status:'Venter resultat',waitingResultAtMs:Date.now(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
-      }
+    if(pending&&!lost){
+      if(bet.status!=='Venter resultat')await betRef.update({status:'Venter resultat',waitingResultAtMs:Date.now(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
       return {settled:false,waiting:true,voided:false};
     }
 
@@ -163,7 +138,6 @@
     const win=Number(bet.possibleWin||Math.floor(stake*Number(bet.totalOdds||1)));
     const userId=bet.userId;
     if(!userId)return {settled:false,waiting:false,voided:false};
-
     const batch=db.batch();
     const userRef=db.collection('users').doc(userId);
 
@@ -192,11 +166,11 @@
     try{
       if(!(await isAdmin())){toast('Kun admin kan utbetale gevinster');return}
       const docs=await activeBetDocs();
-      let settled=0,waiting=0,voided=0,refunded=0,won=0,paid=0;
+      let settled=0,waiting=0,voided=0,won=0,paid=0;
       for(const doc of docs){
         const res=await settleBet(doc.id,doc.data(),forcedMatch);
         if(res.waiting)waiting++;
-        if(res.voided){voided++;refunded+=res.amount||0}
+        if(res.voided)voided++;
         if(res.settled&&!res.voided){settled++;if(res.won){won++;paid+=res.amount}}
       }
       toast(settled||waiting||voided?`Oppdatert: ${won} vinnere, ${waiting} venter resultat, ${voided} slettet/refundert, ${money(paid)} VM Coins betalt`:'Ingen ferdige bets å oppdatere ennå');
@@ -213,8 +187,7 @@
     busy=true;
     try{
       if(!(await isAdmin())){toast('Kun admin kan utbetale gevinster');return}
-      const db=firebase.firestore();
-      const snap=await db.collection('bets').get();
+      const snap=await firebase.firestore().collection('bets').get();
       const groups={};
       snap.docs.forEach(doc=>{
         const b=doc.data();
@@ -222,8 +195,7 @@
         if(!groups[uid])groups[uid]=[];
         groups[uid].push({id:doc.id,data:b});
       });
-
-      let checked=0,settled=0,waiting=0,voided=0,refunded=0,won=0,paid=0,players=0;
+      let checked=0,settled=0,waiting=0,voided=0,won=0,paid=0,players=0;
       for(const uid of Object.keys(groups)){
         const latest=groups[uid].sort((a,b)=>Number(b.data.createdAtMs||0)-Number(a.data.createdAtMs||0)).slice(0,3);
         if(latest.length)players++;
@@ -231,11 +203,8 @@
           checked++;
           const res=await settleBet(item.id,item.data,null);
           if(res.waiting)waiting++;
-          if(res.voided){voided++;refunded+=res.amount||0}
-          if(res.settled&&!res.voided){
-            settled++;
-            if(res.won){won++;paid+=res.amount}
-          }
+          if(res.voided)voided++;
+          if(res.settled&&!res.voided){settled++;if(res.won){won++;paid+=res.amount}}
         }
       }
       toast(settled||waiting||voided?`Siste 3 per spiller: ${won} vinnere, ${waiting} venter resultat, ${voided} slettet/refundert, ${money(paid)} VM Coins utbetalt`:`Sjekket ${checked} bets hos ${players} spillere. Ingen nye gevinster å betale.`);
@@ -272,22 +241,6 @@
     }
   }
 
-  function hookResultForm(){
-    const form=document.getElementById('resultForm');
-    if(!form||form.dataset.payoutHooked==='1')return;
-    form.dataset.payoutHooked='1';
-    form.addEventListener('submit',async()=>{
-      try{
-        const data=new FormData(form);
-        const id=data.get('matchId');
-        const result=data.get('result');
-        if(!id||!result)return;
-        await wait(1200);
-        await settleAll({id,result});
-      }catch(e){console.warn('Auto payout skipped',e)}
-    });
-  }
-
   function maybeAutoLast3(){
     if(autoLast3Started)return;
     const params=new URLSearchParams(location.search);
@@ -306,23 +259,18 @@
 
   function boot(){
     addPayoutButton();
-    hookResultForm();
     watchMatchList();
     refreshMatchCards();
     maybeAutoLast3();
     maybeAutoStatus();
     setTimeout(addPayoutButton,700);
-    setTimeout(hookResultForm,700);
     setTimeout(watchMatchList,700);
     setTimeout(refreshMatchCards,900);
     setTimeout(maybeAutoLast3,900);
     setTimeout(maybeAutoStatus,900);
     setTimeout(addPayoutButton,1600);
-    setTimeout(hookResultForm,1600);
     setTimeout(watchMatchList,1600);
     setTimeout(refreshMatchCards,1900);
-    setTimeout(maybeAutoLast3,1800);
-    setTimeout(maybeAutoStatus,1800);
   }
 
   window.VM_SAFE_BOOT={startAll:boot,settleBets:settleAll,settleLast3PerPlayer,refreshMatchCards};
